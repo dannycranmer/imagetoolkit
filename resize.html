@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resize Images Online Free — ImageToolkit</title>
+  <meta name="description" content="Resize images by pixels, percentage, or social media presets. Instagram, Twitter, YouTube sizes. Free, private — images never leave your device.">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <nav class="nav" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">Image<span>Toolkit</span></a>
+      <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">&#9776;</button>
+      <ul class="nav-links" role="menubar">
+        <li><a href="index.html" role="menuitem">Home</a></li>
+        <li><a href="compress.html" role="menuitem">Compress</a></li>
+        <li><a href="resize.html" class="active" role="menuitem">Resize</a></li>
+        <li><a href="convert.html" role="menuitem">Convert</a></li>
+        <li><a href="crop.html" role="menuitem">Crop</a></li>
+        <li><a href="https://buymeacoffee.com/dairylea" class="nav-coffee" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="tool-header">
+      <h1>Image Resizer</h1>
+      <p>Resize images by exact pixels, percentage, or social media presets. Your images never leave your device.</p>
+    </div>
+
+    <div class="drop-zone" id="dropZone">
+      <div class="drop-zone-icon">&#128208;</div>
+      <div class="drop-zone-text"><strong>Drop images here</strong> or click to browse<br>JPEG, PNG, WebP supported</div>
+      <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" multiple>
+    </div>
+
+    <div class="controls" id="controls" style="display:none">
+      <div class="control-row">
+        <label>Mode</label>
+        <select id="resizeMode">
+          <option value="pixels">Exact Pixels</option>
+          <option value="percentage">Percentage</option>
+          <option value="preset">Social Media Preset</option>
+        </select>
+      </div>
+      <div id="pixelControls">
+        <div class="control-row">
+          <label for="width">Width (px)</label>
+          <input type="number" id="width" min="1" max="10000" value="800">
+          <span style="font-size:0.9rem;color:var(--text-muted)">x</span>
+          <label for="height">Height (px)</label>
+          <input type="number" id="height" min="1" max="10000" value="600">
+        </div>
+        <div class="control-row">
+          <label class="toggle-label">
+            <input type="checkbox" id="lockAspect" checked>
+            <span class="toggle-track"></span>
+            Maintain aspect ratio
+          </label>
+        </div>
+      </div>
+      <div id="percentControls" style="display:none">
+        <div class="control-row">
+          <label for="pct">Scale</label>
+          <input type="range" id="pct" min="1" max="500" value="50">
+          <span class="quality-value" id="pctValue">50%</span>
+        </div>
+      </div>
+      <div id="presetControls" style="display:none">
+        <div class="control-row">
+          <label>Preset</label>
+          <div class="presets" id="presetBtns">
+            <button class="preset-btn" data-w="1080" data-h="1080">Instagram Post (1080x1080)</button>
+            <button class="preset-btn" data-w="1080" data-h="1920">Instagram Story (1080x1920)</button>
+            <button class="preset-btn" data-w="1500" data-h="500">Twitter Header (1500x500)</button>
+            <button class="preset-btn" data-w="820" data-h="312">Facebook Cover (820x312)</button>
+            <button class="preset-btn" data-w="1584" data-h="396">LinkedIn Banner (1584x396)</button>
+            <button class="preset-btn" data-w="1280" data-h="720">YouTube Thumbnail (1280x720)</button>
+          </div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="resizeBtn">Resize All</button>
+        <button class="btn btn-outline" id="clearBtn">Clear All</button>
+      </div>
+    </div>
+
+    <div class="progress-bar" id="progressBar"><div class="progress-bar-fill" id="progressFill"></div></div>
+    <div class="error-msg" id="errorMsg"></div>
+
+    <div class="results" id="results" style="display:none">
+      <div class="results-header">
+        <h2>Results</h2>
+        <button class="btn btn-green" id="downloadAllBtn">Download All (ZIP)</button>
+      </div>
+      <div class="file-list" id="fileList"></div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <p>Powered by <strong>ImageToolkit</strong> — Free &amp; Private</p>
+      <div class="footer-links">
+        <a href="https://buymeacoffee.com/dairylea" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a>
+        <a href="https://dannycranmer.github.io/parchment/" target="_blank" rel="noopener">PDF Tools (Parchment)</a>
+        <a href="https://dannycranmer.github.io/devtoolbox/" target="_blank" rel="noopener">Dev Tools (DevToolbox)</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/common.js"></script>
+  <script>
+  (() => {
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const controls = document.getElementById('controls');
+    const resizeMode = document.getElementById('resizeMode');
+    const pixelControls = document.getElementById('pixelControls');
+    const percentControls = document.getElementById('percentControls');
+    const presetControls = document.getElementById('presetControls');
+    const widthInput = document.getElementById('width');
+    const heightInput = document.getElementById('height');
+    const lockAspect = document.getElementById('lockAspect');
+    const pctSlider = document.getElementById('pct');
+    const pctValue = document.getElementById('pctValue');
+    const resizeBtn = document.getElementById('resizeBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const progressBar = document.getElementById('progressBar');
+    const progressFill = document.getElementById('progressFill');
+    const errorMsg = document.getElementById('errorMsg');
+    const results = document.getElementById('results');
+    const fileList = document.getElementById('fileList');
+    const downloadAllBtn = document.getElementById('downloadAllBtn');
+
+    let sourceFiles = [];
+    let resizedBlobs = [];
+    let originalAspect = 1;
+    let presetW = 0, presetH = 0;
+
+    resizeMode.addEventListener('change', () => {
+      pixelControls.style.display = resizeMode.value === 'pixels' ? '' : 'none';
+      percentControls.style.display = resizeMode.value === 'percentage' ? '' : 'none';
+      presetControls.style.display = resizeMode.value === 'preset' ? '' : 'none';
+    });
+
+    pctSlider.addEventListener('input', () => { pctValue.textContent = pctSlider.value + '%'; });
+
+    document.getElementById('presetBtns').addEventListener('click', e => {
+      const btn = e.target.closest('.preset-btn');
+      if (!btn) return;
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      presetW = parseInt(btn.dataset.w);
+      presetH = parseInt(btn.dataset.h);
+    });
+
+    widthInput.addEventListener('input', () => {
+      if (lockAspect.checked && originalAspect) {
+        heightInput.value = Math.round(parseInt(widthInput.value) / originalAspect);
+      }
+    });
+    heightInput.addEventListener('input', () => {
+      if (lockAspect.checked && originalAspect) {
+        widthInput.value = Math.round(parseInt(heightInput.value) * originalAspect);
+      }
+    });
+
+    setupDropZone(dropZone, fileInput, async files => {
+      sourceFiles = sourceFiles.concat(files);
+      controls.style.display = 'block';
+      results.style.display = 'none';
+      fileList.innerHTML = '';
+      resizedBlobs = [];
+      // Set default dimensions from first image
+      try {
+        const img = await loadImage(files[0]);
+        widthInput.value = img.naturalWidth;
+        heightInput.value = img.naturalHeight;
+        originalAspect = img.naturalWidth / img.naturalHeight;
+      } catch (e) { /* ignore */ }
+      updateDropLabel();
+    });
+
+    function updateDropLabel() {
+      dropZone.querySelector('.drop-zone-text').innerHTML = '<strong>' + sourceFiles.length + ' image' + (sourceFiles.length > 1 ? 's' : '') + ' selected</strong><br>Drop more or click to add';
+    }
+
+    clearBtn.addEventListener('click', () => {
+      sourceFiles = [];
+      resizedBlobs = [];
+      controls.style.display = 'none';
+      results.style.display = 'none';
+      fileList.innerHTML = '';
+      dropZone.querySelector('.drop-zone-text').innerHTML = '<strong>Drop images here</strong> or click to browse<br>JPEG, PNG, WebP supported';
+    });
+
+    resizeBtn.addEventListener('click', async () => {
+      if (!sourceFiles.length) return;
+      hideError(errorMsg);
+      resizedBlobs = [];
+      fileList.innerHTML = '';
+      progressBar.style.display = 'block';
+      progressFill.style.width = '0%';
+      resizeBtn.disabled = true;
+
+      let done = 0;
+      for (const file of sourceFiles) {
+        try {
+          const img = await loadImage(file);
+          let w, h;
+
+          if (resizeMode.value === 'pixels') {
+            w = parseInt(widthInput.value) || img.naturalWidth;
+            h = parseInt(heightInput.value) || img.naturalHeight;
+          } else if (resizeMode.value === 'percentage') {
+            const scale = parseInt(pctSlider.value) / 100;
+            w = Math.round(img.naturalWidth * scale);
+            h = Math.round(img.naturalHeight * scale);
+          } else {
+            if (!presetW || !presetH) { showError(errorMsg, 'Select a preset first'); resizeBtn.disabled = false; return; }
+            w = presetW;
+            h = presetH;
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+
+          const mime = file.type || 'image/png';
+          const blob = await canvasToBlob(canvas, mime, 0.92);
+          const ext = mime === 'image/png' ? 'png' : mime === 'image/webp' ? 'webp' : 'jpg';
+          const outName = baseName(file.name) + '_' + w + 'x' + h + '.' + ext;
+
+          resizedBlobs.push({ blob, name: outName });
+          addFileRow(blob, outName, w, h);
+        } catch (e) {
+          showError(errorMsg, 'Failed to resize ' + file.name + ': ' + e.message);
+        }
+        done++;
+        progressFill.style.width = (done / sourceFiles.length * 100) + '%';
+      }
+
+      progressBar.style.display = 'none';
+      resizeBtn.disabled = false;
+      if (resizedBlobs.length) results.style.display = 'block';
+    });
+
+    function addFileRow(blob, name, w, h) {
+      const thumb = URL.createObjectURL(blob);
+      const row = document.createElement('div');
+      row.className = 'file-item';
+      row.innerHTML =
+        '<img class="file-thumb" src="' + thumb + '" alt="">' +
+        '<div class="file-info">' +
+          '<div class="file-name">' + escHTML(name) + '</div>' +
+          '<div class="file-meta">' + w + ' x ' + h + ' · ' + formatBytes(blob.size) + '</div>' +
+        '</div>' +
+        '<div class="file-actions"><button class="btn btn-primary btn-sm">Download</button></div>';
+      row.querySelector('button').addEventListener('click', () => downloadBlob(blob, name));
+      fileList.appendChild(row);
+    }
+
+    downloadAllBtn.addEventListener('click', async () => {
+      if (resizedBlobs.length === 1) { downloadBlob(resizedBlobs[0].blob, resizedBlobs[0].name); return; }
+      downloadAllBtn.disabled = true;
+      downloadAllBtn.textContent = 'Creating ZIP...';
+      try {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+        await new Promise((res, rej) => { script.onload = res; script.onerror = rej; document.head.appendChild(script); });
+        const zip = new JSZip();
+        resizedBlobs.forEach(f => zip.file(f.name, f.blob));
+        const content = await zip.generateAsync({ type: 'blob' });
+        downloadBlob(content, 'imagetoolkit-resized.zip');
+      } catch (e) { showError(errorMsg, 'Failed to create ZIP: ' + e.message); }
+      downloadAllBtn.disabled = false;
+      downloadAllBtn.textContent = 'Download All (ZIP)';
+    });
+
+    function escHTML(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+  })();
+  </script>
+  <script data-goatcounter="https://dairylea.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

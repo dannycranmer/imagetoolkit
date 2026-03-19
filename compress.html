@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Compress Images Online Free — ImageToolkit</title>
+  <meta name="description" content="Compress JPEG, PNG, and WebP images for free. Adjust quality, batch compress, download as ZIP. 100% private — your images never leave your device.">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <nav class="nav" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">Image<span>Toolkit</span></a>
+      <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">&#9776;</button>
+      <ul class="nav-links" role="menubar">
+        <li><a href="index.html" role="menuitem">Home</a></li>
+        <li><a href="compress.html" class="active" role="menuitem">Compress</a></li>
+        <li><a href="resize.html" role="menuitem">Resize</a></li>
+        <li><a href="convert.html" role="menuitem">Convert</a></li>
+        <li><a href="crop.html" role="menuitem">Crop</a></li>
+        <li><a href="https://buymeacoffee.com/dairylea" class="nav-coffee" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="tool-header">
+      <h1>Image Compressor</h1>
+      <p>Reduce file size while keeping quality. Your images never leave your device.</p>
+    </div>
+
+    <div class="drop-zone" id="dropZone">
+      <div class="drop-zone-icon">&#128230;</div>
+      <div class="drop-zone-text"><strong>Drop images here</strong> or click to browse<br>JPEG, PNG, WebP supported</div>
+      <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" multiple>
+    </div>
+
+    <div class="controls" id="controls" style="display:none">
+      <div class="control-row">
+        <label for="quality">Quality</label>
+        <input type="range" id="quality" min="1" max="100" value="80">
+        <span class="quality-value" id="qualityValue">80%</span>
+      </div>
+      <div class="control-row">
+        <label for="outputFormat">Format</label>
+        <select id="outputFormat">
+          <option value="auto">Same as original</option>
+          <option value="image/jpeg">JPEG</option>
+          <option value="image/png">PNG</option>
+          <option value="image/webp">WebP</option>
+        </select>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="compressBtn">Compress All</button>
+        <button class="btn btn-outline" id="clearBtn">Clear All</button>
+      </div>
+    </div>
+
+    <div class="progress-bar" id="progressBar"><div class="progress-bar-fill" id="progressFill"></div></div>
+    <div class="error-msg" id="errorMsg"></div>
+
+    <div class="results" id="results" style="display:none">
+      <div class="results-header">
+        <h2>Results</h2>
+        <button class="btn btn-green" id="downloadAllBtn">Download All (ZIP)</button>
+      </div>
+      <div class="file-list" id="fileList"></div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <p>Powered by <strong>ImageToolkit</strong> — Free &amp; Private</p>
+      <div class="footer-links">
+        <a href="https://buymeacoffee.com/dairylea" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a>
+        <a href="https://dannycranmer.github.io/parchment/" target="_blank" rel="noopener">PDF Tools (Parchment)</a>
+        <a href="https://dannycranmer.github.io/devtoolbox/" target="_blank" rel="noopener">Dev Tools (DevToolbox)</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/common.js"></script>
+  <script>
+  (() => {
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const controls = document.getElementById('controls');
+    const qualitySlider = document.getElementById('quality');
+    const qualityValue = document.getElementById('qualityValue');
+    const outputFormat = document.getElementById('outputFormat');
+    const compressBtn = document.getElementById('compressBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const progressBar = document.getElementById('progressBar');
+    const progressFill = document.getElementById('progressFill');
+    const errorMsg = document.getElementById('errorMsg');
+    const results = document.getElementById('results');
+    const fileList = document.getElementById('fileList');
+    const downloadAllBtn = document.getElementById('downloadAllBtn');
+
+    let sourceFiles = [];
+    let compressedBlobs = [];
+
+    qualitySlider.addEventListener('input', () => {
+      qualityValue.textContent = qualitySlider.value + '%';
+    });
+
+    setupDropZone(dropZone, fileInput, files => {
+      sourceFiles = sourceFiles.concat(files);
+      controls.style.display = 'block';
+      results.style.display = 'none';
+      fileList.innerHTML = '';
+      compressedBlobs = [];
+      updateDropLabel();
+    });
+
+    function updateDropLabel() {
+      const t = dropZone.querySelector('.drop-zone-text');
+      t.innerHTML = '<strong>' + sourceFiles.length + ' image' + (sourceFiles.length > 1 ? 's' : '') + ' selected</strong><br>Drop more or click to add';
+    }
+
+    clearBtn.addEventListener('click', () => {
+      sourceFiles = [];
+      compressedBlobs = [];
+      controls.style.display = 'none';
+      results.style.display = 'none';
+      fileList.innerHTML = '';
+      dropZone.querySelector('.drop-zone-text').innerHTML = '<strong>Drop images here</strong> or click to browse<br>JPEG, PNG, WebP supported';
+    });
+
+    compressBtn.addEventListener('click', async () => {
+      if (!sourceFiles.length) return;
+      hideError(errorMsg);
+      compressedBlobs = [];
+      fileList.innerHTML = '';
+      progressBar.style.display = 'block';
+      progressFill.style.width = '0%';
+      compressBtn.disabled = true;
+
+      const quality = parseInt(qualitySlider.value) / 100;
+      let done = 0;
+
+      for (const file of sourceFiles) {
+        try {
+          const img = await loadImage(file);
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+
+          let mime = outputFormat.value === 'auto' ? file.type : outputFormat.value;
+          if (!mime || mime === 'auto') mime = 'image/jpeg';
+
+          const blob = await canvasToBlob(canvas, mime, quality);
+          const ext = mime === 'image/png' ? 'png' : mime === 'image/webp' ? 'webp' : 'jpg';
+          const outName = baseName(file.name) + '_compressed.' + ext;
+
+          compressedBlobs.push({ blob, name: outName, original: file });
+          addFileRow(file, blob, outName);
+        } catch (e) {
+          showError(errorMsg, 'Failed to compress ' + file.name + ': ' + e.message);
+        }
+        done++;
+        progressFill.style.width = (done / sourceFiles.length * 100) + '%';
+      }
+
+      progressBar.style.display = 'none';
+      compressBtn.disabled = false;
+      if (compressedBlobs.length) results.style.display = 'block';
+    });
+
+    function addFileRow(original, blob, name) {
+      const saved = original.size - blob.size;
+      const pct = original.size > 0 ? Math.round((saved / original.size) * 100) : 0;
+      const thumb = URL.createObjectURL(blob);
+
+      const row = document.createElement('div');
+      row.className = 'file-item';
+      row.innerHTML =
+        '<img class="file-thumb" src="' + thumb + '" alt="">' +
+        '<div class="file-info">' +
+          '<div class="file-name">' + escHTML(name) + '</div>' +
+          '<div class="file-meta">' + formatBytes(original.size) + ' → ' + formatBytes(blob.size) + '</div>' +
+        '</div>' +
+        (pct > 0 ? '<span class="file-savings">' + pct + '% smaller</span>' : '<span class="file-savings" style="background:#FEF3C7;color:#92400E">' + Math.abs(pct) + '% larger</span>') +
+        '<div class="file-actions"><button class="btn btn-primary btn-sm">Download</button></div>';
+
+      row.querySelector('button').addEventListener('click', () => downloadBlob(blob, name));
+      fileList.appendChild(row);
+    }
+
+    downloadAllBtn.addEventListener('click', async () => {
+      if (compressedBlobs.length === 1) {
+        downloadBlob(compressedBlobs[0].blob, compressedBlobs[0].name);
+        return;
+      }
+      downloadAllBtn.disabled = true;
+      downloadAllBtn.textContent = 'Creating ZIP...';
+      try {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+        await new Promise((res, rej) => { script.onload = res; script.onerror = rej; document.head.appendChild(script); });
+        const zip = new JSZip();
+        compressedBlobs.forEach(f => zip.file(f.name, f.blob));
+        const content = await zip.generateAsync({ type: 'blob' });
+        downloadBlob(content, 'imagetoolkit-compressed.zip');
+      } catch (e) {
+        showError(errorMsg, 'Failed to create ZIP: ' + e.message);
+      }
+      downloadAllBtn.disabled = false;
+      downloadAllBtn.textContent = 'Download All (ZIP)';
+    });
+
+    function escHTML(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+  })();
+  </script>
+  <script data-goatcounter="https://dairylea.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crop Images Online Free — ImageToolkit</title>
+  <meta name="description" content="Crop images with freeform selection or aspect ratio presets (1:1, 4:3, 16:9). Free, private — your images never leave your device.">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .crop-wrapper { position: relative; display: inline-block; max-width: 100%; cursor: crosshair; touch-action: none; }
+    .crop-wrapper canvas { display: block; max-width: 100%; }
+    .crop-overlay {
+      position: absolute; border: 2px dashed #3B82F6; background: rgba(59,130,246,0.08);
+      pointer-events: none; display: none;
+    }
+    .crop-dims {
+      position: absolute; bottom: -24px; left: 0; font-size: 0.75rem; color: var(--accent);
+      font-weight: 600; white-space: nowrap;
+    }
+    .preview-result { margin-top: 1rem; }
+    .preview-result img { max-width: 100%; max-height: 400px; border-radius: 6px; border: 1px solid var(--border); }
+  </style>
+</head>
+<body>
+
+  <nav class="nav" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">Image<span>Toolkit</span></a>
+      <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">&#9776;</button>
+      <ul class="nav-links" role="menubar">
+        <li><a href="index.html" role="menuitem">Home</a></li>
+        <li><a href="compress.html" role="menuitem">Compress</a></li>
+        <li><a href="resize.html" role="menuitem">Resize</a></li>
+        <li><a href="convert.html" role="menuitem">Convert</a></li>
+        <li><a href="crop.html" class="active" role="menuitem">Crop</a></li>
+        <li><a href="https://buymeacoffee.com/dairylea" class="nav-coffee" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="tool-header">
+      <h1>Image Cropper</h1>
+      <p>Crop images with freeform or aspect ratio presets. Your images never leave your device.</p>
+    </div>
+
+    <div class="drop-zone" id="dropZone">
+      <div class="drop-zone-icon">&#9986;</div>
+      <div class="drop-zone-text"><strong>Drop an image here</strong> or click to browse<br>JPEG, PNG, WebP supported</div>
+      <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp">
+    </div>
+
+    <div class="controls" id="controls" style="display:none">
+      <div class="control-row">
+        <label>Aspect Ratio</label>
+        <div class="presets" id="aspectBtns">
+          <button class="preset-btn active" data-ratio="free">Free</button>
+          <button class="preset-btn" data-ratio="1:1">1:1</button>
+          <button class="preset-btn" data-ratio="4:3">4:3</button>
+          <button class="preset-btn" data-ratio="16:9">16:9</button>
+          <button class="preset-btn" data-ratio="3:2">3:2</button>
+        </div>
+      </div>
+      <div class="control-row">
+        <label for="cropX">X</label>
+        <input type="number" id="cropX" min="0" value="0">
+        <label for="cropY">Y</label>
+        <input type="number" id="cropY" min="0" value="0">
+        <label for="cropW">W</label>
+        <input type="number" id="cropW" min="1" value="100">
+        <label for="cropH">H</label>
+        <input type="number" id="cropH" min="1" value="100">
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="cropBtn">Crop &amp; Preview</button>
+        <button class="btn btn-outline" id="clearBtn">Clear</button>
+      </div>
+    </div>
+
+    <div class="error-msg" id="errorMsg"></div>
+
+    <div class="preview-area" id="canvasArea" style="display:none">
+      <p style="margin-bottom:0.75rem;color:var(--text-muted);font-size:0.85rem">Click and drag to select crop region</p>
+      <div class="crop-wrapper" id="cropWrapper">
+        <canvas id="srcCanvas"></canvas>
+        <div class="crop-overlay" id="cropOverlay"><span class="crop-dims" id="cropDims"></span></div>
+      </div>
+    </div>
+
+    <div id="resultArea" style="display:none">
+      <div class="preview-area preview-result">
+        <h3 style="margin-bottom:0.5rem">Cropped Result</h3>
+        <img id="resultImg" alt="Cropped result">
+        <div class="btn-row" style="justify-content:center;margin-top:1rem">
+          <button class="btn btn-green" id="downloadBtn">Download Cropped Image</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <p>Powered by <strong>ImageToolkit</strong> — Free &amp; Private</p>
+      <div class="footer-links">
+        <a href="https://buymeacoffee.com/dairylea" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a>
+        <a href="https://dannycranmer.github.io/parchment/" target="_blank" rel="noopener">PDF Tools (Parchment)</a>
+        <a href="https://dannycranmer.github.io/devtoolbox/" target="_blank" rel="noopener">Dev Tools (DevToolbox)</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/common.js"></script>
+  <script>
+  (() => {
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const controls = document.getElementById('controls');
+    const canvasArea = document.getElementById('canvasArea');
+    const srcCanvas = document.getElementById('srcCanvas');
+    const ctx = srcCanvas.getContext('2d');
+    const cropOverlay = document.getElementById('cropOverlay');
+    const cropDims = document.getElementById('cropDims');
+    const cropWrapper = document.getElementById('cropWrapper');
+    const cropBtn = document.getElementById('cropBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const errorMsg = document.getElementById('errorMsg');
+    const resultArea = document.getElementById('resultArea');
+    const resultImg = document.getElementById('resultImg');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const cropX = document.getElementById('cropX');
+    const cropY = document.getElementById('cropY');
+    const cropW = document.getElementById('cropW');
+    const cropH = document.getElementById('cropH');
+
+    let sourceImg = null;
+    let sourceFile = null;
+    let displayScale = 1;
+    let aspectRatio = null; // null = free
+    let isDragging = false;
+    let startX = 0, startY = 0;
+    let croppedBlob = null;
+    let croppedName = '';
+
+    // Aspect ratio buttons
+    document.getElementById('aspectBtns').addEventListener('click', e => {
+      const btn = e.target.closest('.preset-btn');
+      if (!btn) return;
+      document.querySelectorAll('#aspectBtns .preset-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const r = btn.dataset.ratio;
+      if (r === 'free') { aspectRatio = null; }
+      else {
+        const [a, b2] = r.split(':').map(Number);
+        aspectRatio = a / b2;
+      }
+    });
+
+    setupDropZone(dropZone, fileInput, async files => {
+      sourceFile = files[0];
+      try {
+        sourceImg = await loadImage(sourceFile);
+        showCanvas();
+      } catch (e) {
+        showError(errorMsg, "This file doesn't appear to be a valid image");
+      }
+    });
+
+    function showCanvas() {
+      controls.style.display = 'block';
+      canvasArea.style.display = 'block';
+      resultArea.style.display = 'none';
+      cropOverlay.style.display = 'none';
+
+      const maxW = Math.min(800, cropWrapper.parentElement.clientWidth - 48);
+      displayScale = sourceImg.naturalWidth > maxW ? maxW / sourceImg.naturalWidth : 1;
+      const dw = Math.round(sourceImg.naturalWidth * displayScale);
+      const dh = Math.round(sourceImg.naturalHeight * displayScale);
+
+      srcCanvas.width = dw;
+      srcCanvas.height = dh;
+      ctx.drawImage(sourceImg, 0, 0, dw, dh);
+
+      // Default crop = full image
+      cropX.value = 0; cropY.value = 0;
+      cropW.value = sourceImg.naturalWidth;
+      cropH.value = sourceImg.naturalHeight;
+      cropX.max = sourceImg.naturalWidth;
+      cropY.max = sourceImg.naturalHeight;
+      cropW.max = sourceImg.naturalWidth;
+      cropH.max = sourceImg.naturalHeight;
+    }
+
+    // Mouse drag crop
+    function getPos(e) {
+      const rect = srcCanvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return {
+        x: Math.max(0, Math.min(srcCanvas.width, clientX - rect.left)),
+        y: Math.max(0, Math.min(srcCanvas.height, clientY - rect.top))
+      };
+    }
+
+    srcCanvas.addEventListener('mousedown', onStart);
+    srcCanvas.addEventListener('touchstart', onStart, { passive: false });
+
+    function onStart(e) {
+      e.preventDefault();
+      isDragging = true;
+      const pos = getPos(e);
+      startX = pos.x;
+      startY = pos.y;
+      cropOverlay.style.display = 'block';
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onEnd);
+      document.addEventListener('touchmove', onMove, { passive: false });
+      document.addEventListener('touchend', onEnd);
+    }
+
+    function onMove(e) {
+      if (!isDragging) return;
+      e.preventDefault();
+      const pos = getPos(e);
+      let x = Math.min(startX, pos.x);
+      let y = Math.min(startY, pos.y);
+      let w = Math.abs(pos.x - startX);
+      let h = Math.abs(pos.y - startY);
+
+      if (aspectRatio) {
+        h = w / aspectRatio;
+        if (y + h > srcCanvas.height) { h = srcCanvas.height - y; w = h * aspectRatio; }
+      }
+
+      cropOverlay.style.left = x + 'px';
+      cropOverlay.style.top = y + 'px';
+      cropOverlay.style.width = w + 'px';
+      cropOverlay.style.height = h + 'px';
+
+      // Update inputs (real pixels)
+      const rx = Math.round(x / displayScale);
+      const ry = Math.round(y / displayScale);
+      const rw = Math.round(w / displayScale);
+      const rh = Math.round(h / displayScale);
+      cropX.value = rx; cropY.value = ry; cropW.value = rw; cropH.value = rh;
+      cropDims.textContent = rw + ' x ' + rh;
+    }
+
+    function onEnd() {
+      isDragging = false;
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onEnd);
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('touchend', onEnd);
+    }
+
+    clearBtn.addEventListener('click', () => {
+      sourceImg = null;
+      sourceFile = null;
+      controls.style.display = 'none';
+      canvasArea.style.display = 'none';
+      resultArea.style.display = 'none';
+      cropOverlay.style.display = 'none';
+      croppedBlob = null;
+      dropZone.querySelector('.drop-zone-text').innerHTML = '<strong>Drop an image here</strong> or click to browse<br>JPEG, PNG, WebP supported';
+    });
+
+    cropBtn.addEventListener('click', async () => {
+      if (!sourceImg) return;
+      hideError(errorMsg);
+      const cx = parseInt(cropX.value) || 0;
+      const cy = parseInt(cropY.value) || 0;
+      const cw = parseInt(cropW.value) || sourceImg.naturalWidth;
+      const ch = parseInt(cropH.value) || sourceImg.naturalHeight;
+
+      if (cw < 1 || ch < 1) { showError(errorMsg, 'Crop dimensions must be at least 1 pixel'); return; }
+      if (cx + cw > sourceImg.naturalWidth || cy + ch > sourceImg.naturalHeight) {
+        showError(errorMsg, 'Crop region exceeds image bounds');
+        return;
+      }
+
+      const outCanvas = document.createElement('canvas');
+      outCanvas.width = cw;
+      outCanvas.height = ch;
+      const outCtx = outCanvas.getContext('2d');
+      outCtx.drawImage(sourceImg, cx, cy, cw, ch, 0, 0, cw, ch);
+
+      const mime = sourceFile.type || 'image/png';
+      croppedBlob = await canvasToBlob(outCanvas, mime, 0.92);
+      const ext = mime === 'image/png' ? 'png' : mime === 'image/webp' ? 'webp' : 'jpg';
+      croppedName = baseName(sourceFile.name) + '_cropped.' + ext;
+
+      resultImg.src = URL.createObjectURL(croppedBlob);
+      resultArea.style.display = 'block';
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      if (croppedBlob) downloadBlob(croppedBlob, croppedName);
+    });
+  })();
+  </script>
+  <script data-goatcounter="https://dairylea.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
