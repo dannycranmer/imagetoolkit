@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Text Watermark to Images Online Free — ImageToolkit</title>
+  <meta name="description" content="Add text watermarks to images for free. Control position, opacity, font size, color, and tiling. 100% private — your images never leave your device.">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <nav class="nav" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">Image<span>Toolkit</span></a>
+      <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">&#9776;</button>
+      <ul class="nav-links" role="menubar">
+        <li><a href="index.html" role="menuitem">Home</a></li>
+        <li><a href="compress.html" role="menuitem">Compress</a></li>
+        <li><a href="resize.html" role="menuitem">Resize</a></li>
+        <li><a href="convert.html" role="menuitem">Convert</a></li>
+        <li><a href="crop.html" role="menuitem">Crop</a></li>
+        <li><a href="watermark.html" class="active" role="menuitem">Watermark</a></li>
+        <li><a href="https://buymeacoffee.com/dairylea" class="nav-coffee" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="tool-header">
+      <h1>Add Text Watermark</h1>
+      <p>Add text watermarks to your images. Your images never leave your device.</p>
+    </div>
+
+    <div class="drop-zone" id="dropZone">
+      <div class="drop-zone-icon">&#128396;</div>
+      <div class="drop-zone-text"><strong>Drop images here</strong> or click to browse<br>JPEG, PNG, WebP supported</div>
+      <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" multiple>
+    </div>
+
+    <div class="controls" id="controls" style="display:none">
+      <div class="control-row">
+        <label for="wmText">Text</label>
+        <input type="text" id="wmText" value="ImageToolkit" placeholder="Watermark text" style="flex:1;padding:0.4rem 0.6rem;border:1px solid var(--border);border-radius:6px;font-size:0.9rem;">
+      </div>
+      <div class="control-row">
+        <label for="wmSize">Font Size</label>
+        <input type="range" id="wmSize" min="10" max="200" value="48">
+        <span class="quality-value" id="wmSizeValue">48px</span>
+      </div>
+      <div class="control-row">
+        <label for="wmOpacity">Opacity</label>
+        <input type="range" id="wmOpacity" min="1" max="100" value="30">
+        <span class="quality-value" id="wmOpacityValue">30%</span>
+      </div>
+      <div class="control-row">
+        <label for="wmColor">Color</label>
+        <input type="color" id="wmColor" value="#000000" style="width:50px;height:32px;border:1px solid var(--border);border-radius:6px;cursor:pointer;">
+      </div>
+      <div class="control-row">
+        <label>Position</label>
+        <div class="presets" id="positionPresets">
+          <button class="preset-btn" data-pos="top-left">Top Left</button>
+          <button class="preset-btn active" data-pos="center">Center</button>
+          <button class="preset-btn" data-pos="top-right">Top Right</button>
+          <button class="preset-btn" data-pos="bottom-left">Bottom Left</button>
+          <button class="preset-btn" data-pos="bottom-center">Bottom Center</button>
+          <button class="preset-btn" data-pos="bottom-right">Bottom Right</button>
+        </div>
+      </div>
+      <div class="control-row">
+        <label for="wmRotation">Rotation</label>
+        <input type="range" id="wmRotation" min="-180" max="180" value="-30">
+        <span class="quality-value" id="wmRotationValue">-30&deg;</span>
+      </div>
+      <div class="control-row">
+        <label class="toggle-label">
+          <input type="checkbox" id="wmTile">
+          <span class="toggle-track"></span>
+          Tile watermark across entire image
+        </label>
+      </div>
+      <div class="control-row">
+        <label for="outputFormat">Format</label>
+        <select id="outputFormat">
+          <option value="auto">Same as original</option>
+          <option value="image/jpeg">JPEG</option>
+          <option value="image/png">PNG</option>
+          <option value="image/webp">WebP</option>
+        </select>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="applyBtn">Apply Watermark</button>
+        <button class="btn btn-outline" id="clearBtn">Clear All</button>
+      </div>
+    </div>
+
+    <div class="preview-area" id="previewArea" style="display:none">
+      <h3 style="margin-bottom:0.75rem">Preview</h3>
+      <canvas id="previewCanvas"></canvas>
+    </div>
+
+    <div class="progress-bar" id="progressBar"><div class="progress-bar-fill" id="progressFill"></div></div>
+    <div class="error-msg" id="errorMsg"></div>
+
+    <div class="results" id="results" style="display:none">
+      <div class="results-header">
+        <h2>Results</h2>
+        <button class="btn btn-green" id="downloadAllBtn">Download All (ZIP)</button>
+      </div>
+      <div class="file-list" id="fileList"></div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <p>Powered by <strong>ImageToolkit</strong> — Free &amp; Private</p>
+      <div class="footer-links">
+        <a href="https://buymeacoffee.com/dairylea" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a>
+        <a href="https://dannycranmer.github.io/parchment/" target="_blank" rel="noopener">PDF Tools (Parchment)</a>
+        <a href="https://dannycranmer.github.io/devtoolbox/" target="_blank" rel="noopener">Dev Tools (DevToolbox)</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/common.js"></script>
+  <script>
+  (() => {
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const controls = document.getElementById('controls');
+    const wmText = document.getElementById('wmText');
+    const wmSize = document.getElementById('wmSize');
+    const wmSizeValue = document.getElementById('wmSizeValue');
+    const wmOpacity = document.getElementById('wmOpacity');
+    const wmOpacityValue = document.getElementById('wmOpacityValue');
+    const wmColor = document.getElementById('wmColor');
+    const wmRotation = document.getElementById('wmRotation');
+    const wmRotationValue = document.getElementById('wmRotationValue');
+    const wmTile = document.getElementById('wmTile');
+    const positionPresets = document.getElementById('positionPresets');
+    const outputFormat = document.getElementById('outputFormat');
+    const applyBtn = document.getElementById('applyBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const previewArea = document.getElementById('previewArea');
+    const previewCanvas = document.getElementById('previewCanvas');
+    const progressBar = document.getElementById('progressBar');
+    const progressFill = document.getElementById('progressFill');
+    const errorMsg = document.getElementById('errorMsg');
+    const results = document.getElementById('results');
+    const fileList = document.getElementById('fileList');
+    const downloadAllBtn = document.getElementById('downloadAllBtn');
+
+    let sourceFiles = [];
+    let watermarkedBlobs = [];
+    let position = 'center';
+    let previewImg = null;
+
+    // Slider updates
+    wmSize.addEventListener('input', () => { wmSizeValue.textContent = wmSize.value + 'px'; updatePreview(); });
+    wmOpacity.addEventListener('input', () => { wmOpacityValue.textContent = wmOpacity.value + '%'; updatePreview(); });
+    wmColor.addEventListener('input', updatePreview);
+    wmRotation.addEventListener('input', () => { wmRotationValue.innerHTML = wmRotation.value + '&deg;'; updatePreview(); });
+    wmText.addEventListener('input', updatePreview);
+    wmTile.addEventListener('change', updatePreview);
+
+    // Position presets
+    positionPresets.addEventListener('click', e => {
+      const btn = e.target.closest('.preset-btn');
+      if (!btn) return;
+      positionPresets.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      position = btn.dataset.pos;
+      updatePreview();
+    });
+
+    setupDropZone(dropZone, fileInput, files => {
+      sourceFiles = sourceFiles.concat(files);
+      controls.style.display = 'block';
+      results.style.display = 'none';
+      fileList.innerHTML = '';
+      watermarkedBlobs = [];
+      updateDropLabel();
+      // Show preview of first image
+      loadImage(sourceFiles[0]).then(img => { previewImg = img; updatePreview(); });
+    });
+
+    function updateDropLabel() {
+      const t = dropZone.querySelector('.drop-zone-text');
+      t.innerHTML = '<strong>' + sourceFiles.length + ' image' + (sourceFiles.length > 1 ? 's' : '') + ' selected</strong><br>Drop more or click to add';
+    }
+
+    function updatePreview() {
+      if (!previewImg) return;
+      previewArea.style.display = 'block';
+      // Use a scaled-down preview for performance
+      const maxDim = 600;
+      const scale = Math.min(1, maxDim / Math.max(previewImg.naturalWidth, previewImg.naturalHeight));
+      const w = Math.round(previewImg.naturalWidth * scale);
+      const h = Math.round(previewImg.naturalHeight * scale);
+      previewCanvas.width = w;
+      previewCanvas.height = h;
+      const ctx = previewCanvas.getContext('2d');
+      ctx.drawImage(previewImg, 0, 0, w, h);
+      drawWatermark(ctx, w, h, parseInt(wmSize.value) * scale);
+    }
+
+    function drawWatermark(ctx, w, h, fontSize) {
+      const text = wmText.value.trim();
+      if (!text) return;
+
+      const opacity = parseInt(wmOpacity.value) / 100;
+      const angle = parseInt(wmRotation.value) * Math.PI / 180;
+      const color = wmColor.value;
+
+      ctx.save();
+      ctx.globalAlpha = opacity;
+      ctx.fillStyle = color;
+      ctx.font = 'bold ' + Math.max(10, Math.round(fontSize)) + 'px ' + getComputedStyle(document.body).fontFamily;
+      ctx.textBaseline = 'middle';
+
+      if (wmTile.checked) {
+        // Tile across entire image
+        const metrics = ctx.measureText(text);
+        const tw = metrics.width;
+        const th = fontSize * 1.2;
+        const spacingX = tw + fontSize * 2;
+        const spacingY = th + fontSize * 2;
+        // Rotate around center and draw grid
+        for (let y = -h; y < h * 2; y += spacingY) {
+          for (let x = -w; x < w * 2; x += spacingX) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(angle);
+            ctx.fillText(text, 0, 0);
+            ctx.restore();
+          }
+        }
+      } else {
+        // Single watermark at position
+        const metrics = ctx.measureText(text);
+        const tw = metrics.width;
+        const pad = fontSize * 0.5;
+        let x, y;
+        ctx.textAlign = 'left';
+
+        switch (position) {
+          case 'top-left':     x = pad; y = pad + fontSize / 2; break;
+          case 'top-right':    x = w - tw - pad; y = pad + fontSize / 2; break;
+          case 'bottom-left':  x = pad; y = h - pad - fontSize / 2; break;
+          case 'bottom-center': x = (w - tw) / 2; y = h - pad - fontSize / 2; break;
+          case 'bottom-right': x = w - tw - pad; y = h - pad - fontSize / 2; break;
+          case 'center': default: x = (w - tw) / 2; y = h / 2; break;
+        }
+
+        ctx.translate(x + tw / 2, y);
+        ctx.rotate(angle);
+        ctx.fillText(text, -tw / 2, 0);
+      }
+
+      ctx.restore();
+    }
+
+    clearBtn.addEventListener('click', () => {
+      sourceFiles = [];
+      watermarkedBlobs = [];
+      previewImg = null;
+      controls.style.display = 'none';
+      results.style.display = 'none';
+      previewArea.style.display = 'none';
+      fileList.innerHTML = '';
+      dropZone.querySelector('.drop-zone-text').innerHTML = '<strong>Drop images here</strong> or click to browse<br>JPEG, PNG, WebP supported';
+    });
+
+    applyBtn.addEventListener('click', async () => {
+      if (!sourceFiles.length) return;
+      const text = wmText.value.trim();
+      if (!text) { showError(errorMsg, 'Please enter watermark text'); return; }
+
+      hideError(errorMsg);
+      watermarkedBlobs = [];
+      fileList.innerHTML = '';
+      progressBar.style.display = 'block';
+      progressFill.style.width = '0%';
+      applyBtn.disabled = true;
+
+      let done = 0;
+
+      for (const file of sourceFiles) {
+        try {
+          const img = await loadImage(file);
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+
+          drawWatermark(ctx, canvas.width, canvas.height, parseInt(wmSize.value));
+
+          let mime = outputFormat.value === 'auto' ? file.type : outputFormat.value;
+          if (!mime || mime === 'auto') mime = 'image/png';
+
+          const blob = await canvasToBlob(canvas, mime, 0.92);
+          const ext = mime === 'image/png' ? 'png' : mime === 'image/webp' ? 'webp' : 'jpg';
+          const outName = baseName(file.name) + '_watermarked.' + ext;
+
+          watermarkedBlobs.push({ blob, name: outName, original: file });
+          addFileRow(file, blob, outName);
+        } catch (e) {
+          showError(errorMsg, 'Failed to watermark ' + file.name + ': ' + e.message);
+        }
+        done++;
+        progressFill.style.width = (done / sourceFiles.length * 100) + '%';
+      }
+
+      progressBar.style.display = 'none';
+      applyBtn.disabled = false;
+      if (watermarkedBlobs.length) results.style.display = 'block';
+    });
+
+    function addFileRow(original, blob, name) {
+      const thumb = URL.createObjectURL(blob);
+      const row = document.createElement('div');
+      row.className = 'file-item';
+      row.innerHTML =
+        '<img class="file-thumb" src="' + thumb + '" alt="">' +
+        '<div class="file-info">' +
+          '<div class="file-name">' + escHTML(name) + '</div>' +
+          '<div class="file-meta">' + formatBytes(blob.size) + '</div>' +
+        '</div>' +
+        '<div class="file-actions"><button class="btn btn-primary btn-sm">Download</button></div>';
+      row.querySelector('button').addEventListener('click', () => downloadBlob(blob, name));
+      fileList.appendChild(row);
+    }
+
+    downloadAllBtn.addEventListener('click', async () => {
+      if (watermarkedBlobs.length === 1) {
+        downloadBlob(watermarkedBlobs[0].blob, watermarkedBlobs[0].name);
+        return;
+      }
+      downloadAllBtn.disabled = true;
+      downloadAllBtn.textContent = 'Creating ZIP...';
+      try {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+        await new Promise((res, rej) => { script.onload = res; script.onerror = rej; document.head.appendChild(script); });
+        const zip = new JSZip();
+        watermarkedBlobs.forEach(f => zip.file(f.name, f.blob));
+        const content = await zip.generateAsync({ type: 'blob' });
+        downloadBlob(content, 'imagetoolkit-watermarked.zip');
+      } catch (e) {
+        showError(errorMsg, 'Failed to create ZIP: ' + e.message);
+      }
+      downloadAllBtn.disabled = false;
+      downloadAllBtn.textContent = 'Download All (ZIP)';
+    });
+
+    function escHTML(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+  })();
+  </script>
+  <script data-goatcounter="https://dairylea.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
