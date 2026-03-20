@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Add Text Watermark to Images Online Free — ImageToolkit</title>
-  <meta name="description" content="Add text watermarks to images for free. Control position, opacity, font size, color, and tiling. 100% private — your images never leave your device.">
+  <title>Flip &amp; Rotate Images Online Free — ImageToolkit</title>
+  <meta name="description" content="Flip and rotate images for free. Flip horizontal/vertical, rotate 90/180/270 degrees or any custom angle. 100% private — your images never leave your device.">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="css/style.css">
 </head>
@@ -20,8 +20,8 @@
         <li><a href="resize.html" role="menuitem">Resize</a></li>
         <li><a href="convert.html" role="menuitem">Convert</a></li>
         <li><a href="crop.html" role="menuitem">Crop</a></li>
-        <li><a href="watermark.html" class="active" role="menuitem">Watermark</a></li>
-        <li><a href="flip-rotate.html" role="menuitem">Flip &amp; Rotate</a></li>
+        <li><a href="watermark.html" role="menuitem">Watermark</a></li>
+        <li><a href="flip-rotate.html" class="active" role="menuitem">Flip &amp; Rotate</a></li>
         <li><a href="https://buymeacoffee.com/dairylea" class="nav-coffee" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a></li>
       </ul>
     </div>
@@ -29,57 +29,37 @@
 
   <main class="main">
     <div class="tool-header">
-      <h1>Add Text Watermark</h1>
-      <p>Add text watermarks to your images. Your images never leave your device.</p>
+      <h1>Flip &amp; Rotate Images</h1>
+      <p>Flip horizontally or vertically, rotate by preset angles or any custom degree. Your images never leave your device.</p>
     </div>
 
     <div class="drop-zone" id="dropZone">
-      <div class="drop-zone-icon">&#128396;</div>
+      <div class="drop-zone-icon">&#128260;</div>
       <div class="drop-zone-text"><strong>Drop images here</strong> or click to browse<br>JPEG, PNG, WebP supported</div>
       <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" multiple>
     </div>
 
     <div class="controls" id="controls" style="display:none">
       <div class="control-row">
-        <label for="wmText">Text</label>
-        <input type="text" id="wmText" value="ImageToolkit" placeholder="Watermark text" style="flex:1;padding:0.4rem 0.6rem;border:1px solid var(--border);border-radius:6px;font-size:0.9rem;">
-      </div>
-      <div class="control-row">
-        <label for="wmSize">Font Size</label>
-        <input type="range" id="wmSize" min="10" max="200" value="48">
-        <span class="quality-value" id="wmSizeValue">48px</span>
-      </div>
-      <div class="control-row">
-        <label for="wmOpacity">Opacity</label>
-        <input type="range" id="wmOpacity" min="1" max="100" value="30">
-        <span class="quality-value" id="wmOpacityValue">30%</span>
-      </div>
-      <div class="control-row">
-        <label for="wmColor">Color</label>
-        <input type="color" id="wmColor" value="#000000" style="width:50px;height:32px;border:1px solid var(--border);border-radius:6px;cursor:pointer;">
-      </div>
-      <div class="control-row">
-        <label>Position</label>
-        <div class="presets" id="positionPresets">
-          <button class="preset-btn" data-pos="top-left">Top Left</button>
-          <button class="preset-btn active" data-pos="center">Center</button>
-          <button class="preset-btn" data-pos="top-right">Top Right</button>
-          <button class="preset-btn" data-pos="bottom-left">Bottom Left</button>
-          <button class="preset-btn" data-pos="bottom-center">Bottom Center</button>
-          <button class="preset-btn" data-pos="bottom-right">Bottom Right</button>
+        <label>Flip</label>
+        <div class="presets" id="flipPresets">
+          <button class="preset-btn" data-flip="h" title="Flip Horizontal">&#8596; Horizontal</button>
+          <button class="preset-btn" data-flip="v" title="Flip Vertical">&#8597; Vertical</button>
         </div>
       </div>
       <div class="control-row">
-        <label for="wmRotation">Rotation</label>
-        <input type="range" id="wmRotation" min="-180" max="180" value="-30">
-        <span class="quality-value" id="wmRotationValue">-30&deg;</span>
+        <label>Rotate</label>
+        <div class="presets" id="rotatePresets">
+          <button class="preset-btn" data-angle="90">90&deg; CW</button>
+          <button class="preset-btn" data-angle="180">180&deg;</button>
+          <button class="preset-btn" data-angle="270">270&deg; CW</button>
+        </div>
       </div>
       <div class="control-row">
-        <label class="toggle-label">
-          <input type="checkbox" id="wmTile">
-          <span class="toggle-track"></span>
-          Tile watermark across entire image
-        </label>
+        <label for="customAngle">Custom Angle</label>
+        <input type="range" id="customAngle" min="-180" max="180" value="0">
+        <span class="quality-value" id="angleValue">0&deg;</span>
+        <button class="btn btn-outline btn-sm" id="applyAngleBtn" style="padding:0.3rem 0.75rem;font-size:0.8rem;">Apply</button>
       </div>
       <div class="control-row">
         <label for="outputFormat">Format</label>
@@ -90,8 +70,13 @@
           <option value="image/webp">WebP</option>
         </select>
       </div>
+      <div class="control-row">
+        <label>Current</label>
+        <span id="transformLabel" style="font-size:0.85rem;color:var(--text-muted);">No transforms applied</span>
+      </div>
       <div class="btn-row">
-        <button class="btn btn-primary" id="applyBtn">Apply Watermark</button>
+        <button class="btn btn-outline" id="resetBtn">Reset Transforms</button>
+        <button class="btn btn-primary" id="applyBtn">Apply &amp; Download All</button>
         <button class="btn btn-outline" id="clearBtn">Clear All</button>
       </div>
     </div>
@@ -130,17 +115,12 @@
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('fileInput');
     const controls = document.getElementById('controls');
-    const wmText = document.getElementById('wmText');
-    const wmSize = document.getElementById('wmSize');
-    const wmSizeValue = document.getElementById('wmSizeValue');
-    const wmOpacity = document.getElementById('wmOpacity');
-    const wmOpacityValue = document.getElementById('wmOpacityValue');
-    const wmColor = document.getElementById('wmColor');
-    const wmRotation = document.getElementById('wmRotation');
-    const wmRotationValue = document.getElementById('wmRotationValue');
-    const wmTile = document.getElementById('wmTile');
-    const positionPresets = document.getElementById('positionPresets');
+    const customAngle = document.getElementById('customAngle');
+    const angleValue = document.getElementById('angleValue');
+    const applyAngleBtn = document.getElementById('applyAngleBtn');
     const outputFormat = document.getElementById('outputFormat');
+    const transformLabel = document.getElementById('transformLabel');
+    const resetBtn = document.getElementById('resetBtn');
     const applyBtn = document.getElementById('applyBtn');
     const clearBtn = document.getElementById('clearBtn');
     const previewArea = document.getElementById('previewArea');
@@ -153,36 +133,81 @@
     const downloadAllBtn = document.getElementById('downloadAllBtn');
 
     let sourceFiles = [];
-    let watermarkedBlobs = [];
-    let position = 'center';
+    let processedBlobs = [];
     let previewImg = null;
 
-    // Slider updates
-    wmSize.addEventListener('input', () => { wmSizeValue.textContent = wmSize.value + 'px'; updatePreview(); });
-    wmOpacity.addEventListener('input', () => { wmOpacityValue.textContent = wmOpacity.value + '%'; updatePreview(); });
-    wmColor.addEventListener('input', updatePreview);
-    wmRotation.addEventListener('input', () => { wmRotationValue.innerHTML = wmRotation.value + '&deg;'; updatePreview(); });
-    wmText.addEventListener('input', updatePreview);
-    wmTile.addEventListener('change', updatePreview);
+    // Transform state: accumulated transforms
+    let flipH = false;
+    let flipV = false;
+    let rotation = 0; // degrees, always 0-359 for presets, arbitrary for custom
 
-    // Position presets
-    positionPresets.addEventListener('click', e => {
+    customAngle.addEventListener('input', () => {
+      angleValue.innerHTML = customAngle.value + '&deg;';
+    });
+
+    // Flip buttons toggle state
+    document.getElementById('flipPresets').addEventListener('click', e => {
       const btn = e.target.closest('.preset-btn');
       if (!btn) return;
-      positionPresets.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      position = btn.dataset.pos;
+      if (btn.dataset.flip === 'h') {
+        flipH = !flipH;
+        btn.classList.toggle('active', flipH);
+      } else if (btn.dataset.flip === 'v') {
+        flipV = !flipV;
+        btn.classList.toggle('active', flipV);
+      }
+      updateTransformLabel();
       updatePreview();
     });
+
+    // Rotate preset buttons add to current rotation
+    document.getElementById('rotatePresets').addEventListener('click', e => {
+      const btn = e.target.closest('.preset-btn');
+      if (!btn) return;
+      const angle = parseInt(btn.dataset.angle);
+      rotation = (rotation + angle) % 360;
+      updateTransformLabel();
+      updatePreview();
+    });
+
+    // Custom angle apply
+    applyAngleBtn.addEventListener('click', () => {
+      const angle = parseInt(customAngle.value);
+      if (angle === 0) return;
+      rotation = rotation + angle;
+      // Normalize to -360..360 range
+      while (rotation > 360) rotation -= 360;
+      while (rotation < -360) rotation += 360;
+      customAngle.value = 0;
+      angleValue.innerHTML = '0&deg;';
+      updateTransformLabel();
+      updatePreview();
+    });
+
+    resetBtn.addEventListener('click', () => {
+      flipH = false;
+      flipV = false;
+      rotation = 0;
+      document.querySelectorAll('#flipPresets .preset-btn').forEach(b => b.classList.remove('active'));
+      updateTransformLabel();
+      updatePreview();
+    });
+
+    function updateTransformLabel() {
+      const parts = [];
+      if (flipH) parts.push('Flip H');
+      if (flipV) parts.push('Flip V');
+      if (rotation !== 0) parts.push('Rotate ' + rotation + '\u00B0');
+      transformLabel.textContent = parts.length ? parts.join(' + ') : 'No transforms applied';
+    }
 
     setupDropZone(dropZone, fileInput, files => {
       sourceFiles = sourceFiles.concat(files);
       controls.style.display = 'block';
       results.style.display = 'none';
       fileList.innerHTML = '';
-      watermarkedBlobs = [];
+      processedBlobs = [];
       updateDropLabel();
-      // Show preview of first image
       loadImage(sourceFiles[0]).then(img => { previewImg = img; updatePreview(); });
     });
 
@@ -194,78 +219,44 @@
     function updatePreview() {
       if (!previewImg) return;
       previewArea.style.display = 'block';
-      // Use a scaled-down preview for performance
       const maxDim = 600;
       const scale = Math.min(1, maxDim / Math.max(previewImg.naturalWidth, previewImg.naturalHeight));
-      const w = Math.round(previewImg.naturalWidth * scale);
-      const h = Math.round(previewImg.naturalHeight * scale);
-      previewCanvas.width = w;
-      previewCanvas.height = h;
-      const ctx = previewCanvas.getContext('2d');
-      ctx.drawImage(previewImg, 0, 0, w, h);
-      drawWatermark(ctx, w, h, parseInt(wmSize.value) * scale);
+      const sw = Math.round(previewImg.naturalWidth * scale);
+      const sh = Math.round(previewImg.naturalHeight * scale);
+      drawTransformed(previewCanvas, previewImg, sw, sh, flipH, flipV, rotation);
     }
 
-    function drawWatermark(ctx, w, h, fontSize) {
-      const text = wmText.value.trim();
-      if (!text) return;
+    function drawTransformed(canvas, img, w, h, fh, fv, angleDeg) {
+      const rad = angleDeg * Math.PI / 180;
+      const cos = Math.abs(Math.cos(rad));
+      const sin = Math.abs(Math.sin(rad));
 
-      const opacity = parseInt(wmOpacity.value) / 100;
-      const angle = parseInt(wmRotation.value) * Math.PI / 180;
-      const color = wmColor.value;
+      // For 90/270 rotations, swap dimensions
+      const outW = Math.round(w * cos + h * sin);
+      const outH = Math.round(w * sin + h * cos);
+
+      canvas.width = outW;
+      canvas.height = outH;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, outW, outH);
 
       ctx.save();
-      ctx.globalAlpha = opacity;
-      ctx.fillStyle = color;
-      ctx.font = 'bold ' + Math.max(10, Math.round(fontSize)) + 'px ' + getComputedStyle(document.body).fontFamily;
-      ctx.textBaseline = 'middle';
-
-      if (wmTile.checked) {
-        // Tile across entire image
-        const metrics = ctx.measureText(text);
-        const tw = metrics.width;
-        const th = fontSize * 1.2;
-        const spacingX = tw + fontSize * 2;
-        const spacingY = th + fontSize * 2;
-        // Rotate around center and draw grid
-        for (let y = -h; y < h * 2; y += spacingY) {
-          for (let x = -w; x < w * 2; x += spacingX) {
-            ctx.save();
-            ctx.translate(x, y);
-            ctx.rotate(angle);
-            ctx.fillText(text, 0, 0);
-            ctx.restore();
-          }
-        }
-      } else {
-        // Single watermark at position
-        const metrics = ctx.measureText(text);
-        const tw = metrics.width;
-        const pad = fontSize * 0.5;
-        let x, y;
-        ctx.textAlign = 'left';
-
-        switch (position) {
-          case 'top-left':     x = pad; y = pad + fontSize / 2; break;
-          case 'top-right':    x = w - tw - pad; y = pad + fontSize / 2; break;
-          case 'bottom-left':  x = pad; y = h - pad - fontSize / 2; break;
-          case 'bottom-center': x = (w - tw) / 2; y = h - pad - fontSize / 2; break;
-          case 'bottom-right': x = w - tw - pad; y = h - pad - fontSize / 2; break;
-          case 'center': default: x = (w - tw) / 2; y = h / 2; break;
-        }
-
-        ctx.translate(x + tw / 2, y);
-        ctx.rotate(angle);
-        ctx.fillText(text, -tw / 2, 0);
-      }
-
+      ctx.translate(outW / 2, outH / 2);
+      ctx.rotate(rad);
+      ctx.scale(fh ? -1 : 1, fv ? -1 : 1);
+      ctx.drawImage(img, -w / 2, -h / 2, w, h);
       ctx.restore();
     }
 
     clearBtn.addEventListener('click', () => {
       sourceFiles = [];
-      watermarkedBlobs = [];
+      processedBlobs = [];
       previewImg = null;
+      flipH = false;
+      flipV = false;
+      rotation = 0;
+      document.querySelectorAll('#flipPresets .preset-btn').forEach(b => b.classList.remove('active'));
+      updateTransformLabel();
       controls.style.display = 'none';
       results.style.display = 'none';
       previewArea.style.display = 'none';
@@ -275,40 +266,36 @@
 
     applyBtn.addEventListener('click', async () => {
       if (!sourceFiles.length) return;
-      const text = wmText.value.trim();
-      if (!text) { showError(errorMsg, 'Please enter watermark text'); return; }
+      if (!flipH && !flipV && rotation === 0) {
+        showError(errorMsg, 'No transforms applied. Flip or rotate first.');
+        return;
+      }
 
       hideError(errorMsg);
-      watermarkedBlobs = [];
+      processedBlobs = [];
       fileList.innerHTML = '';
       progressBar.style.display = 'block';
       progressFill.style.width = '0%';
       applyBtn.disabled = true;
 
       let done = 0;
-
       for (const file of sourceFiles) {
         try {
           const img = await loadImage(file);
           const canvas = document.createElement('canvas');
-          canvas.width = img.naturalWidth;
-          canvas.height = img.naturalHeight;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0);
-
-          drawWatermark(ctx, canvas.width, canvas.height, parseInt(wmSize.value));
+          drawTransformed(canvas, img, img.naturalWidth, img.naturalHeight, flipH, flipV, rotation);
 
           let mime = outputFormat.value === 'auto' ? file.type : outputFormat.value;
           if (!mime || mime === 'auto') mime = 'image/png';
 
           const blob = await canvasToBlob(canvas, mime, 0.92);
           const ext = mime === 'image/png' ? 'png' : mime === 'image/webp' ? 'webp' : 'jpg';
-          const outName = baseName(file.name) + '_watermarked.' + ext;
+          const outName = baseName(file.name) + '_transformed.' + ext;
 
-          watermarkedBlobs.push({ blob, name: outName, original: file });
+          processedBlobs.push({ blob, name: outName });
           addFileRow(file, blob, outName);
         } catch (e) {
-          showError(errorMsg, 'Failed to watermark ' + file.name + ': ' + e.message);
+          showError(errorMsg, 'Failed to process ' + file.name + ': ' + e.message);
         }
         done++;
         progressFill.style.width = (done / sourceFiles.length * 100) + '%';
@@ -316,7 +303,7 @@
 
       progressBar.style.display = 'none';
       applyBtn.disabled = false;
-      if (watermarkedBlobs.length) results.style.display = 'block';
+      if (processedBlobs.length) results.style.display = 'block';
     });
 
     function addFileRow(original, blob, name) {
@@ -335,8 +322,8 @@
     }
 
     downloadAllBtn.addEventListener('click', async () => {
-      if (watermarkedBlobs.length === 1) {
-        downloadBlob(watermarkedBlobs[0].blob, watermarkedBlobs[0].name);
+      if (processedBlobs.length === 1) {
+        downloadBlob(processedBlobs[0].blob, processedBlobs[0].name);
         return;
       }
       downloadAllBtn.disabled = true;
@@ -346,9 +333,9 @@
         script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
         await new Promise((res, rej) => { script.onload = res; script.onerror = rej; document.head.appendChild(script); });
         const zip = new JSZip();
-        watermarkedBlobs.forEach(f => zip.file(f.name, f.blob));
+        processedBlobs.forEach(f => zip.file(f.name, f.blob));
         const content = await zip.generateAsync({ type: 'blob' });
-        downloadBlob(content, 'imagetoolkit-watermarked.zip');
+        downloadBlob(content, 'imagetoolkit-flip-rotate.zip');
       } catch (e) {
         showError(errorMsg, 'Failed to create ZIP: ' + e.message);
       }
