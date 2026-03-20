@@ -3,44 +3,45 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Apply Filters to Image Online Free — ImageToolkit</title>
-  <meta name="description" content="Apply filters and effects to images for free. Brightness, contrast, saturation, blur, grayscale, sepia, invert. 100% private — your images never leave your device.">
+  <title>Remove Image Noise Online Free — ImageToolkit</title>
+  <meta name="description" content="Reduce noise and grain from photos for free. Adjustable denoise strength with live preview. 100% private — your images never leave your device.">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="css/style.css">
   <style>
-    .filter-controls {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
+    .denoise-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      align-items: center;
     }
-    .filter-slider {
+    .denoise-slider {
       display: flex;
       align-items: center;
       gap: 0.75rem;
+      flex: 1;
+      min-width: 200px;
     }
-    .filter-slider label {
+    .denoise-slider label {
       font-weight: 600;
       font-size: 0.85rem;
-      min-width: 80px;
+      min-width: 70px;
     }
-    .filter-slider input[type="range"] {
+    .denoise-slider input[type="range"] {
       flex: 1;
-      min-width: 100px;
+      min-width: 120px;
     }
-    .filter-slider .filter-val {
+    .denoise-slider .denoise-val {
       font-weight: 700;
       font-size: 0.85rem;
       min-width: 44px;
       text-align: center;
       color: var(--accent);
     }
-    .toggle-filters {
+    .mode-toggle {
       display: flex;
-      flex-wrap: wrap;
       gap: 0.5rem;
-      margin-top: 0.5rem;
     }
-    .toggle-filter-btn {
+    .mode-btn {
       padding: 0.45rem 0.9rem;
       border: 1px solid var(--border);
       border-radius: 6px;
@@ -50,11 +51,11 @@
       font-weight: 600;
       transition: all 0.15s;
     }
-    .toggle-filter-btn:hover {
+    .mode-btn:hover {
       border-color: var(--accent);
       color: var(--accent);
     }
-    .toggle-filter-btn.active {
+    .mode-btn.active {
       background: var(--accent);
       color: #fff;
       border-color: var(--accent);
@@ -78,25 +79,23 @@
       margin-bottom: 0.75rem;
       color: var(--text-muted);
     }
-    .preview-panel canvas, .preview-panel img {
+    .preview-panel canvas {
       max-width: 100%;
       max-height: 400px;
       border-radius: 6px;
     }
-    .filter-info {
+    .preview-info {
       font-size: 0.8rem;
       color: var(--text-muted);
       margin-top: 0.5rem;
     }
     @media (max-width: 768px) {
-      .filter-controls {
-        grid-template-columns: 1fr;
+      .denoise-controls {
+        flex-direction: column;
+        align-items: stretch;
       }
       .preview-split {
         grid-template-columns: 1fr;
-      }
-      .filter-slider label {
-        min-width: 70px;
       }
     }
   </style>
@@ -116,12 +115,12 @@
         <li><a href="watermark.html" role="menuitem">Watermark</a></li>
         <li><a href="flip-rotate.html" role="menuitem">Flip &amp; Rotate</a></li>
         <li><a href="background-remover.html" role="menuitem">BG Remover</a></li>
-        <li><a href="filters.html" class="active" role="menuitem">Filters</a></li>
+        <li><a href="filters.html" role="menuitem">Filters</a></li>
         <li><a href="palette.html" role="menuitem">Palette</a></li>
         <li><a href="meme.html" role="menuitem">Meme</a></li>
         <li><a href="base64.html" role="menuitem">Base64</a></li>
         <li><a href="collage.html" role="menuitem">Collage</a></li>
-        <li><a href="denoise.html" role="menuitem">Denoise</a></li>
+        <li><a href="denoise.html" class="active" role="menuitem">Denoise</a></li>
         <li><a href="https://buymeacoffee.com/dairylea" class="nav-coffee" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a></li>
       </ul>
     </div>
@@ -129,51 +128,41 @@
 
   <main class="main">
     <div class="tool-header">
-      <h1>Image Filters &amp; Effects</h1>
-      <p>Adjust brightness, contrast, saturation, and more. Apply grayscale, sepia, or invert effects instantly.</p>
+      <h1>Image Noise Remover</h1>
+      <p>Reduce noise and grain from photos. Adjust strength for the perfect balance between smoothing and detail. Your images never leave your device.</p>
     </div>
 
     <div class="drop-zone" id="dropZone">
-      <div class="drop-zone-icon">&#127912;</div>
+      <div class="drop-zone-icon">&#128247;</div>
       <div class="drop-zone-text"><strong>Drop an image here</strong> or click to browse<br>JPEG, PNG, WebP supported</div>
       <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp">
     </div>
 
     <div class="controls" id="controls" style="display:none">
-      <div class="filter-controls">
-        <div class="filter-slider">
-          <label for="brightness">Brightness</label>
-          <input type="range" id="brightness" min="0" max="200" value="100">
-          <span class="filter-val" id="brightnessVal">100%</span>
+      <div class="denoise-controls">
+        <div class="denoise-slider">
+          <label for="strength">Strength</label>
+          <input type="range" id="strength" min="1" max="10" value="3" step="1">
+          <span class="denoise-val" id="strengthVal">3</span>
         </div>
-        <div class="filter-slider">
-          <label for="contrast">Contrast</label>
-          <input type="range" id="contrast" min="0" max="200" value="100">
-          <span class="filter-val" id="contrastVal">100%</span>
-        </div>
-        <div class="filter-slider">
-          <label for="saturation">Saturation</label>
-          <input type="range" id="saturation" min="0" max="200" value="100">
-          <span class="filter-val" id="saturationVal">100%</span>
-        </div>
-        <div class="filter-slider">
-          <label for="blur">Blur</label>
-          <input type="range" id="blur" min="0" max="20" value="0" step="0.5">
-          <span class="filter-val" id="blurVal">0px</span>
+        <div class="denoise-slider">
+          <label for="passes">Passes</label>
+          <input type="range" id="passes" min="1" max="5" value="1" step="1">
+          <span class="denoise-val" id="passesVal">1</span>
         </div>
       </div>
 
       <div style="margin-top:1rem">
-        <label style="font-weight:600;font-size:0.85rem">Effects</label>
-        <div class="toggle-filters">
-          <button class="toggle-filter-btn" data-filter="grayscale" id="grayscaleBtn">Grayscale</button>
-          <button class="toggle-filter-btn" data-filter="sepia" id="sepiaBtn">Sepia</button>
-          <button class="toggle-filter-btn" data-filter="invert" id="invertBtn">Invert</button>
+        <label style="font-weight:600;font-size:0.85rem">Mode</label>
+        <div class="mode-toggle" style="margin-top:0.4rem">
+          <button class="mode-btn active" id="modeGaussian" data-mode="gaussian">Gaussian Blur</button>
+          <button class="mode-btn" id="modeMedian" data-mode="median">Median Filter</button>
+          <button class="mode-btn" id="modeBilateral" data-mode="bilateral">Bilateral</button>
         </div>
       </div>
 
-      <div class="btn-row">
-        <button class="btn btn-primary" id="resetBtn">Reset All</button>
+      <div class="btn-row" style="margin-top:1rem">
+        <button class="btn btn-primary" id="applyBtn">Apply Denoise</button>
         <button class="btn btn-green" id="downloadBtn">Download</button>
         <button class="btn btn-outline" id="clearBtn">Clear</button>
       </div>
@@ -198,12 +187,12 @@
       <div class="preview-panel">
         <h3>Original</h3>
         <canvas id="originalCanvas"></canvas>
-        <div class="filter-info" id="originalInfo"></div>
+        <div class="preview-info" id="originalInfo"></div>
       </div>
       <div class="preview-panel">
-        <h3>Filtered</h3>
-        <canvas id="filteredCanvas"></canvas>
-        <div class="filter-info" id="filteredInfo"></div>
+        <h3>Denoised</h3>
+        <canvas id="denoisedCanvas"></canvas>
+        <div class="preview-info" id="denoisedInfo"></div>
       </div>
     </div>
   </main>
@@ -228,67 +217,42 @@
     const errorMsg = document.getElementById('errorMsg');
     const previewArea = document.getElementById('previewArea');
     const originalCanvas = document.getElementById('originalCanvas');
-    const filteredCanvas = document.getElementById('filteredCanvas');
+    const denoisedCanvas = document.getElementById('denoisedCanvas');
     const originalInfo = document.getElementById('originalInfo');
-    const filteredInfo = document.getElementById('filteredInfo');
+    const denoisedInfo = document.getElementById('denoisedInfo');
 
-    const brightnessSlider = document.getElementById('brightness');
-    const contrastSlider = document.getElementById('contrast');
-    const saturationSlider = document.getElementById('saturation');
-    const blurSlider = document.getElementById('blur');
+    const strengthSlider = document.getElementById('strength');
+    const passesSlider = document.getElementById('passes');
     const outputFormat = document.getElementById('outputFormat');
     const outputQuality = document.getElementById('outputQuality');
     const qualityVal = document.getElementById('qualityVal');
 
-    const grayscaleBtn = document.getElementById('grayscaleBtn');
-    const sepiaBtn = document.getElementById('sepiaBtn');
-    const invertBtn = document.getElementById('invertBtn');
-    const resetBtn = document.getElementById('resetBtn');
+    const applyBtn = document.getElementById('applyBtn');
     const downloadBtn = document.getElementById('downloadBtn');
     const clearBtn = document.getElementById('clearBtn');
 
     let currentFile = null;
     let currentImg = null;
-    let grayscaleOn = false;
-    let sepiaOn = false;
-    let invertOn = false;
+    let currentMode = 'gaussian';
 
-    // Slider value displays
-    brightnessSlider.addEventListener('input', () => {
-      document.getElementById('brightnessVal').textContent = brightnessSlider.value + '%';
-      applyFilters();
+    // Slider displays
+    strengthSlider.addEventListener('input', () => {
+      document.getElementById('strengthVal').textContent = strengthSlider.value;
     });
-    contrastSlider.addEventListener('input', () => {
-      document.getElementById('contrastVal').textContent = contrastSlider.value + '%';
-      applyFilters();
-    });
-    saturationSlider.addEventListener('input', () => {
-      document.getElementById('saturationVal').textContent = saturationSlider.value + '%';
-      applyFilters();
-    });
-    blurSlider.addEventListener('input', () => {
-      document.getElementById('blurVal').textContent = blurSlider.value + 'px';
-      applyFilters();
+    passesSlider.addEventListener('input', () => {
+      document.getElementById('passesVal').textContent = passesSlider.value;
     });
     outputQuality.addEventListener('input', () => {
       qualityVal.textContent = outputQuality.value + '%';
     });
 
-    // Toggle effect buttons
-    grayscaleBtn.addEventListener('click', () => {
-      grayscaleOn = !grayscaleOn;
-      grayscaleBtn.classList.toggle('active', grayscaleOn);
-      applyFilters();
-    });
-    sepiaBtn.addEventListener('click', () => {
-      sepiaOn = !sepiaOn;
-      sepiaBtn.classList.toggle('active', sepiaOn);
-      applyFilters();
-    });
-    invertBtn.addEventListener('click', () => {
-      invertOn = !invertOn;
-      invertBtn.classList.toggle('active', invertOn);
-      applyFilters();
+    // Mode toggle
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentMode = btn.dataset.mode;
+      });
     });
 
     setupDropZone(dropZone, fileInput, files => {
@@ -299,7 +263,7 @@
         controls.style.display = 'block';
         previewArea.style.display = 'grid';
         drawOriginal();
-        applyFilters();
+        applyDenoise();
         dropZone.querySelector('.drop-zone-text').innerHTML =
           '<strong>' + escHTML(currentFile.name) + '</strong><br>Drop another to replace';
       }).catch(e => {
@@ -307,19 +271,17 @@
       });
     });
 
+    applyBtn.addEventListener('click', () => {
+      if (currentImg) applyDenoise();
+    });
+
     clearBtn.addEventListener('click', () => {
       currentFile = null;
       currentImg = null;
       controls.style.display = 'none';
       previewArea.style.display = 'none';
-      resetAllFilters();
       dropZone.querySelector('.drop-zone-text').innerHTML =
         '<strong>Drop an image here</strong> or click to browse<br>JPEG, PNG, WebP supported';
-    });
-
-    resetBtn.addEventListener('click', () => {
-      resetAllFilters();
-      applyFilters();
     });
 
     downloadBtn.addEventListener('click', () => {
@@ -330,22 +292,16 @@
       fullCanvas.width = currentImg.naturalWidth;
       fullCanvas.height = currentImg.naturalHeight;
       const ctx = fullCanvas.getContext('2d');
-
-      ctx.filter = buildFilterString();
       ctx.drawImage(currentImg, 0, 0);
-      ctx.filter = 'none';
 
-      // Apply pixel-level effects (invert) if needed
-      if (invertOn) {
-        const imageData = ctx.getImageData(0, 0, fullCanvas.width, fullCanvas.height);
-        const d = imageData.data;
-        for (let i = 0; i < d.length; i += 4) {
-          d[i] = 255 - d[i];
-          d[i + 1] = 255 - d[i + 1];
-          d[i + 2] = 255 - d[i + 2];
-        }
-        ctx.putImageData(imageData, 0, 0);
+      const strength = parseInt(strengthSlider.value);
+      const passes = parseInt(passesSlider.value);
+      let imageData = ctx.getImageData(0, 0, fullCanvas.width, fullCanvas.height);
+
+      for (let p = 0; p < passes; p++) {
+        imageData = applyFilter(imageData, strength, currentMode);
       }
+      ctx.putImageData(imageData, 0, 0);
 
       const fmt = outputFormat.value === 'same' ? getOriginalFormat() : outputFormat.value;
       const mime = getMimeType(fmt);
@@ -353,26 +309,9 @@
       const ext = fmt === 'jpeg' ? 'jpg' : fmt;
 
       fullCanvas.toBlob(blob => {
-        if (blob) downloadBlob(blob, baseName(currentFile.name) + '-filtered.' + ext);
+        if (blob) downloadBlob(blob, baseName(currentFile.name) + '-denoised.' + ext);
       }, mime, quality);
     });
-
-    function resetAllFilters() {
-      brightnessSlider.value = 100;
-      contrastSlider.value = 100;
-      saturationSlider.value = 100;
-      blurSlider.value = 0;
-      document.getElementById('brightnessVal').textContent = '100%';
-      document.getElementById('contrastVal').textContent = '100%';
-      document.getElementById('saturationVal').textContent = '100%';
-      document.getElementById('blurVal').textContent = '0px';
-      grayscaleOn = false;
-      sepiaOn = false;
-      invertOn = false;
-      grayscaleBtn.classList.remove('active');
-      sepiaBtn.classList.remove('active');
-      invertBtn.classList.remove('active');
-    }
 
     function drawOriginal() {
       if (!currentImg) return;
@@ -389,7 +328,7 @@
       originalInfo.textContent = currentImg.naturalWidth + ' x ' + currentImg.naturalHeight + ' — ' + formatBytes(currentFile.size);
     }
 
-    function applyFilters() {
+    function applyDenoise() {
       if (!currentImg) return;
 
       const maxW = 500, maxH = 400;
@@ -397,49 +336,143 @@
       const w = Math.round(currentImg.naturalWidth * scale);
       const h = Math.round(currentImg.naturalHeight * scale);
 
-      filteredCanvas.width = w;
-      filteredCanvas.height = h;
-      const ctx = filteredCanvas.getContext('2d');
-
-      ctx.filter = buildFilterString();
+      denoisedCanvas.width = w;
+      denoisedCanvas.height = h;
+      const ctx = denoisedCanvas.getContext('2d');
       ctx.drawImage(currentImg, 0, 0, w, h);
-      ctx.filter = 'none';
 
-      // Manual invert (more reliable cross-browser than CSS filter invert)
-      if (invertOn) {
-        const imageData = ctx.getImageData(0, 0, w, h);
-        const d = imageData.data;
-        for (let i = 0; i < d.length; i += 4) {
-          d[i] = 255 - d[i];
-          d[i + 1] = 255 - d[i + 1];
-          d[i + 2] = 255 - d[i + 2];
-        }
-        ctx.putImageData(imageData, 0, 0);
+      const strength = parseInt(strengthSlider.value);
+      const passes = parseInt(passesSlider.value);
+      let imageData = ctx.getImageData(0, 0, w, h);
+
+      for (let p = 0; p < passes; p++) {
+        imageData = applyFilter(imageData, strength, currentMode);
       }
+      ctx.putImageData(imageData, 0, 0);
 
-      const parts = [];
-      if (brightnessSlider.value !== '100') parts.push('Brightness ' + brightnessSlider.value + '%');
-      if (contrastSlider.value !== '100') parts.push('Contrast ' + contrastSlider.value + '%');
-      if (saturationSlider.value !== '100') parts.push('Saturation ' + saturationSlider.value + '%');
-      if (blurSlider.value !== '0') parts.push('Blur ' + blurSlider.value + 'px');
-      if (grayscaleOn) parts.push('Grayscale');
-      if (sepiaOn) parts.push('Sepia');
-      if (invertOn) parts.push('Invert');
-      filteredInfo.textContent = parts.length ? parts.join(' · ') : 'No filters applied';
+      const modeNames = { gaussian: 'Gaussian Blur', median: 'Median Filter', bilateral: 'Bilateral' };
+      denoisedInfo.textContent = modeNames[currentMode] + ' — Strength ' + strength + ' — ' + passes + ' pass' + (passes > 1 ? 'es' : '');
     }
 
-    function buildFilterString() {
-      const parts = [];
-      parts.push('brightness(' + (brightnessSlider.value / 100) + ')');
-      parts.push('contrast(' + (contrastSlider.value / 100) + ')');
-      parts.push('saturate(' + (saturationSlider.value / 100) + ')');
-      if (parseFloat(blurSlider.value) > 0) {
-        parts.push('blur(' + blurSlider.value + 'px)');
+    function applyFilter(imageData, strength, mode) {
+      const { width, height, data } = imageData;
+      const out = new Uint8ClampedArray(data);
+      const radius = strength;
+
+      if (mode === 'gaussian') {
+        // Gaussian blur via box blur approximation (separable, fast)
+        boxBlur(data, out, width, height, radius);
+      } else if (mode === 'median') {
+        medianFilter(data, out, width, height, Math.min(radius, 5));
+      } else if (mode === 'bilateral') {
+        bilateralFilter(data, out, width, height, radius);
       }
-      if (grayscaleOn) parts.push('grayscale(1)');
-      if (sepiaOn) parts.push('sepia(1)');
-      // invert handled via pixel manipulation for cross-browser reliability
-      return parts.join(' ');
+
+      return new ImageData(out, width, height);
+    }
+
+    // Fast box blur (approximation of gaussian)
+    function boxBlur(src, dst, w, h, r) {
+      // Two-pass separable box blur
+      const temp = new Uint8ClampedArray(src);
+      // Horizontal pass
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          let rr = 0, gg = 0, bb = 0, count = 0;
+          for (let dx = -r; dx <= r; dx++) {
+            const nx = Math.min(w - 1, Math.max(0, x + dx));
+            const i = (y * w + nx) * 4;
+            rr += src[i]; gg += src[i + 1]; bb += src[i + 2];
+            count++;
+          }
+          const i = (y * w + x) * 4;
+          temp[i] = rr / count;
+          temp[i + 1] = gg / count;
+          temp[i + 2] = bb / count;
+          temp[i + 3] = src[i + 3];
+        }
+      }
+      // Vertical pass
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          let rr = 0, gg = 0, bb = 0, count = 0;
+          for (let dy = -r; dy <= r; dy++) {
+            const ny = Math.min(h - 1, Math.max(0, y + dy));
+            const i = (ny * w + x) * 4;
+            rr += temp[i]; gg += temp[i + 1]; bb += temp[i + 2];
+            count++;
+          }
+          const i = (y * w + x) * 4;
+          dst[i] = rr / count;
+          dst[i + 1] = gg / count;
+          dst[i + 2] = bb / count;
+          dst[i + 3] = temp[i + 3];
+        }
+      }
+    }
+
+    // Median filter
+    function medianFilter(src, dst, w, h, r) {
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const rs = [], gs = [], bs = [];
+          for (let dy = -r; dy <= r; dy++) {
+            for (let dx = -r; dx <= r; dx++) {
+              const nx = Math.min(w - 1, Math.max(0, x + dx));
+              const ny = Math.min(h - 1, Math.max(0, y + dy));
+              const i = (ny * w + nx) * 4;
+              rs.push(src[i]); gs.push(src[i + 1]); bs.push(src[i + 2]);
+            }
+          }
+          rs.sort((a, b) => a - b);
+          gs.sort((a, b) => a - b);
+          bs.sort((a, b) => a - b);
+          const mid = rs.length >> 1;
+          const i = (y * w + x) * 4;
+          dst[i] = rs[mid];
+          dst[i + 1] = gs[mid];
+          dst[i + 2] = bs[mid];
+          dst[i + 3] = src[i + 3];
+        }
+      }
+    }
+
+    // Bilateral filter (edge-preserving denoise)
+    function bilateralFilter(src, dst, w, h, r) {
+      const sigmaSpace = r;
+      const sigmaColor = 30 + r * 8; // Adaptive color sigma
+      const spaceCoeff = -0.5 / (sigmaSpace * sigmaSpace);
+      const colorCoeff = -0.5 / (sigmaColor * sigmaColor);
+
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const ci = (y * w + x) * 4;
+          const cr = src[ci], cg = src[ci + 1], cb = src[ci + 2];
+          let sumR = 0, sumG = 0, sumB = 0, sumW = 0;
+
+          for (let dy = -r; dy <= r; dy++) {
+            for (let dx = -r; dx <= r; dx++) {
+              const nx = Math.min(w - 1, Math.max(0, x + dx));
+              const ny = Math.min(h - 1, Math.max(0, y + dy));
+              const ni = (ny * w + nx) * 4;
+
+              const spatialDist = dx * dx + dy * dy;
+              const colorDist = (src[ni] - cr) ** 2 + (src[ni + 1] - cg) ** 2 + (src[ni + 2] - cb) ** 2;
+              const weight = Math.exp(spatialDist * spaceCoeff + colorDist * colorCoeff);
+
+              sumR += src[ni] * weight;
+              sumG += src[ni + 1] * weight;
+              sumB += src[ni + 2] * weight;
+              sumW += weight;
+            }
+          }
+
+          dst[ci] = sumR / sumW;
+          dst[ci + 1] = sumG / sumW;
+          dst[ci + 2] = sumB / sumW;
+          dst[ci + 3] = src[ci + 3];
+        }
+      }
     }
 
     function getOriginalFormat() {
