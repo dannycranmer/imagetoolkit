@@ -8,17 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
     toggle.addEventListener('click', () => {
       const open = links.classList.toggle('open');
       toggle.setAttribute('aria-expanded', open);
-      toggle.innerHTML = open ? '\u2715' : '\u2630';
-      if (open) toggle.style.cssText = 'display:block;position:fixed;top:12px;right:16px;z-index:201;';
-      else toggle.style.cssText = '';
-    });
-    links.querySelectorAll('a').forEach(a => {
-      a.addEventListener('click', () => {
-        links.classList.remove('open');
-        toggle.setAttribute('aria-expanded', 'false');
-        toggle.innerHTML = '\u2630';
-        toggle.style.cssText = '';
-      });
     });
   }
 });

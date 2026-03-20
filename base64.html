@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Convert Image to Base64 Online Free — ImageToolkit</title>
+  <meta name="description" content="Convert any image to Base64 string or data URI for free. Copy to clipboard instantly. 100% private — your images never leave your device.">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <nav class="nav" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">Image<span>Toolkit</span></a>
+      <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">&#9776;</button>
+      <ul class="nav-links" role="menubar">
+        <li><a href="index.html" role="menuitem">Home</a></li>
+        <li><a href="compress.html" role="menuitem">Compress</a></li>
+        <li><a href="resize.html" role="menuitem">Resize</a></li>
+        <li><a href="convert.html" role="menuitem">Convert</a></li>
+        <li><a href="crop.html" role="menuitem">Crop</a></li>
+        <li><a href="watermark.html" role="menuitem">Watermark</a></li>
+        <li><a href="flip-rotate.html" role="menuitem">Flip &amp; Rotate</a></li>
+        <li><a href="background-remover.html" role="menuitem">BG Remover</a></li>
+        <li><a href="filters.html" role="menuitem">Filters</a></li>
+        <li><a href="palette.html" role="menuitem">Palette</a></li>
+        <li><a href="meme.html" role="menuitem">Meme</a></li>
+        <li><a href="base64.html" class="active" role="menuitem">Base64</a></li>
+        <li><a href="https://buymeacoffee.com/dairylea" class="nav-coffee" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="tool-header">
+      <h1>Image to Base64 Converter</h1>
+      <p>Convert any image to a Base64 string or data URI. Copy to clipboard instantly. Your images never leave your device.</p>
+    </div>
+
+    <div class="drop-zone" id="dropZone">
+      <div class="drop-zone-icon">&#128221;</div>
+      <div class="drop-zone-text"><strong>Drop an image here</strong> or click to browse<br>JPEG, PNG, WebP, BMP, GIF, SVG supported</div>
+      <input type="file" id="fileInput" accept="image/*">
+    </div>
+
+    <div class="error-msg" id="errorMsg"></div>
+
+    <div id="resultSection" style="display:none">
+      <div class="controls">
+        <div class="control-row" style="align-items:center;gap:1rem;flex-wrap:wrap">
+          <strong style="white-space:nowrap">Image Preview</strong>
+          <span class="file-meta" id="fileMeta"></span>
+        </div>
+        <div style="text-align:center;padding:1rem 0">
+          <img id="previewImg" alt="Preview" style="max-width:100%;max-height:300px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1)">
+        </div>
+      </div>
+
+      <div class="controls" style="margin-top:1rem">
+        <div class="control-row">
+          <label>Output Format</label>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+            <button class="btn btn-primary btn-sm" id="btnDataUri" style="opacity:1">Data URI</button>
+            <button class="btn btn-outline btn-sm" id="btnBase64Only">Base64 Only</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="controls" style="margin-top:1rem">
+        <div class="control-row" style="flex-direction:column;align-items:stretch">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem">
+            <label id="outputLabel"><strong>Data URI</strong></label>
+            <div style="display:flex;gap:0.5rem;align-items:center">
+              <span class="file-meta" id="outputSize"></span>
+              <button class="btn btn-green btn-sm" id="copyBtn">Copy to Clipboard</button>
+            </div>
+          </div>
+          <textarea id="outputText" readonly rows="8" style="width:100%;font-family:monospace;font-size:0.8rem;padding:0.75rem;border:1px solid #CBD5E1;border-radius:8px;background:#F1F5F9;resize:vertical;word-break:break-all"></textarea>
+        </div>
+      </div>
+
+      <div class="controls" style="margin-top:1rem">
+        <div class="control-row" style="flex-direction:column;align-items:stretch">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem">
+            <label><strong>HTML &lt;img&gt; Tag</strong></label>
+            <button class="btn btn-outline btn-sm" id="copyHtmlBtn">Copy HTML</button>
+          </div>
+          <textarea id="htmlOutput" readonly rows="3" style="width:100%;font-family:monospace;font-size:0.8rem;padding:0.75rem;border:1px solid #CBD5E1;border-radius:8px;background:#F1F5F9;resize:vertical;word-break:break-all"></textarea>
+        </div>
+      </div>
+
+      <div class="controls" style="margin-top:1rem">
+        <div class="control-row" style="flex-direction:column;align-items:stretch">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem">
+            <label><strong>CSS Background</strong></label>
+            <button class="btn btn-outline btn-sm" id="copyCssBtn">Copy CSS</button>
+          </div>
+          <textarea id="cssOutput" readonly rows="2" style="width:100%;font-family:monospace;font-size:0.8rem;padding:0.75rem;border:1px solid #CBD5E1;border-radius:8px;background:#F1F5F9;resize:vertical;word-break:break-all"></textarea>
+        </div>
+      </div>
+
+      <div class="btn-row" style="margin-top:1rem">
+        <button class="btn btn-outline" id="clearBtn">Clear</button>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <p>Powered by <strong>ImageToolkit</strong> — Free &amp; Private</p>
+      <div class="footer-links">
+        <a href="https://buymeacoffee.com/dairylea" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a>
+        <a href="https://dannycranmer.github.io/parchment/" target="_blank" rel="noopener">PDF Tools (Parchment)</a>
+        <a href="https://dannycranmer.github.io/devtoolbox/" target="_blank" rel="noopener">Dev Tools (DevToolbox)</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/common.js"></script>
+  <script>
+  (() => {
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const errorMsg = document.getElementById('errorMsg');
+    const resultSection = document.getElementById('resultSection');
+    const previewImg = document.getElementById('previewImg');
+    const fileMeta = document.getElementById('fileMeta');
+    const outputText = document.getElementById('outputText');
+    const outputLabel = document.getElementById('outputLabel');
+    const outputSize = document.getElementById('outputSize');
+    const htmlOutput = document.getElementById('htmlOutput');
+    const cssOutput = document.getElementById('cssOutput');
+    const copyBtn = document.getElementById('copyBtn');
+    const copyHtmlBtn = document.getElementById('copyHtmlBtn');
+    const copyCssBtn = document.getElementById('copyCssBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const btnDataUri = document.getElementById('btnDataUri');
+    const btnBase64Only = document.getElementById('btnBase64Only');
+
+    let dataUri = '';
+    let base64Only = '';
+    let showDataUri = true;
+
+    setupDropZone(dropZone, fileInput, files => {
+      if (files.length) processFile(files[0]);
+    });
+
+    function processFile(file) {
+      if (!file.type.startsWith('image/') && !file.name.match(/\.svg$/i)) {
+        showError(errorMsg, 'This file doesn\'t appear to be a valid image.');
+        return;
+      }
+      if (file.size > 50 * 1024 * 1024) {
+        showError(errorMsg, 'File is too large (max 50MB).');
+        return;
+      }
+      hideError(errorMsg);
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        dataUri = reader.result;
+        base64Only = dataUri.split(',')[1] || '';
+
+        previewImg.src = dataUri;
+        fileMeta.textContent = file.name + ' · ' + formatBytes(file.size) + ' · ' + (file.type || 'unknown');
+
+        updateOutput();
+        resultSection.style.display = 'block';
+        dropZone.querySelector('.drop-zone-text').innerHTML = '<strong>Image loaded</strong><br>Drop another to replace';
+      };
+      reader.onerror = () => showError(errorMsg, 'Failed to read file.');
+      reader.readAsDataURL(file);
+    }
+
+    function updateOutput() {
+      const value = showDataUri ? dataUri : base64Only;
+      outputText.value = value;
+      outputLabel.innerHTML = showDataUri ? '<strong>Data URI</strong>' : '<strong>Base64 String</strong>';
+      outputSize.textContent = formatBytes(value.length) + ' (text)';
+      htmlOutput.value = '<img src="' + dataUri + '" alt="">';
+      cssOutput.value = 'background-image: url(' + dataUri + ');';
+    }
+
+    btnDataUri.addEventListener('click', () => {
+      showDataUri = true;
+      btnDataUri.className = 'btn btn-primary btn-sm';
+      btnBase64Only.className = 'btn btn-outline btn-sm';
+      updateOutput();
+    });
+
+    btnBase64Only.addEventListener('click', () => {
+      showDataUri = false;
+      btnBase64Only.className = 'btn btn-primary btn-sm';
+      btnDataUri.className = 'btn btn-outline btn-sm';
+      updateOutput();
+    });
+
+    copyBtn.addEventListener('click', () => copyText(outputText.value, copyBtn));
+    copyHtmlBtn.addEventListener('click', () => copyText(htmlOutput.value, copyHtmlBtn));
+    copyCssBtn.addEventListener('click', () => copyText(cssOutput.value, copyCssBtn));
+
+    function copyText(text, btn) {
+      navigator.clipboard.writeText(text).then(() => {
+        const orig = btn.textContent;
+        btn.textContent = 'Copied!';
+        btn.classList.add('btn-green');
+        setTimeout(() => { btn.textContent = orig; btn.classList.remove('btn-green'); }, 1500);
+      }).catch(() => {
+        outputText.select();
+        document.execCommand('copy');
+      });
+    }
+
+    clearBtn.addEventListener('click', () => {
+      dataUri = '';
+      base64Only = '';
+      resultSection.style.display = 'none';
+      outputText.value = '';
+      htmlOutput.value = '';
+      cssOutput.value = '';
+      dropZone.querySelector('.drop-zone-text').innerHTML = '<strong>Drop an image here</strong> or click to browse<br>JPEG, PNG, WebP, BMP, GIF, SVG supported';
+    });
+  })();
+  </script>
+  <script data-goatcounter="https://dairylea.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
