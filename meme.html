@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meme Generator Online Free — ImageToolkit</title>
+  <meta name="description" content="Create memes for free. Upload an image, add top and bottom text with Impact font, download instantly. 100% private — your images never leave your device.">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .meme-controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .meme-input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .meme-input-group label {
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+    .meme-input-group input[type="text"] {
+      padding: 0.5rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      background: var(--bg-card);
+    }
+    .meme-input-group input[type="text"]:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+    }
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .slider-row label {
+      font-weight: 600;
+      font-size: 0.85rem;
+      min-width: 80px;
+    }
+    .slider-row input[type="range"] {
+      flex: 1;
+      min-width: 100px;
+    }
+    .slider-row .slider-val {
+      font-weight: 700;
+      font-size: 0.85rem;
+      min-width: 44px;
+      text-align: center;
+      color: var(--accent);
+    }
+    .color-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .color-row label {
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+    .color-row input[type="color"] {
+      width: 36px;
+      height: 36px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      padding: 2px;
+    }
+    .meme-preview {
+      margin-top: 1.5rem;
+      text-align: center;
+    }
+    .meme-preview canvas {
+      max-width: 100%;
+      max-height: 500px;
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+    }
+    .meme-info {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+    }
+    @media (max-width: 768px) {
+      .meme-controls {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">Image<span>Toolkit</span></a>
+      <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">&#9776;</button>
+      <ul class="nav-links" role="menubar">
+        <li><a href="index.html" role="menuitem">Home</a></li>
+        <li><a href="compress.html" role="menuitem">Compress</a></li>
+        <li><a href="resize.html" role="menuitem">Resize</a></li>
+        <li><a href="convert.html" role="menuitem">Convert</a></li>
+        <li><a href="crop.html" role="menuitem">Crop</a></li>
+        <li><a href="watermark.html" role="menuitem">Watermark</a></li>
+        <li><a href="flip-rotate.html" role="menuitem">Flip &amp; Rotate</a></li>
+        <li><a href="background-remover.html" role="menuitem">BG Remover</a></li>
+        <li><a href="filters.html" role="menuitem">Filters</a></li>
+        <li><a href="palette.html" role="menuitem">Palette</a></li>
+        <li><a href="meme.html" class="active" role="menuitem">Meme</a></li>
+        <li><a href="https://buymeacoffee.com/dairylea" class="nav-coffee" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="tool-header">
+      <h1>Meme Generator</h1>
+      <p>Upload an image, add top and bottom text, and download your meme. Classic Impact font style.</p>
+    </div>
+
+    <div class="drop-zone" id="dropZone">
+      <div class="drop-zone-icon">&#128514;</div>
+      <div class="drop-zone-text"><strong>Drop an image here</strong> or click to browse<br>JPEG, PNG, WebP supported</div>
+      <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp">
+    </div>
+
+    <div class="controls" id="controls" style="display:none">
+      <div class="meme-controls">
+        <div class="meme-input-group">
+          <label for="topText">Top Text</label>
+          <input type="text" id="topText" placeholder="TOP TEXT" maxlength="200">
+        </div>
+        <div class="meme-input-group">
+          <label for="bottomText">Bottom Text</label>
+          <input type="text" id="bottomText" placeholder="BOTTOM TEXT" maxlength="200">
+        </div>
+      </div>
+
+      <div style="margin-top:1rem; display:flex; flex-direction:column; gap:0.75rem;">
+        <div class="slider-row">
+          <label for="fontSize">Font Size</label>
+          <input type="range" id="fontSize" min="16" max="120" value="48">
+          <span class="slider-val" id="fontSizeVal">48px</span>
+        </div>
+        <div class="slider-row">
+          <label for="strokeWidth">Outline</label>
+          <input type="range" id="strokeWidth" min="0" max="10" value="3" step="0.5">
+          <span class="slider-val" id="strokeWidthVal">3px</span>
+        </div>
+      </div>
+
+      <div style="margin-top:1rem; display:flex; flex-wrap:wrap; gap:1.5rem;">
+        <div class="color-row">
+          <label for="textColor">Text Color</label>
+          <input type="color" id="textColor" value="#ffffff">
+        </div>
+        <div class="color-row">
+          <label for="strokeColor">Outline Color</label>
+          <input type="color" id="strokeColor" value="#000000">
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-green" id="downloadBtn">Download Meme</button>
+        <button class="btn btn-outline" id="clearBtn">Clear</button>
+      </div>
+    </div>
+
+    <div class="error-msg" id="errorMsg"></div>
+
+    <div class="meme-preview" id="previewArea" style="display:none">
+      <canvas id="memeCanvas"></canvas>
+      <div class="meme-info" id="memeInfo"></div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <p>Powered by <strong>ImageToolkit</strong> — Free &amp; Private</p>
+      <div class="footer-links">
+        <a href="https://buymeacoffee.com/dairylea" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a>
+        <a href="https://dannycranmer.github.io/parchment/" target="_blank" rel="noopener">PDF Tools (Parchment)</a>
+        <a href="https://dannycranmer.github.io/devtoolbox/" target="_blank" rel="noopener">Dev Tools (DevToolbox)</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/common.js"></script>
+  <script>
+  (() => {
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const controls = document.getElementById('controls');
+    const errorMsg = document.getElementById('errorMsg');
+    const previewArea = document.getElementById('previewArea');
+    const memeCanvas = document.getElementById('memeCanvas');
+    const memeInfo = document.getElementById('memeInfo');
+
+    const topTextInput = document.getElementById('topText');
+    const bottomTextInput = document.getElementById('bottomText');
+    const fontSizeSlider = document.getElementById('fontSize');
+    const strokeWidthSlider = document.getElementById('strokeWidth');
+    const textColorInput = document.getElementById('textColor');
+    const strokeColorInput = document.getElementById('strokeColor');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const clearBtn = document.getElementById('clearBtn');
+
+    let currentFile = null;
+    let currentImg = null;
+
+    // Slider displays
+    fontSizeSlider.addEventListener('input', () => {
+      document.getElementById('fontSizeVal').textContent = fontSizeSlider.value + 'px';
+      renderMeme();
+    });
+    strokeWidthSlider.addEventListener('input', () => {
+      document.getElementById('strokeWidthVal').textContent = strokeWidthSlider.value + 'px';
+      renderMeme();
+    });
+
+    // Live update on all controls
+    topTextInput.addEventListener('input', renderMeme);
+    bottomTextInput.addEventListener('input', renderMeme);
+    textColorInput.addEventListener('input', renderMeme);
+    strokeColorInput.addEventListener('input', renderMeme);
+
+    setupDropZone(dropZone, fileInput, files => {
+      currentFile = files[0];
+      hideError(errorMsg);
+      loadImage(currentFile).then(img => {
+        currentImg = img;
+        controls.style.display = 'block';
+        previewArea.style.display = 'block';
+
+        // Auto-scale font size based on image width
+        const autoSize = Math.max(16, Math.min(120, Math.round(img.naturalWidth / 12)));
+        fontSizeSlider.value = autoSize;
+        document.getElementById('fontSizeVal').textContent = autoSize + 'px';
+
+        renderMeme();
+        dropZone.querySelector('.drop-zone-text').innerHTML =
+          '<strong>' + escHTML(currentFile.name) + '</strong><br>Drop another to replace';
+      }).catch(e => {
+        showError(errorMsg, 'Failed to load image: ' + e.message);
+      });
+    });
+
+    clearBtn.addEventListener('click', () => {
+      currentFile = null;
+      currentImg = null;
+      controls.style.display = 'none';
+      previewArea.style.display = 'none';
+      topTextInput.value = '';
+      bottomTextInput.value = '';
+      fontSizeSlider.value = 48;
+      strokeWidthSlider.value = 3;
+      textColorInput.value = '#ffffff';
+      strokeColorInput.value = '#000000';
+      document.getElementById('fontSizeVal').textContent = '48px';
+      document.getElementById('strokeWidthVal').textContent = '3px';
+      dropZone.querySelector('.drop-zone-text').innerHTML =
+        '<strong>Drop an image here</strong> or click to browse<br>JPEG, PNG, WebP supported';
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      if (!currentImg) return;
+      // Render at full resolution for download
+      const canvas = document.createElement('canvas');
+      canvas.width = currentImg.naturalWidth;
+      canvas.height = currentImg.naturalHeight;
+      drawMeme(canvas, currentImg.naturalWidth, currentImg.naturalHeight, 1);
+      canvas.toBlob(blob => {
+        if (blob) downloadBlob(blob, baseName(currentFile.name) + '-meme.png');
+      }, 'image/png');
+    });
+
+    function renderMeme() {
+      if (!currentImg) return;
+      const maxW = 600, maxH = 500;
+      const scale = Math.min(1, maxW / currentImg.naturalWidth, maxH / currentImg.naturalHeight);
+      const w = Math.round(currentImg.naturalWidth * scale);
+      const h = Math.round(currentImg.naturalHeight * scale);
+      memeCanvas.width = w;
+      memeCanvas.height = h;
+      drawMeme(memeCanvas, w, h, scale);
+      memeInfo.textContent = currentImg.naturalWidth + ' × ' + currentImg.naturalHeight + ' — ' + formatBytes(currentFile.size);
+    }
+
+    function drawMeme(canvas, w, h, scale) {
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(currentImg, 0, 0, w, h);
+
+      const fontSize = parseInt(fontSizeSlider.value) * scale;
+      const strokeWidth = parseFloat(strokeWidthSlider.value) * scale;
+      const textColor = textColorInput.value;
+      const strokeColor = strokeColorInput.value;
+
+      ctx.font = 'bold ' + fontSize + 'px Impact, "Arial Black", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = textColor;
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = strokeWidth;
+      ctx.lineJoin = 'round';
+      ctx.miterLimit = 2;
+
+      const topText = topTextInput.value.toUpperCase();
+      const bottomText = bottomTextInput.value.toUpperCase();
+      const padding = fontSize * 0.3;
+      const maxTextWidth = w * 0.9;
+
+      if (topText) {
+        const lines = wrapText(ctx, topText, maxTextWidth);
+        let y = padding + fontSize;
+        for (const line of lines) {
+          if (strokeWidth > 0) ctx.strokeText(line, w / 2, y);
+          ctx.fillText(line, w / 2, y);
+          y += fontSize * 1.15;
+        }
+      }
+
+      if (bottomText) {
+        const lines = wrapText(ctx, bottomText, maxTextWidth);
+        let y = h - padding - (lines.length - 1) * fontSize * 1.15;
+        for (const line of lines) {
+          if (strokeWidth > 0) ctx.strokeText(line, w / 2, y);
+          ctx.fillText(line, w / 2, y);
+          y += fontSize * 1.15;
+        }
+      }
+    }
+
+    function wrapText(ctx, text, maxWidth) {
+      const words = text.split(' ');
+      const lines = [];
+      let line = '';
+      for (const word of words) {
+        const test = line ? line + ' ' + word : word;
+        if (ctx.measureText(test).width > maxWidth && line) {
+          lines.push(line);
+          line = word;
+        } else {
+          line = test;
+        }
+      }
+      if (line) lines.push(line);
+      return lines.length ? lines : [''];
+    }
+
+    function escHTML(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+  })();
+  </script>
+  <script data-goatcounter="https://dairylea.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
