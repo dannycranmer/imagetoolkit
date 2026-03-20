@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Collage Maker Online Free — ImageToolkit</title>
+  <meta name="description" content="Create image collages for free. Upload 2-9 images, choose grid layouts, adjust spacing and background color. 100% private — your images never leave your device.">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .layout-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .layout-btn {
+      width: 64px;
+      height: 64px;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-card);
+      cursor: pointer;
+      padding: 6px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px;
+      align-content: flex-start;
+    }
+    .layout-btn:hover { border-color: var(--accent); }
+    .layout-btn.active { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(59,130,246,0.3); }
+    .layout-cell {
+      background: var(--border);
+      border-radius: 2px;
+    }
+    .thumb-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+    .thumb-item {
+      position: relative;
+      width: 100px;
+      height: 100px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .thumb-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .thumb-item .thumb-remove {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 22px;
+      height: 22px;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+    .thumb-item .thumb-remove:hover { background: #EF4444; }
+    .thumb-item .thumb-index {
+      position: absolute;
+      bottom: 2px;
+      left: 2px;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+    .collage-preview {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-top: 1.5rem;
+      text-align: center;
+    }
+    .collage-preview canvas {
+      max-width: 100%;
+      max-height: 600px;
+      border-radius: 6px;
+      box-shadow: var(--shadow);
+    }
+    .color-input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .color-input-wrap input[type="color"] {
+      width: 36px;
+      height: 30px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      cursor: pointer;
+      padding: 0;
+    }
+    .btn-sm { padding: 0.35rem 0.75rem; font-size: 0.8rem; }
+  </style>
+</head>
+<body>
+
+  <nav class="nav" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">Image<span>Toolkit</span></a>
+      <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">&#9776;</button>
+      <ul class="nav-links" role="menubar">
+        <li><a href="index.html" role="menuitem">Home</a></li>
+        <li><a href="compress.html" role="menuitem">Compress</a></li>
+        <li><a href="resize.html" role="menuitem">Resize</a></li>
+        <li><a href="convert.html" role="menuitem">Convert</a></li>
+        <li><a href="crop.html" role="menuitem">Crop</a></li>
+        <li><a href="watermark.html" role="menuitem">Watermark</a></li>
+        <li><a href="flip-rotate.html" role="menuitem">Flip &amp; Rotate</a></li>
+        <li><a href="background-remover.html" role="menuitem">BG Remover</a></li>
+        <li><a href="filters.html" role="menuitem">Filters</a></li>
+        <li><a href="palette.html" role="menuitem">Palette</a></li>
+        <li><a href="meme.html" role="menuitem">Meme</a></li>
+        <li><a href="base64.html" role="menuitem">Base64</a></li>
+        <li><a href="collage.html" class="active" role="menuitem">Collage</a></li>
+        <li><a href="https://buymeacoffee.com/dairylea" class="nav-coffee" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="tool-header">
+      <h1>Image Collage Maker</h1>
+      <p>Upload 2–9 images, choose a grid layout, adjust spacing and background color, and download your collage as PNG. Your images never leave your device.</p>
+    </div>
+
+    <div class="drop-zone" id="dropZone">
+      <div class="drop-zone-icon">&#128444;</div>
+      <div class="drop-zone-text"><strong>Drop images here</strong> or click to browse<br>Upload 2–9 images (JPEG, PNG, WebP)</div>
+      <input type="file" id="fileInput" accept="image/*" multiple>
+    </div>
+
+    <div class="error-msg" id="errorMsg"></div>
+
+    <div id="thumbSection" style="display:none">
+      <div class="controls">
+        <div class="control-row" style="justify-content:space-between">
+          <strong>Uploaded Images (<span id="imageCount">0</span>/9)</strong>
+          <button class="btn btn-outline btn-sm" id="addMoreBtn">+ Add More</button>
+        </div>
+        <div class="thumb-grid" id="thumbGrid"></div>
+      </div>
+    </div>
+
+    <div id="settingsSection" style="display:none">
+      <div class="controls" style="margin-top:1rem">
+        <div class="control-row">
+          <label>Layout</label>
+        </div>
+        <div class="layout-grid" id="layoutGrid"></div>
+      </div>
+
+      <div class="controls" style="margin-top:1rem">
+        <div class="control-row">
+          <label>Spacing</label>
+          <input type="range" id="spacingSlider" min="0" max="40" value="8">
+          <span class="quality-value" id="spacingValue">8px</span>
+        </div>
+        <div class="control-row">
+          <label>Background</label>
+          <div class="color-input-wrap">
+            <input type="color" id="bgColor" value="#ffffff">
+            <span id="bgColorHex">#ffffff</span>
+          </div>
+        </div>
+        <div class="control-row">
+          <label>Output Width</label>
+          <input type="number" id="outputWidth" value="1200" min="200" max="4000" step="100">
+          <span style="font-size:0.85rem;color:var(--text-muted)">px (height auto)</span>
+        </div>
+      </div>
+
+      <div class="btn-row" style="margin-top:1rem">
+        <button class="btn btn-primary" id="generateBtn">Generate Collage</button>
+      </div>
+    </div>
+
+    <div id="previewSection" style="display:none">
+      <div class="collage-preview">
+        <h3 style="margin-bottom:1rem">Collage Preview</h3>
+        <canvas id="collageCanvas"></canvas>
+        <div class="btn-row" style="justify-content:center;margin-top:1rem">
+          <button class="btn btn-green" id="downloadBtn">Download PNG</button>
+          <button class="btn btn-outline" id="resetBtn">Start Over</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <p>Powered by <strong>ImageToolkit</strong> — Free &amp; Private</p>
+      <div class="footer-links">
+        <a href="https://buymeacoffee.com/dairylea" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a>
+        <a href="https://dannycranmer.github.io/parchment/" target="_blank" rel="noopener">PDF Tools (Parchment)</a>
+        <a href="https://dannycranmer.github.io/devtoolbox/" target="_blank" rel="noopener">Dev Tools (DevToolbox)</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/common.js"></script>
+  <script>
+  (() => {
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const errorMsg = document.getElementById('errorMsg');
+    const thumbSection = document.getElementById('thumbSection');
+    const thumbGrid = document.getElementById('thumbGrid');
+    const imageCount = document.getElementById('imageCount');
+    const addMoreBtn = document.getElementById('addMoreBtn');
+    const settingsSection = document.getElementById('settingsSection');
+    const layoutGrid = document.getElementById('layoutGrid');
+    const spacingSlider = document.getElementById('spacingSlider');
+    const spacingValue = document.getElementById('spacingValue');
+    const bgColor = document.getElementById('bgColor');
+    const bgColorHex = document.getElementById('bgColorHex');
+    const outputWidth = document.getElementById('outputWidth');
+    const generateBtn = document.getElementById('generateBtn');
+    const previewSection = document.getElementById('previewSection');
+    const collageCanvas = document.getElementById('collageCanvas');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    let images = []; // {file, img, url}
+    let selectedLayout = null;
+
+    const LAYOUTS = [
+      { name: '2×1', cols: 2, rows: 1, cells: 2 },
+      { name: '1×2', cols: 1, rows: 2, cells: 2 },
+      { name: '2×2', cols: 2, rows: 2, cells: 4 },
+      { name: '3×1', cols: 3, rows: 1, cells: 3 },
+      { name: '1×3', cols: 1, rows: 3, cells: 3 },
+      { name: '3×2', cols: 3, rows: 2, cells: 6 },
+      { name: '2×3', cols: 2, rows: 3, cells: 6 },
+      { name: '3×3', cols: 3, rows: 3, cells: 9 },
+    ];
+
+    // Drop zone setup
+    setupDropZone(dropZone, fileInput, files => addImages(files));
+
+    addMoreBtn.addEventListener('click', () => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.multiple = true;
+      input.addEventListener('change', () => {
+        const files = Array.from(input.files).filter(f => f.type.startsWith('image/'));
+        if (files.length) addImages(files);
+      });
+      input.click();
+    });
+
+    async function addImages(files) {
+      hideError(errorMsg);
+      for (const file of files) {
+        if (images.length >= 9) {
+          showError(errorMsg, 'Maximum 9 images allowed.');
+          break;
+        }
+        if (!file.type.startsWith('image/')) continue;
+        if (file.size > 50 * 1024 * 1024) {
+          showError(errorMsg, file.name + ' is too large (max 50MB). Skipped.');
+          continue;
+        }
+        try {
+          const img = await loadImage(file);
+          const url = URL.createObjectURL(file);
+          images.push({ file, img, url });
+        } catch (e) {
+          showError(errorMsg, 'Failed to load ' + file.name);
+        }
+      }
+      renderThumbs();
+      updateLayouts();
+    }
+
+    function renderThumbs() {
+      thumbGrid.innerHTML = '';
+      images.forEach((item, i) => {
+        const div = document.createElement('div');
+        div.className = 'thumb-item';
+        div.innerHTML = '<img src="' + item.url + '" alt="Image ' + (i + 1) + '">' +
+          '<button class="thumb-remove" title="Remove">×</button>' +
+          '<span class="thumb-index">' + (i + 1) + '</span>';
+        div.querySelector('.thumb-remove').addEventListener('click', () => {
+          URL.revokeObjectURL(images[i].url);
+          images.splice(i, 1);
+          renderThumbs();
+          updateLayouts();
+        });
+        thumbGrid.appendChild(div);
+      });
+      imageCount.textContent = images.length;
+      thumbSection.style.display = images.length > 0 ? 'block' : 'none';
+      if (images.length > 0) {
+        dropZone.querySelector('.drop-zone-text').innerHTML = '<strong>Drop more images</strong> or click to add<br>' + images.length + '/9 images uploaded';
+      } else {
+        dropZone.querySelector('.drop-zone-text').innerHTML = '<strong>Drop images here</strong> or click to browse<br>Upload 2–9 images (JPEG, PNG, WebP)';
+      }
+    }
+
+    function updateLayouts() {
+      const count = images.length;
+      settingsSection.style.display = count >= 2 ? 'block' : 'none';
+      previewSection.style.display = 'none';
+
+      layoutGrid.innerHTML = '';
+      const available = LAYOUTS.filter(l => l.cells >= count && l.cells <= Math.max(count + 2, count));
+      // Also include layouts where cells == count exactly, plus ones where cells > count (empty cells)
+      const shown = LAYOUTS.filter(l => l.cells >= count);
+
+      shown.forEach((layout, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'layout-btn' + (selectedLayout && selectedLayout.name === layout.name ? ' active' : '');
+        btn.title = layout.name + ' (' + layout.cells + ' cells)';
+
+        // Draw mini grid
+        const cellW = (64 - 12 - (layout.cols - 1) * 2) / layout.cols;
+        const cellH = (64 - 12 - (layout.rows - 1) * 2) / layout.rows;
+        for (let r = 0; r < layout.rows; r++) {
+          for (let c = 0; c < layout.cols; c++) {
+            const cell = document.createElement('div');
+            cell.className = 'layout-cell';
+            cell.style.width = cellW + 'px';
+            cell.style.height = cellH + 'px';
+            btn.appendChild(cell);
+          }
+        }
+
+        const label = document.createElement('div');
+        label.style.cssText = 'font-size:9px;font-weight:700;width:100%;text-align:center;color:var(--text-muted);margin-top:1px';
+        label.textContent = layout.name;
+        btn.appendChild(label);
+
+        btn.addEventListener('click', () => {
+          selectedLayout = layout;
+          layoutGrid.querySelectorAll('.layout-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+        });
+        layoutGrid.appendChild(btn);
+      });
+
+      // Auto-select best matching layout
+      if (!selectedLayout || !shown.find(l => l.name === selectedLayout.name)) {
+        const exact = shown.find(l => l.cells === count);
+        selectedLayout = exact || shown[0] || null;
+        if (selectedLayout) {
+          const btns = layoutGrid.querySelectorAll('.layout-btn');
+          const matchIdx = shown.findIndex(l => l.name === selectedLayout.name);
+          if (matchIdx >= 0 && btns[matchIdx]) btns[matchIdx].classList.add('active');
+        }
+      }
+    }
+
+    spacingSlider.addEventListener('input', () => {
+      spacingValue.textContent = spacingSlider.value + 'px';
+    });
+
+    bgColor.addEventListener('input', () => {
+      bgColorHex.textContent = bgColor.value;
+    });
+
+    generateBtn.addEventListener('click', () => {
+      if (images.length < 2) {
+        showError(errorMsg, 'Please upload at least 2 images.');
+        return;
+      }
+      if (!selectedLayout) {
+        showError(errorMsg, 'Please select a layout.');
+        return;
+      }
+      hideError(errorMsg);
+      renderCollage();
+    });
+
+    function renderCollage() {
+      const layout = selectedLayout;
+      const spacing = parseInt(spacingSlider.value);
+      const totalW = parseInt(outputWidth.value) || 1200;
+      const bg = bgColor.value;
+
+      const cellW = (totalW - spacing * (layout.cols + 1)) / layout.cols;
+      const cellH = cellW; // Square cells for clean grids
+      const totalH = cellH * layout.rows + spacing * (layout.rows + 1);
+
+      const canvas = collageCanvas;
+      canvas.width = totalW;
+      canvas.height = totalH;
+      const ctx = canvas.getContext('2d');
+
+      // Background
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, totalW, totalH);
+
+      // Place images in cells
+      let imgIdx = 0;
+      for (let r = 0; r < layout.rows; r++) {
+        for (let c = 0; c < layout.cols; c++) {
+          if (imgIdx >= images.length) break;
+          const x = spacing + c * (cellW + spacing);
+          const y = spacing + r * (cellH + spacing);
+
+          const img = images[imgIdx].img;
+
+          // Cover-fit: scale to fill cell, center crop
+          const imgRatio = img.width / img.height;
+          const cellRatio = cellW / cellH;
+          let sx, sy, sw, sh;
+          if (imgRatio > cellRatio) {
+            // Image wider: crop sides
+            sh = img.height;
+            sw = sh * cellRatio;
+            sx = (img.width - sw) / 2;
+            sy = 0;
+          } else {
+            // Image taller: crop top/bottom
+            sw = img.width;
+            sh = sw / cellRatio;
+            sx = 0;
+            sy = (img.height - sh) / 2;
+          }
+
+          // Round corners clip
+          const cornerR = Math.min(8, cellW * 0.02);
+          ctx.save();
+          ctx.beginPath();
+          ctx.roundRect(x, y, cellW, cellH, cornerR);
+          ctx.clip();
+          ctx.drawImage(img, sx, sy, sw, sh, x, y, cellW, cellH);
+          ctx.restore();
+
+          imgIdx++;
+        }
+      }
+
+      previewSection.style.display = 'block';
+      previewSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    downloadBtn.addEventListener('click', () => {
+      collageCanvas.toBlob(blob => {
+        if (blob) downloadBlob(blob, 'collage-' + Date.now() + '.png');
+      }, 'image/png');
+    });
+
+    resetBtn.addEventListener('click', () => {
+      images.forEach(item => URL.revokeObjectURL(item.url));
+      images = [];
+      selectedLayout = null;
+      renderThumbs();
+      updateLayouts();
+      previewSection.style.display = 'none';
+      settingsSection.style.display = 'none';
+      thumbSection.style.display = 'none';
+    });
+  })();
+  </script>
+  <script data-goatcounter="https://dairylea.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
