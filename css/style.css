@@ -515,17 +515,35 @@ body {
   .nav-toggle { display: block; }
   .nav-links {
     display: none;
-    position: absolute;
-    top: 56px;
+    position: fixed;
+    top: 0;
     left: 0;
     right: 0;
+    bottom: 0;
     background: #fff;
     flex-direction: column;
     padding: 1rem;
-    border-bottom: 1px solid var(--border);
-    box-shadow: var(--shadow-lg);
+    padding-top: 4rem;
+    z-index: 200;
+    overflow-y: auto;
+    gap: 0;
   }
   .nav-links.open { display: flex; }
+  .nav-links li {
+    list-style: none;
+    width: 100%;
+  }
+  .nav-links a {
+    display: block;
+    width: 100%;
+    text-align: center;
+    padding: 0.9rem 1rem;
+    min-height: 48px;
+    font-size: 1rem;
+    border-bottom: 1px solid var(--border);
+    border-radius: 0;
+  }
+  .nav-links a:last-child { border-bottom: none; }
   .drop-zone { padding: 2rem 1rem; }
   .control-row { flex-direction: column; align-items: stretch; }
   .control-row label { min-width: auto; }
