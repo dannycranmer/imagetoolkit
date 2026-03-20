@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apply Filters to Image Online Free — ImageToolkit</title>
+  <meta name="description" content="Apply filters and effects to images for free. Brightness, contrast, saturation, blur, grayscale, sepia, invert. 100% private — your images never leave your device.">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .filter-controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem 2rem;
+    }
+    .filter-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .filter-row label {
+      font-weight: 600;
+      font-size: 0.9rem;
+      min-width: 90px;
+      flex-shrink: 0;
+    }
+    .filter-row input[type="range"] {
+      flex: 1;
+      min-width: 100px;
+    }
+    .filter-value {
+      font-weight: 700;
+      font-size: 0.85rem;
+      min-width: 48px;
+      text-align: right;
+      color: var(--accent);
+    }
+    .preview-canvas-wrap {
+      overflow: auto;
+      max-height: 520px;
+      display: flex;
+      justify-content: center;
+      margin-top: 1rem;
+    }
+    .preview-canvas-wrap canvas {
+      max-width: 100%;
+      max-height: 500px;
+      border-radius: 6px;
+    }
+    @media (max-width: 768px) {
+      .filter-controls {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">Image<span>Toolkit</span></a>
+      <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">&#9776;</button>
+      <ul class="nav-links" role="menubar">
+        <li><a href="index.html" role="menuitem">Home</a></li>
+        <li><a href="compress.html" role="menuitem">Compress</a></li>
+        <li><a href="resize.html" role="menuitem">Resize</a></li>
+        <li><a href="convert.html" role="menuitem">Convert</a></li>
+        <li><a href="crop.html" role="menuitem">Crop</a></li>
+        <li><a href="watermark.html" role="menuitem">Watermark</a></li>
+        <li><a href="flip-rotate.html" role="menuitem">Flip &amp; Rotate</a></li>
+        <li><a href="background-remover.html" role="menuitem">BG Remover</a></li>
+        <li><a href="filters.html" class="active" role="menuitem">Filters</a></li>
+        <li><a href="https://buymeacoffee.com/dairylea" class="nav-coffee" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="tool-header">
+      <h1>Image Filters &amp; Effects</h1>
+      <p>Apply filters and effects to your images. Everything runs in your browser — your images never leave your device.</p>
+    </div>
+
+    <div class="drop-zone" id="dropZone">
+      <div class="drop-zone-icon">&#127912;</div>
+      <div class="drop-zone-text"><strong>Drop an image here</strong> or click to browse<br>JPEG, PNG, WebP supported</div>
+      <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp">
+    </div>
+
+    <div class="controls" id="controls" style="display:none">
+      <div class="filter-controls" id="filterControls">
+        <div class="filter-row">
+          <label for="brightness">Brightness</label>
+          <input type="range" id="brightness" min="0" max="200" value="100">
+          <span class="filter-value" id="brightnessVal">100%</span>
+        </div>
+        <div class="filter-row">
+          <label for="contrast">Contrast</label>
+          <input type="range" id="contrast" min="0" max="200" value="100">
+          <span class="filter-value" id="contrastVal">100%</span>
+        </div>
+        <div class="filter-row">
+          <label for="saturate">Saturation</label>
+          <input type="range" id="saturate" min="0" max="200" value="100">
+          <span class="filter-value" id="saturateVal">100%</span>
+        </div>
+        <div class="filter-row">
+          <label for="blur">Blur</label>
+          <input type="range" id="blur" min="0" max="20" value="0" step="0.5">
+          <span class="filter-value" id="blurVal">0px</span>
+        </div>
+        <div class="filter-row">
+          <label for="grayscale">Grayscale</label>
+          <input type="range" id="grayscale" min="0" max="100" value="0">
+          <span class="filter-value" id="grayscaleVal">0%</span>
+        </div>
+        <div class="filter-row">
+          <label for="sepia">Sepia</label>
+          <input type="range" id="sepia" min="0" max="100" value="0">
+          <span class="filter-value" id="sepiaVal">0%</span>
+        </div>
+        <div class="filter-row">
+          <label for="invert">Invert</label>
+          <input type="range" id="invert" min="0" max="100" value="0">
+          <span class="filter-value" id="invertVal">0%</span>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="downloadBtn">Download Filtered Image</button>
+        <button class="btn btn-outline" id="resetBtn">Reset All Filters</button>
+        <button class="btn btn-outline" id="clearBtn">Clear Image</button>
+      </div>
+    </div>
+
+    <div class="error-msg" id="errorMsg"></div>
+
+    <div class="preview-area" id="previewArea" style="display:none">
+      <h2 style="font-size:1.15rem; margin-bottom:0.75rem;">Live Preview</h2>
+      <div class="preview-canvas-wrap">
+        <canvas id="previewCanvas"></canvas>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <p>Powered by <strong>ImageToolkit</strong> — Free &amp; Private</p>
+      <div class="footer-links">
+        <a href="https://buymeacoffee.com/dairylea" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a>
+        <a href="https://dannycranmer.github.io/parchment/" target="_blank" rel="noopener">PDF Tools (Parchment)</a>
+        <a href="https://dannycranmer.github.io/devtoolbox/" target="_blank" rel="noopener">Dev Tools (DevToolbox)</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/common.js"></script>
+  <script>
+  (() => {
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const controls = document.getElementById('controls');
+    const previewArea = document.getElementById('previewArea');
+    const previewCanvas = document.getElementById('previewCanvas');
+    const errorMsg = document.getElementById('errorMsg');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const clearBtn = document.getElementById('clearBtn');
+
+    let sourceImg = null;
+    let sourceFile = null;
+
+    const filters = [
+      { id: 'brightness', unit: '%', default: 100 },
+      { id: 'contrast', unit: '%', default: 100 },
+      { id: 'saturate', unit: '%', default: 100 },
+      { id: 'blur', unit: 'px', default: 0 },
+      { id: 'grayscale', unit: '%', default: 0 },
+      { id: 'sepia', unit: '%', default: 0 },
+      { id: 'invert', unit: '%', default: 0 }
+    ];
+
+    // Bind slider events
+    filters.forEach(f => {
+      const slider = document.getElementById(f.id);
+      const valEl = document.getElementById(f.id + 'Val');
+      slider.addEventListener('input', () => {
+        valEl.textContent = slider.value + f.unit;
+        applyFilters();
+      });
+    });
+
+    setupDropZone(dropZone, fileInput, files => {
+      const file = files[0];
+      if (!file) return;
+      sourceFile = file;
+      loadImage(file).then(img => {
+        sourceImg = img;
+        controls.style.display = 'block';
+        previewArea.style.display = 'block';
+        dropZone.querySelector('.drop-zone-text').innerHTML = '<strong>' + file.name + '</strong><br>Drop another image to replace';
+        resetFilters();
+        applyFilters();
+      }).catch(e => {
+        showError(errorMsg, 'Failed to load image: ' + e.message);
+      });
+    });
+
+    function buildFilterString() {
+      return filters.map(f => {
+        const val = document.getElementById(f.id).value;
+        return f.id + '(' + val + f.unit + ')';
+      }).join(' ');
+    }
+
+    function applyFilters() {
+      if (!sourceImg) return;
+      const canvas = previewCanvas;
+      canvas.width = sourceImg.naturalWidth;
+      canvas.height = sourceImg.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.filter = buildFilterString();
+      ctx.drawImage(sourceImg, 0, 0);
+    }
+
+    function resetFilters() {
+      filters.forEach(f => {
+        const slider = document.getElementById(f.id);
+        slider.value = f.default;
+        document.getElementById(f.id + 'Val').textContent = f.default + f.unit;
+      });
+      applyFilters();
+    }
+
+    resetBtn.addEventListener('click', resetFilters);
+
+    clearBtn.addEventListener('click', () => {
+      sourceImg = null;
+      sourceFile = null;
+      controls.style.display = 'none';
+      previewArea.style.display = 'none';
+      dropZone.querySelector('.drop-zone-text').innerHTML = '<strong>Drop an image here</strong> or click to browse<br>JPEG, PNG, WebP supported';
+      resetFilters();
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      if (!sourceImg) return;
+      // Render at full resolution to an offscreen canvas
+      const canvas = document.createElement('canvas');
+      canvas.width = sourceImg.naturalWidth;
+      canvas.height = sourceImg.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.filter = buildFilterString();
+      ctx.drawImage(sourceImg, 0, 0);
+
+      const mime = sourceFile && sourceFile.type ? sourceFile.type : 'image/png';
+      const ext = mime === 'image/png' ? 'png' : mime === 'image/webp' ? 'webp' : 'jpg';
+      const outName = baseName(sourceFile ? sourceFile.name : 'image') + '_filtered.' + ext;
+
+      canvas.toBlob(blob => {
+        if (blob) downloadBlob(blob, outName);
+      }, mime, 0.92);
+    });
+  })();
+  </script>
+  <script data-goatcounter="https://dairylea.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
