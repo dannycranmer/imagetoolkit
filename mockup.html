@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Screenshot Mockup Generator — ImageToolkit</title>
+  <meta name="description" content="Place your screenshot inside a device frame — iPhone, MacBook, iPad, browser window, or Android phone. Free, private, runs in your browser.">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .device-picker {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+    .device-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.75rem 1rem;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      background: var(--bg-card);
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      transition: all 0.15s;
+      min-width: 100px;
+    }
+    .device-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .device-btn.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    .device-btn .device-icon {
+      font-size: 1.6rem;
+    }
+    .mockup-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.25rem;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .mockup-options label {
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+    .mockup-options select {
+      padding: 0.4rem 0.6rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.85rem;
+    }
+    .color-opt {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .color-opt input[type="color"] {
+      width: 36px;
+      height: 30px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      cursor: pointer;
+      padding: 0;
+    }
+    .preview-container {
+      margin-top: 1.5rem;
+      text-align: center;
+    }
+    .preview-container canvas {
+      max-width: 100%;
+      max-height: 600px;
+      border-radius: 8px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    }
+    .preview-info {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+    }
+    @media (max-width: 768px) {
+      .device-picker {
+        gap: 0.5rem;
+      }
+      .device-btn {
+        min-width: 80px;
+        padding: 0.5rem 0.6rem;
+        font-size: 0.75rem;
+      }
+      .device-btn .device-icon {
+        font-size: 1.3rem;
+      }
+      .mockup-options {
+        flex-direction: column;
+        align-items: stretch;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">Image<span>Toolkit</span></a>
+      <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">&#9776;</button>
+      <ul class="nav-links" role="menubar">
+        <li><a href="index.html" role="menuitem">Home</a></li>
+        <li><a href="compress.html" role="menuitem">Compress</a></li>
+        <li><a href="resize.html" role="menuitem">Resize</a></li>
+        <li><a href="convert.html" role="menuitem">Convert</a></li>
+        <li><a href="crop.html" role="menuitem">Crop</a></li>
+        <li><a href="watermark.html" role="menuitem">Watermark</a></li>
+        <li><a href="flip-rotate.html" role="menuitem">Flip &amp; Rotate</a></li>
+        <li><a href="background-remover.html" role="menuitem">BG Remover</a></li>
+        <li><a href="filters.html" role="menuitem">Filters</a></li>
+        <li><a href="palette.html" role="menuitem">Palette</a></li>
+        <li><a href="meme.html" role="menuitem">Meme</a></li>
+        <li><a href="base64.html" role="menuitem">Base64</a></li>
+        <li><a href="collage.html" role="menuitem">Collage</a></li>
+        <li><a href="denoise.html" role="menuitem">Denoise</a></li>
+        <li><a href="mockup.html" class="active" role="menuitem">Mockup</a></li>
+        <li><a href="https://buymeacoffee.com/dairylea" class="nav-coffee" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="tool-header">
+      <h1>Screenshot Mockup Generator</h1>
+      <p>Upload a screenshot and place it inside a realistic device frame — iPhone, MacBook, iPad, browser window, or Android phone. Your images never leave your device.</p>
+    </div>
+
+    <div class="drop-zone" id="dropZone">
+      <div class="drop-zone-icon">&#128241;</div>
+      <div class="drop-zone-text"><strong>Drop a screenshot here</strong> or click to browse<br>JPEG, PNG, WebP supported</div>
+      <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp">
+    </div>
+
+    <div class="controls" id="controls" style="display:none">
+      <label style="font-weight:600;font-size:0.85rem;display:block;margin-bottom:0.5rem">Device Frame</label>
+      <div class="device-picker" id="devicePicker">
+        <button class="device-btn active" data-device="iphone">
+          <span class="device-icon">&#128241;</span>
+          iPhone
+        </button>
+        <button class="device-btn" data-device="macbook">
+          <span class="device-icon">&#128187;</span>
+          MacBook
+        </button>
+        <button class="device-btn" data-device="ipad">
+          <span class="device-icon">&#128195;</span>
+          iPad
+        </button>
+        <button class="device-btn" data-device="browser">
+          <span class="device-icon">&#127760;</span>
+          Browser
+        </button>
+        <button class="device-btn" data-device="android">
+          <span class="device-icon">&#128242;</span>
+          Android
+        </button>
+      </div>
+
+      <div class="mockup-options">
+        <div class="color-opt">
+          <label for="bgColor">Background</label>
+          <input type="color" id="bgColor" value="#f0f4f8">
+        </div>
+        <div class="color-opt">
+          <label for="frameColor">Frame Color</label>
+          <select id="frameColor">
+            <option value="dark">Dark</option>
+            <option value="silver">Silver</option>
+            <option value="white">White</option>
+          </select>
+        </div>
+        <div class="color-opt">
+          <label for="shadowToggle">
+            <input type="checkbox" id="shadowToggle" checked> Drop Shadow
+          </label>
+        </div>
+        <div class="color-opt">
+          <label for="paddingSlider">Padding</label>
+          <input type="range" id="paddingSlider" min="20" max="200" value="80" style="width:120px">
+          <span id="paddingVal" style="font-size:0.8rem;font-weight:700;color:var(--accent)">80px</span>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-green" id="downloadBtn">Download Mockup</button>
+        <button class="btn btn-outline" id="clearBtn">Clear</button>
+      </div>
+    </div>
+
+    <div class="error-msg" id="errorMsg"></div>
+
+    <div class="preview-container" id="previewArea" style="display:none">
+      <canvas id="mockupCanvas"></canvas>
+      <div class="preview-info" id="previewInfo"></div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <p>Powered by <strong>ImageToolkit</strong> — Free &amp; Private</p>
+      <div class="footer-links">
+        <a href="https://buymeacoffee.com/dairylea" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a>
+        <a href="https://dannycranmer.github.io/parchment/" target="_blank" rel="noopener">PDF Tools (Parchment)</a>
+        <a href="https://dannycranmer.github.io/devtoolbox/" target="_blank" rel="noopener">Dev Tools (DevToolbox)</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/common.js"></script>
+  <script>
+  (() => {
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const controls = document.getElementById('controls');
+    const errorMsg = document.getElementById('errorMsg');
+    const previewArea = document.getElementById('previewArea');
+    const mockupCanvas = document.getElementById('mockupCanvas');
+    const previewInfo = document.getElementById('previewInfo');
+    const bgColorInput = document.getElementById('bgColor');
+    const frameColorSelect = document.getElementById('frameColor');
+    const shadowToggle = document.getElementById('shadowToggle');
+    const paddingSlider = document.getElementById('paddingSlider');
+    const paddingVal = document.getElementById('paddingVal');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const clearBtn = document.getElementById('clearBtn');
+
+    let currentImg = null;
+    let currentFile = null;
+    let currentDevice = 'iphone';
+
+    // Device frame configs: screen region relative to frame dimensions
+    const devices = {
+      iphone: {
+        label: 'iPhone',
+        // Frame aspect: portrait phone
+        frameW: 380, frameH: 780,
+        screenX: 22, screenY: 70, screenW: 336, screenH: 640,
+        cornerRadius: 50,
+        bezelRadius: 14,
+        notch: true
+      },
+      macbook: {
+        label: 'MacBook',
+        frameW: 900, frameH: 580,
+        screenX: 62, screenY: 22, screenW: 776, screenH: 486,
+        cornerRadius: 14,
+        bezelRadius: 6,
+        notch: false,
+        hasBase: true
+      },
+      ipad: {
+        label: 'iPad',
+        frameW: 620, frameH: 820,
+        screenX: 30, screenY: 50, screenW: 560, screenH: 720,
+        cornerRadius: 30,
+        bezelRadius: 8,
+        notch: false
+      },
+      browser: {
+        label: 'Browser',
+        frameW: 860, frameH: 600,
+        screenX: 4, screenY: 44, screenW: 852, screenH: 552,
+        cornerRadius: 12,
+        bezelRadius: 0,
+        notch: false,
+        hasTitleBar: true
+      },
+      android: {
+        label: 'Android',
+        frameW: 380, frameH: 780,
+        screenX: 18, screenY: 52, screenW: 344, screenH: 676,
+        cornerRadius: 36,
+        bezelRadius: 12,
+        notch: false,
+        punchHole: true
+      }
+    };
+
+    const frameColors = {
+      dark: { body: '#1a1a1e', accent: '#2a2a30', highlight: '#3a3a40' },
+      silver: { body: '#c0c4cc', accent: '#d4d8e0', highlight: '#e8eaee' },
+      white: { body: '#f0f0f2', accent: '#e0e0e4', highlight: '#fafafa' }
+    };
+
+    // Device picker
+    document.getElementById('devicePicker').addEventListener('click', e => {
+      const btn = e.target.closest('.device-btn');
+      if (!btn) return;
+      document.querySelectorAll('.device-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentDevice = btn.dataset.device;
+      if (currentImg) renderMockup();
+    });
+
+    // Re-render on option change
+    bgColorInput.addEventListener('input', () => { if (currentImg) renderMockup(); });
+    frameColorSelect.addEventListener('change', () => { if (currentImg) renderMockup(); });
+    shadowToggle.addEventListener('change', () => { if (currentImg) renderMockup(); });
+    paddingSlider.addEventListener('input', () => {
+      paddingVal.textContent = paddingSlider.value + 'px';
+      if (currentImg) renderMockup();
+    });
+
+    setupDropZone(dropZone, fileInput, files => {
+      currentFile = files[0];
+      hideError(errorMsg);
+      loadImage(currentFile).then(img => {
+        currentImg = img;
+        controls.style.display = 'block';
+        previewArea.style.display = 'block';
+        renderMockup();
+        dropZone.querySelector('.drop-zone-text').innerHTML =
+          '<strong>' + escHTML(currentFile.name) + '</strong><br>Drop another to replace';
+      }).catch(e => {
+        showError(errorMsg, 'Failed to load image: ' + e.message);
+      });
+    });
+
+    clearBtn.addEventListener('click', () => {
+      currentImg = null;
+      currentFile = null;
+      controls.style.display = 'none';
+      previewArea.style.display = 'none';
+      dropZone.querySelector('.drop-zone-text').innerHTML =
+        '<strong>Drop a screenshot here</strong> or click to browse<br>JPEG, PNG, WebP supported';
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      if (!currentImg) return;
+      // Render at full resolution
+      const canvas = renderMockup(true);
+      canvas.toBlob(blob => {
+        if (blob) downloadBlob(blob, baseName(currentFile.name) + '-mockup.png');
+      }, 'image/png');
+    });
+
+    function renderMockup(fullRes) {
+      const dev = devices[currentDevice];
+      const colors = frameColors[frameColorSelect.value];
+      const padding = parseInt(paddingSlider.value);
+      const showShadow = shadowToggle.checked;
+
+      // Scale factor: for preview, scale down; for download, use a multiplier for quality
+      const scale = fullRes ? 2 : 1;
+
+      const totalW = (dev.frameW + padding * 2) * scale;
+      const totalH = ((dev.hasBase ? dev.frameH + 30 : dev.frameH) + padding * 2) * scale;
+
+      const canvas = fullRes ? document.createElement('canvas') : mockupCanvas;
+      canvas.width = totalW;
+      canvas.height = totalH;
+      const ctx = canvas.getContext('2d');
+
+      // Background
+      ctx.fillStyle = bgColorInput.value;
+      ctx.fillRect(0, 0, totalW, totalH);
+
+      ctx.save();
+      ctx.scale(scale, scale);
+
+      const fx = padding;
+      const fy = padding;
+
+      // Shadow
+      if (showShadow) {
+        ctx.shadowColor = 'rgba(0,0,0,0.25)';
+        ctx.shadowBlur = 40;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 12;
+      }
+
+      if (dev.hasTitleBar) {
+        drawBrowserFrame(ctx, fx, fy, dev, colors);
+      } else if (dev.hasBase) {
+        drawLaptopFrame(ctx, fx, fy, dev, colors);
+      } else {
+        drawPhoneTabletFrame(ctx, fx, fy, dev, colors);
+      }
+
+      // Reset shadow
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+
+      // Draw screen content (screenshot) clipped to screen area
+      const sx = fx + dev.screenX;
+      const sy = fy + dev.screenY;
+      const sw = dev.screenW;
+      const sh = dev.screenH;
+
+      ctx.save();
+      roundRect(ctx, sx, sy, sw, sh, dev.bezelRadius);
+      ctx.clip();
+
+      // Cover-fit the screenshot into screen area
+      const imgAspect = currentImg.naturalWidth / currentImg.naturalHeight;
+      const screenAspect = sw / sh;
+      let drawW, drawH, drawX, drawY;
+      if (imgAspect > screenAspect) {
+        drawH = sh;
+        drawW = sh * imgAspect;
+        drawX = sx + (sw - drawW) / 2;
+        drawY = sy;
+      } else {
+        drawW = sw;
+        drawH = sw / imgAspect;
+        drawX = sx;
+        drawY = sy + (sh - drawH) / 2;
+      }
+      ctx.drawImage(currentImg, drawX, drawY, drawW, drawH);
+      ctx.restore();
+
+      // Draw overlays (notch, punch-hole, title bar dots)
+      if (dev.notch) {
+        drawNotch(ctx, fx, fy, dev, colors);
+      }
+      if (dev.punchHole) {
+        drawPunchHole(ctx, fx, fy, dev);
+      }
+      if (dev.hasTitleBar) {
+        drawTitleBarDots(ctx, fx, fy, dev);
+      }
+
+      ctx.restore();
+
+      if (!fullRes) {
+        previewInfo.textContent = Math.round(totalW) + ' x ' + Math.round(totalH) + ' — ' + dev.label + ' mockup';
+      }
+
+      return canvas;
+    }
+
+    function drawPhoneTabletFrame(ctx, x, y, dev, colors) {
+      // Outer body
+      ctx.fillStyle = colors.body;
+      roundRect(ctx, x, y, dev.frameW, dev.frameH, dev.cornerRadius);
+      ctx.fill();
+
+      // Inner bezel highlight
+      ctx.fillStyle = colors.accent;
+      const inset = 4;
+      roundRect(ctx, x + inset, y + inset, dev.frameW - inset * 2, dev.frameH - inset * 2, dev.cornerRadius - inset);
+      ctx.fill();
+
+      // Screen cutout (dark)
+      ctx.fillStyle = '#000';
+      roundRect(ctx, x + dev.screenX, y + dev.screenY, dev.screenW, dev.screenH, dev.bezelRadius);
+      ctx.fill();
+    }
+
+    function drawLaptopFrame(ctx, x, y, dev, colors) {
+      // Screen lid
+      ctx.fillStyle = colors.body;
+      roundRect(ctx, x, y, dev.frameW, dev.frameH, dev.cornerRadius);
+      ctx.fill();
+
+      // Inner bezel
+      ctx.fillStyle = colors.accent;
+      const inset = 6;
+      roundRect(ctx, x + inset, y + inset, dev.frameW - inset * 2, dev.frameH - inset * 2, dev.cornerRadius - 4);
+      ctx.fill();
+
+      // Screen
+      ctx.fillStyle = '#000';
+      roundRect(ctx, x + dev.screenX, y + dev.screenY, dev.screenW, dev.screenH, dev.bezelRadius);
+      ctx.fill();
+
+      // Camera dot
+      ctx.fillStyle = colors.highlight;
+      ctx.beginPath();
+      ctx.arc(x + dev.frameW / 2, y + 12, 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Base / keyboard section
+      const baseY = y + dev.frameH;
+      const baseH = 24;
+      ctx.fillStyle = colors.body;
+      ctx.beginPath();
+      ctx.moveTo(x + 20, baseY);
+      ctx.lineTo(x + dev.frameW - 20, baseY);
+      ctx.lineTo(x + dev.frameW + 30, baseY + baseH);
+      ctx.quadraticCurveTo(x + dev.frameW + 30, baseY + baseH + 4, x + dev.frameW + 26, baseY + baseH + 4);
+      ctx.lineTo(x - 26, baseY + baseH + 4);
+      ctx.quadraticCurveTo(x - 30, baseY + baseH + 4, x - 30, baseY + baseH);
+      ctx.lineTo(x + 20, baseY);
+      ctx.closePath();
+      ctx.fill();
+
+      // Base hinge line
+      ctx.strokeStyle = colors.accent;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x + 20, baseY + 1);
+      ctx.lineTo(x + dev.frameW - 20, baseY + 1);
+      ctx.stroke();
+    }
+
+    function drawBrowserFrame(ctx, x, y, dev, colors) {
+      // Window body
+      ctx.fillStyle = colors.highlight;
+      roundRect(ctx, x, y, dev.frameW, dev.frameH, dev.cornerRadius);
+      ctx.fill();
+
+      // Title bar
+      ctx.fillStyle = colors.accent;
+      ctx.beginPath();
+      ctx.moveTo(x + dev.cornerRadius, y);
+      ctx.arcTo(x + dev.frameW, y, x + dev.frameW, y + dev.cornerRadius, dev.cornerRadius);
+      ctx.lineTo(x + dev.frameW, y + 40);
+      ctx.lineTo(x, y + 40);
+      ctx.lineTo(x, y + dev.cornerRadius);
+      ctx.arcTo(x, y, x + dev.cornerRadius, y, dev.cornerRadius);
+      ctx.closePath();
+      ctx.fill();
+
+      // Divider line
+      ctx.strokeStyle = colors.body;
+      ctx.lineWidth = 0.5;
+      ctx.beginPath();
+      ctx.moveTo(x, y + 40);
+      ctx.lineTo(x + dev.frameW, y + 40);
+      ctx.stroke();
+
+      // Screen area
+      ctx.fillStyle = '#000';
+      ctx.fillRect(x + dev.screenX, y + dev.screenY, dev.screenW, dev.screenH);
+
+      // URL bar
+      ctx.fillStyle = colors.highlight;
+      roundRect(ctx, x + 80, y + 10, dev.frameW - 160, 22, 6);
+      ctx.fill();
+
+      // URL text placeholder
+      ctx.fillStyle = colors.body;
+      ctx.font = '11px -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('imagetoolkit.io', x + dev.frameW / 2, y + 25);
+      ctx.textAlign = 'start';
+    }
+
+    function drawTitleBarDots(ctx, x, y, dev) {
+      const dotY = y + 20;
+      const dotX = x + 18;
+      const dotR = 5.5;
+      const gap = 18;
+      const dotColors = ['#ff5f57', '#febc2e', '#28c840'];
+      dotColors.forEach((c, i) => {
+        ctx.fillStyle = c;
+        ctx.beginPath();
+        ctx.arc(dotX + i * gap, dotY, dotR, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
+
+    function drawNotch(ctx, x, y, dev, colors) {
+      // iPhone-style notch/dynamic island
+      const notchW = 120;
+      const notchH = 28;
+      const notchX = x + (dev.frameW - notchW) / 2;
+      const notchY = y + dev.screenY + 8;
+      ctx.fillStyle = colors.body;
+      roundRect(ctx, notchX, notchY, notchW, notchH, 14);
+      ctx.fill();
+    }
+
+    function drawPunchHole(ctx, x, y, dev) {
+      // Android-style punch-hole camera
+      const holeX = x + dev.frameW / 2;
+      const holeY = y + dev.screenY + 16;
+      ctx.fillStyle = '#1a1a1e';
+      ctx.beginPath();
+      ctx.arc(holeX, holeY, 6, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function roundRect(ctx, x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+
+    function escHTML(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+  })();
+  </script>
+  <script data-goatcounter="https://dairylea.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
