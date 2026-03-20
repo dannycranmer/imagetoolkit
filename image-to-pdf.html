@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Convert Images to PDF Online Free — ImageToolkit</title>
+  <meta name="description" content="Upload multiple images and combine them into a single PDF. Choose page size (A4, Letter, fit-to-image). Free, private, runs in your browser.">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .page-size-picker {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .page-size-btn {
+      padding: 0.5rem 1rem;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-card);
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.15s;
+    }
+    .page-size-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .page-size-btn.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    .image-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    .image-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.5rem 0.75rem;
+    }
+    .image-item img {
+      width: 50px;
+      height: 50px;
+      object-fit: cover;
+      border-radius: 4px;
+      background: var(--bg);
+      flex-shrink: 0;
+    }
+    .image-item-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .image-item-name {
+      font-weight: 600;
+      font-size: 0.85rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .image-item-meta {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    .image-item-actions {
+      display: flex;
+      gap: 0.25rem;
+      flex-shrink: 0;
+    }
+    .image-item-actions button {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      padding: 0.25rem 0.4rem;
+      line-height: 1;
+      transition: all 0.15s;
+    }
+    .image-item-actions button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .image-item-actions .remove-btn:hover {
+      border-color: #EF4444;
+      color: #EF4444;
+    }
+    .orientation-picker {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .orientation-btn {
+      padding: 0.4rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg-card);
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    .orientation-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .orientation-btn.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    .option-group {
+      margin-bottom: 1rem;
+    }
+    .option-group label {
+      font-weight: 600;
+      font-size: 0.85rem;
+      display: block;
+      margin-bottom: 0.4rem;
+    }
+    .image-count {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+    }
+    @media (max-width: 768px) {
+      .image-item-name {
+        max-width: 150px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">Image<span>Toolkit</span></a>
+      <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">&#9776;</button>
+      <ul class="nav-links" role="menubar">
+        <li><a href="index.html" role="menuitem">Home</a></li>
+        <li><a href="compress.html" role="menuitem">Compress</a></li>
+        <li><a href="resize.html" role="menuitem">Resize</a></li>
+        <li><a href="convert.html" role="menuitem">Convert</a></li>
+        <li><a href="crop.html" role="menuitem">Crop</a></li>
+        <li><a href="watermark.html" role="menuitem">Watermark</a></li>
+        <li><a href="flip-rotate.html" role="menuitem">Flip &amp; Rotate</a></li>
+        <li><a href="background-remover.html" role="menuitem">BG Remover</a></li>
+        <li><a href="filters.html" role="menuitem">Filters</a></li>
+        <li><a href="palette.html" role="menuitem">Palette</a></li>
+        <li><a href="meme.html" role="menuitem">Meme</a></li>
+        <li><a href="base64.html" role="menuitem">Base64</a></li>
+        <li><a href="collage.html" role="menuitem">Collage</a></li>
+        <li><a href="denoise.html" role="menuitem">Denoise</a></li>
+        <li><a href="mockup.html" role="menuitem">Mockup</a></li>
+        <li><a href="image-to-pdf.html" class="active" role="menuitem">To PDF</a></li>
+        <li><a href="https://buymeacoffee.com/dairylea" class="nav-coffee" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="tool-header">
+      <h1>Convert Images to PDF</h1>
+      <p>Upload multiple images and combine them into a single PDF document. Choose your page size and orientation. Your images never leave your device.</p>
+    </div>
+
+    <div class="drop-zone" id="dropZone">
+      <div class="drop-zone-icon">&#128196;</div>
+      <div class="drop-zone-text"><strong>Drop images here</strong> or click to browse<br>JPEG, PNG, WebP supported — add multiple images</div>
+      <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" multiple>
+    </div>
+
+    <div class="controls" id="controls" style="display:none">
+      <div class="image-count" id="imageCount"></div>
+      <div id="imageList" class="image-list"></div>
+
+      <div class="option-group">
+        <label>Page Size</label>
+        <div class="page-size-picker" id="pageSizePicker">
+          <button class="page-size-btn active" data-size="a4">A4</button>
+          <button class="page-size-btn" data-size="letter">Letter</button>
+          <button class="page-size-btn" data-size="fit">Fit to Image</button>
+        </div>
+      </div>
+
+      <div class="option-group" id="orientationGroup">
+        <label>Orientation</label>
+        <div class="orientation-picker" id="orientationPicker">
+          <button class="orientation-btn active" data-orient="portrait">Portrait</button>
+          <button class="orientation-btn" data-orient="landscape">Landscape</button>
+          <button class="orientation-btn" data-orient="auto">Auto (per image)</button>
+        </div>
+      </div>
+
+      <div class="option-group">
+        <div class="control-row">
+          <label for="marginSlider">Margin</label>
+          <input type="range" id="marginSlider" min="0" max="40" value="10">
+          <span class="quality-value" id="marginVal">10mm</span>
+        </div>
+      </div>
+
+      <div class="option-group">
+        <div class="control-row">
+          <label for="qualitySlider">Image Quality</label>
+          <input type="range" id="qualitySlider" min="50" max="100" value="92">
+          <span class="quality-value" id="qualityVal">92%</span>
+        </div>
+      </div>
+
+      <div class="progress-bar" id="progressBar">
+        <div class="progress-bar-fill" id="progressFill"></div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-green" id="generateBtn">Generate PDF</button>
+        <button class="btn btn-outline" id="addMoreBtn">Add More Images</button>
+        <button class="btn btn-outline" id="clearBtn">Clear All</button>
+      </div>
+    </div>
+
+    <div class="error-msg" id="errorMsg"></div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <p>Powered by <strong>ImageToolkit</strong> — Free &amp; Private</p>
+      <div class="footer-links">
+        <a href="https://buymeacoffee.com/dairylea" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a>
+        <a href="https://dannycranmer.github.io/parchment/" target="_blank" rel="noopener">PDF Tools (Parchment)</a>
+        <a href="https://dannycranmer.github.io/devtoolbox/" target="_blank" rel="noopener">Dev Tools (DevToolbox)</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/common.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+  <script>
+  (() => {
+    const { jsPDF } = window.jspdf;
+
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const controls = document.getElementById('controls');
+    const imageList = document.getElementById('imageList');
+    const imageCount = document.getElementById('imageCount');
+    const errorMsg = document.getElementById('errorMsg');
+    const generateBtn = document.getElementById('generateBtn');
+    const addMoreBtn = document.getElementById('addMoreBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const marginSlider = document.getElementById('marginSlider');
+    const marginVal = document.getElementById('marginVal');
+    const qualitySlider = document.getElementById('qualitySlider');
+    const qualityVal = document.getElementById('qualityVal');
+    const progressBar = document.getElementById('progressBar');
+    const progressFill = document.getElementById('progressFill');
+    const orientationGroup = document.getElementById('orientationGroup');
+
+    let images = []; // { file, img, name, size, w, h }
+    let pageSize = 'a4';
+    let orientation = 'portrait';
+
+    // Page size picker
+    document.getElementById('pageSizePicker').addEventListener('click', e => {
+      const btn = e.target.closest('.page-size-btn');
+      if (!btn) return;
+      document.querySelectorAll('.page-size-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      pageSize = btn.dataset.size;
+      orientationGroup.style.display = pageSize === 'fit' ? 'none' : '';
+    });
+
+    // Orientation picker
+    document.getElementById('orientationPicker').addEventListener('click', e => {
+      const btn = e.target.closest('.orientation-btn');
+      if (!btn) return;
+      document.querySelectorAll('.orientation-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      orientation = btn.dataset.orient;
+    });
+
+    marginSlider.addEventListener('input', () => {
+      marginVal.textContent = marginSlider.value + 'mm';
+    });
+
+    qualitySlider.addEventListener('input', () => {
+      qualityVal.textContent = qualitySlider.value + '%';
+    });
+
+    function addFiles(files) {
+      hideError(errorMsg);
+      const promises = files.map(file => {
+        return loadImage(file).then(img => {
+          images.push({
+            file,
+            img,
+            name: file.name,
+            size: file.size,
+            w: img.naturalWidth,
+            h: img.naturalHeight
+          });
+        }).catch(() => {
+          showError(errorMsg, 'Could not load: ' + file.name);
+        });
+      });
+
+      Promise.all(promises).then(() => {
+        if (images.length > 0) {
+          controls.style.display = 'block';
+          renderList();
+        }
+      });
+    }
+
+    setupDropZone(dropZone, fileInput, addFiles);
+
+    addMoreBtn.addEventListener('click', () => fileInput.click());
+
+    clearBtn.addEventListener('click', () => {
+      images = [];
+      controls.style.display = 'none';
+      progressBar.style.display = 'none';
+      dropZone.querySelector('.drop-zone-text').innerHTML =
+        '<strong>Drop images here</strong> or click to browse<br>JPEG, PNG, WebP supported — add multiple images';
+    });
+
+    function renderList() {
+      imageCount.textContent = images.length + ' image' + (images.length !== 1 ? 's' : '') + ' — drag to reorder, or use arrows';
+      imageList.innerHTML = '';
+      images.forEach((item, idx) => {
+        const div = document.createElement('div');
+        div.className = 'image-item';
+
+        const thumb = document.createElement('img');
+        thumb.src = item.img.src;
+        thumb.alt = item.name;
+
+        const info = document.createElement('div');
+        info.className = 'image-item-info';
+        info.innerHTML =
+          '<div class="image-item-name">' + escHTML(item.name) + '</div>' +
+          '<div class="image-item-meta">' + item.w + '×' + item.h + ' · ' + formatBytes(item.size) + '</div>';
+
+        const actions = document.createElement('div');
+        actions.className = 'image-item-actions';
+
+        if (idx > 0) {
+          const upBtn = document.createElement('button');
+          upBtn.textContent = '▲';
+          upBtn.title = 'Move up';
+          upBtn.addEventListener('click', () => { swap(idx, idx - 1); renderList(); });
+          actions.appendChild(upBtn);
+        }
+        if (idx < images.length - 1) {
+          const downBtn = document.createElement('button');
+          downBtn.textContent = '▼';
+          downBtn.title = 'Move down';
+          downBtn.addEventListener('click', () => { swap(idx, idx + 1); renderList(); });
+          actions.appendChild(downBtn);
+        }
+
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'remove-btn';
+        removeBtn.textContent = '✕';
+        removeBtn.title = 'Remove';
+        removeBtn.addEventListener('click', () => {
+          images.splice(idx, 1);
+          if (images.length === 0) {
+            controls.style.display = 'none';
+          } else {
+            renderList();
+          }
+        });
+        actions.appendChild(removeBtn);
+
+        div.appendChild(thumb);
+        div.appendChild(info);
+        div.appendChild(actions);
+        imageList.appendChild(div);
+      });
+
+      dropZone.querySelector('.drop-zone-text').innerHTML =
+        '<strong>' + images.length + ' image' + (images.length !== 1 ? 's' : '') + ' added</strong><br>Drop more to add';
+    }
+
+    function swap(a, b) {
+      [images[a], images[b]] = [images[b], images[a]];
+    }
+
+    generateBtn.addEventListener('click', async () => {
+      if (images.length === 0) return;
+
+      generateBtn.disabled = true;
+      progressBar.style.display = 'block';
+      progressFill.style.width = '0%';
+
+      try {
+        const margin = parseInt(marginSlider.value);
+        const quality = parseInt(qualitySlider.value) / 100;
+
+        // Page dimensions in mm
+        const pageSizes = {
+          a4: [210, 297],
+          letter: [215.9, 279.4]
+        };
+
+        let doc = null;
+
+        for (let i = 0; i < images.length; i++) {
+          const item = images[i];
+          const imgW = item.w;
+          const imgH = item.h;
+
+          // Convert image to JPEG data URL for smaller PDF
+          const canvas = document.createElement('canvas');
+          canvas.width = imgW;
+          canvas.height = imgH;
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(0, 0, imgW, imgH);
+          ctx.drawImage(item.img, 0, 0);
+          const dataUrl = canvas.toDataURL('image/jpeg', quality);
+
+          let pageW, pageH;
+
+          if (pageSize === 'fit') {
+            // Convert pixels to mm at 96 DPI
+            const pxToMm = 25.4 / 96;
+            pageW = imgW * pxToMm + margin * 2;
+            pageH = imgH * pxToMm + margin * 2;
+          } else {
+            const [baseW, baseH] = pageSizes[pageSize];
+            let orient = orientation;
+            if (orient === 'auto') {
+              orient = imgW > imgH ? 'landscape' : 'portrait';
+            }
+            if (orient === 'landscape') {
+              pageW = baseH;
+              pageH = baseW;
+            } else {
+              pageW = baseW;
+              pageH = baseH;
+            }
+          }
+
+          if (i === 0) {
+            doc = new jsPDF({
+              unit: 'mm',
+              format: [pageW, pageH]
+            });
+          } else {
+            doc.addPage([pageW, pageH]);
+          }
+
+          // Calculate image placement within margins
+          const availW = pageW - margin * 2;
+          const availH = pageH - margin * 2;
+
+          let drawW, drawH;
+          if (pageSize === 'fit') {
+            drawW = availW;
+            drawH = availH;
+          } else {
+            const imgAspect = imgW / imgH;
+            const areaAspect = availW / availH;
+            if (imgAspect > areaAspect) {
+              drawW = availW;
+              drawH = availW / imgAspect;
+            } else {
+              drawH = availH;
+              drawW = availH * imgAspect;
+            }
+          }
+
+          const x = margin + (availW - drawW) / 2;
+          const y = margin + (availH - drawH) / 2;
+
+          doc.addImage(dataUrl, 'JPEG', x, y, drawW, drawH);
+
+          progressFill.style.width = Math.round(((i + 1) / images.length) * 100) + '%';
+
+          // Yield to UI
+          if (i < images.length - 1) {
+            await new Promise(r => setTimeout(r, 0));
+          }
+        }
+
+        const pdfBlob = doc.output('blob');
+        downloadBlob(pdfBlob, 'images.pdf');
+
+        progressFill.style.width = '100%';
+      } catch (err) {
+        showError(errorMsg, 'Failed to generate PDF: ' + err.message);
+      } finally {
+        generateBtn.disabled = false;
+        setTimeout(() => { progressBar.style.display = 'none'; }, 1000);
+      }
+    });
+
+    function escHTML(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+  })();
+  </script>
+  <script data-goatcounter="https://dairylea.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

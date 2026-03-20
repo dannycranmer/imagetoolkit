@@ -1,14 +1,57 @@
 /* ImageToolkit — Shared Utilities */
 
-// Mobile nav toggle
+// Mobile nav toggle + "More" dropdown for nav overflow
 document.addEventListener('DOMContentLoaded', () => {
   const toggle = document.querySelector('.nav-toggle');
-  const links = document.querySelector('.nav-links');
-  if (toggle && links) {
+  const navLinks = document.querySelector('.nav-links');
+  if (toggle && navLinks) {
     toggle.addEventListener('click', () => {
-      const open = links.classList.toggle('open');
+      const open = navLinks.classList.toggle('open');
       toggle.setAttribute('aria-expanded', open);
     });
+  }
+
+  // Move overflow items into a "More" dropdown
+  if (navLinks) {
+    const items = Array.from(navLinks.children);
+    const VISIBLE = 8;
+    let coffeeItem = null;
+    const toolItems = [];
+    items.forEach(li => {
+      if (li.querySelector('.nav-coffee')) coffeeItem = li;
+      else toolItems.push(li);
+    });
+    if (toolItems.length > VISIBLE) {
+      const overflow = toolItems.slice(VISIBLE);
+      const moreLi = document.createElement('li');
+      moreLi.className = 'nav-more';
+      const btn = document.createElement('button');
+      btn.className = 'nav-more-btn';
+      btn.textContent = 'More \u25BE';
+      btn.setAttribute('aria-expanded', 'false');
+      moreLi.appendChild(btn);
+      const dd = document.createElement('ul');
+      dd.className = 'nav-more-dropdown';
+      let hasActive = false;
+      overflow.forEach(li => {
+        navLinks.removeChild(li);
+        if (li.querySelector('.active')) hasActive = true;
+        dd.appendChild(li);
+      });
+      moreLi.appendChild(dd);
+      if (hasActive) moreLi.classList.add('has-active');
+      if (coffeeItem) navLinks.insertBefore(moreLi, coffeeItem);
+      else navLinks.appendChild(moreLi);
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const isOpen = moreLi.classList.toggle('open');
+        btn.setAttribute('aria-expanded', isOpen);
+      });
+      document.addEventListener('click', () => {
+        moreLi.classList.remove('open');
+        btn.setAttribute('aria-expanded', 'false');
+      });
+    }
   }
 });
 

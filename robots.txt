@@ -1,4 +1,1 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://dannycranmer.github.io/imagetoolkit/sitemap.xml
+User-agent: *\nAllow: /\nSitemap: https://dannycranmer.github.io/imagetoolkit/sitemap.xml
