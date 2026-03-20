@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Extract Color Palette from Image Online Free — ImageToolkit</title>
+  <meta name="description" content="Extract dominant colors from any image for free. Get hex codes, RGB values, and download palettes as PNG or JSON. 100% private — your images never leave your device.">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .palette-display {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-top: 1.5rem;
+    }
+    .palette-preview {
+      display: flex;
+      border-radius: 8px;
+      overflow: hidden;
+      height: 80px;
+      margin-bottom: 1.25rem;
+    }
+    .palette-preview-bar {
+      flex: 1;
+      transition: flex 0.2s;
+      cursor: pointer;
+    }
+    .palette-preview-bar:hover {
+      flex: 1.5;
+    }
+    .palette-swatches {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.75rem;
+    }
+    .swatch {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: box-shadow 0.2s, transform 0.15s;
+    }
+    .swatch:hover {
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-2px);
+    }
+    .swatch-color {
+      height: 70px;
+      width: 100%;
+    }
+    .swatch-info {
+      padding: 0.6rem 0.75rem;
+    }
+    .swatch-hex {
+      font-weight: 700;
+      font-size: 0.9rem;
+      font-family: 'SF Mono', SFMono-Regular, Consolas, monospace;
+    }
+    .swatch-rgb {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.15rem;
+    }
+    .swatch-pct {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 0.15rem;
+    }
+    .copied-toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--text);
+      color: #fff;
+      padding: 0.6rem 1.25rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      opacity: 0;
+      transition: opacity 0.2s, transform 0.2s;
+      pointer-events: none;
+      z-index: 200;
+    }
+    .copied-toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    .image-preview {
+      text-align: center;
+      margin-bottom: 1.25rem;
+    }
+    .image-preview img {
+      max-width: 100%;
+      max-height: 300px;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+    .palette-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+    .palette-header h2 {
+      font-size: 1.15rem;
+    }
+    .download-btns {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .btn-sm {
+      padding: 0.4rem 0.85rem;
+      font-size: 0.8rem;
+    }
+    .color-count-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">Image<span>Toolkit</span></a>
+      <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">&#9776;</button>
+      <ul class="nav-links" role="menubar">
+        <li><a href="index.html" role="menuitem">Home</a></li>
+        <li><a href="compress.html" role="menuitem">Compress</a></li>
+        <li><a href="resize.html" role="menuitem">Resize</a></li>
+        <li><a href="convert.html" role="menuitem">Convert</a></li>
+        <li><a href="crop.html" role="menuitem">Crop</a></li>
+        <li><a href="watermark.html" role="menuitem">Watermark</a></li>
+        <li><a href="flip-rotate.html" role="menuitem">Flip &amp; Rotate</a></li>
+        <li><a href="background-remover.html" role="menuitem">BG Remover</a></li>
+        <li><a href="filters.html" role="menuitem">Filters</a></li>
+        <li><a href="palette.html" class="active" role="menuitem">Palette</a></li>
+        <li><a href="https://buymeacoffee.com/dairylea" class="nav-coffee" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="tool-header">
+      <h1>Color Palette Extractor</h1>
+      <p>Extract dominant colors from any image. Click a swatch to copy its hex code.</p>
+    </div>
+
+    <div class="drop-zone" id="dropZone">
+      <div class="drop-zone-icon">&#127912;</div>
+      <div class="drop-zone-text"><strong>Drop an image here</strong> or click to browse<br>JPEG, PNG, WebP supported</div>
+      <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp">
+    </div>
+
+    <div class="controls" id="controls" style="display:none">
+      <div class="control-row color-count-row">
+        <label for="colorCount">Colors</label>
+        <input type="range" id="colorCount" min="3" max="12" value="6">
+        <span class="quality-value" id="colorCountValue">6</span>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="extractBtn">Extract Palette</button>
+        <button class="btn btn-outline" id="clearBtn">Clear</button>
+      </div>
+    </div>
+
+    <div class="error-msg" id="errorMsg"></div>
+
+    <div class="palette-display" id="paletteDisplay" style="display:none">
+      <div class="image-preview" id="imagePreview"></div>
+      <div class="palette-header">
+        <h2>Extracted Palette</h2>
+        <div class="download-btns">
+          <button class="btn btn-primary btn-sm" id="downloadPng">Download PNG</button>
+          <button class="btn btn-green btn-sm" id="downloadJson">Download JSON</button>
+        </div>
+      </div>
+      <div class="palette-preview" id="palettePreview"></div>
+      <div class="palette-swatches" id="paletteSwatches"></div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <p>Powered by <strong>ImageToolkit</strong> — Free &amp; Private</p>
+      <div class="footer-links">
+        <a href="https://buymeacoffee.com/dairylea" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a>
+        <a href="https://dannycranmer.github.io/parchment/" target="_blank" rel="noopener">PDF Tools (Parchment)</a>
+        <a href="https://dannycranmer.github.io/devtoolbox/" target="_blank" rel="noopener">Dev Tools (DevToolbox)</a>
+      </div>
+    </div>
+  </footer>
+
+  <div class="copied-toast" id="copiedToast">Copied!</div>
+
+  <script src="js/common.js"></script>
+  <script>
+  (() => {
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const controls = document.getElementById('controls');
+    const colorCountSlider = document.getElementById('colorCount');
+    const colorCountValue = document.getElementById('colorCountValue');
+    const extractBtn = document.getElementById('extractBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const errorMsg = document.getElementById('errorMsg');
+    const paletteDisplay = document.getElementById('paletteDisplay');
+    const imagePreview = document.getElementById('imagePreview');
+    const palettePreview = document.getElementById('palettePreview');
+    const paletteSwatches = document.getElementById('paletteSwatches');
+    const downloadPng = document.getElementById('downloadPng');
+    const downloadJson = document.getElementById('downloadJson');
+    const copiedToast = document.getElementById('copiedToast');
+
+    let currentFile = null;
+    let currentImg = null;
+    let currentPalette = [];
+
+    colorCountSlider.addEventListener('input', () => {
+      colorCountValue.textContent = colorCountSlider.value;
+    });
+
+    setupDropZone(dropZone, fileInput, files => {
+      currentFile = files[0];
+      controls.style.display = 'block';
+      paletteDisplay.style.display = 'none';
+      currentPalette = [];
+      const t = dropZone.querySelector('.drop-zone-text');
+      t.innerHTML = '<strong>' + escHTML(currentFile.name) + '</strong><br>Drop another to replace';
+    });
+
+    clearBtn.addEventListener('click', () => {
+      currentFile = null;
+      currentImg = null;
+      currentPalette = [];
+      controls.style.display = 'none';
+      paletteDisplay.style.display = 'none';
+      dropZone.querySelector('.drop-zone-text').innerHTML = '<strong>Drop an image here</strong> or click to browse<br>JPEG, PNG, WebP supported';
+    });
+
+    extractBtn.addEventListener('click', async () => {
+      if (!currentFile) return;
+      hideError(errorMsg);
+      extractBtn.disabled = true;
+      extractBtn.textContent = 'Extracting...';
+
+      try {
+        const img = await loadImage(currentFile);
+        currentImg = img;
+        const numColors = parseInt(colorCountSlider.value);
+        currentPalette = extractPalette(img, numColors);
+        renderPalette();
+      } catch (e) {
+        showError(errorMsg, 'Failed to extract palette: ' + e.message);
+      }
+
+      extractBtn.disabled = false;
+      extractBtn.textContent = 'Extract Palette';
+    });
+
+    function extractPalette(img, numColors) {
+      // Sample image at reduced resolution for performance
+      const maxDim = 200;
+      const scale = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight));
+      const w = Math.round(img.naturalWidth * scale);
+      const h = Math.round(img.naturalHeight * scale);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      const data = ctx.getImageData(0, 0, w, h).data;
+
+      // Collect all pixels (skip very transparent ones)
+      const pixels = [];
+      for (let i = 0; i < data.length; i += 4) {
+        if (data[i + 3] < 128) continue; // skip transparent
+        pixels.push([data[i], data[i + 1], data[i + 2]]);
+      }
+
+      if (pixels.length === 0) return [{ r: 0, g: 0, b: 0, hex: '#000000', pct: 100 }];
+
+      // Median cut algorithm
+      const boxes = medianCut(pixels, numColors);
+
+      // Sort by frequency (most dominant first)
+      boxes.sort((a, b) => b.count - a.count);
+
+      const totalPixels = pixels.length;
+      return boxes.map(box => {
+        const r = box.avg[0];
+        const g = box.avg[1];
+        const b = box.avg[2];
+        return {
+          r, g, b,
+          hex: rgbToHex(r, g, b),
+          pct: Math.round((box.count / totalPixels) * 100)
+        };
+      });
+    }
+
+    function medianCut(pixels, numColors) {
+      let boxes = [makeBox(pixels)];
+
+      while (boxes.length < numColors) {
+        // Find the box with the largest range to split
+        let maxRange = -1;
+        let maxIdx = 0;
+        for (let i = 0; i < boxes.length; i++) {
+          const range = Math.max(boxes[i].rangeR, boxes[i].rangeG, boxes[i].rangeB);
+          if (range > maxRange && boxes[i].pixels.length > 1) {
+            maxRange = range;
+            maxIdx = i;
+          }
+        }
+
+        if (maxRange <= 0) break; // cannot split further
+
+        const box = boxes[maxIdx];
+        // Determine which channel has the largest range
+        let channel;
+        if (box.rangeR >= box.rangeG && box.rangeR >= box.rangeB) channel = 0;
+        else if (box.rangeG >= box.rangeR && box.rangeG >= box.rangeB) channel = 1;
+        else channel = 2;
+
+        // Sort pixels by that channel
+        box.pixels.sort((a, b) => a[channel] - b[channel]);
+
+        const mid = Math.floor(box.pixels.length / 2);
+        const left = box.pixels.slice(0, mid);
+        const right = box.pixels.slice(mid);
+
+        boxes.splice(maxIdx, 1, makeBox(left), makeBox(right));
+      }
+
+      return boxes;
+    }
+
+    function makeBox(pixels) {
+      let minR = 255, maxR = 0, minG = 255, maxG = 0, minB = 255, maxB = 0;
+      let sumR = 0, sumG = 0, sumB = 0;
+
+      for (const p of pixels) {
+        if (p[0] < minR) minR = p[0];
+        if (p[0] > maxR) maxR = p[0];
+        if (p[1] < minG) minG = p[1];
+        if (p[1] > maxG) maxG = p[1];
+        if (p[2] < minB) minB = p[2];
+        if (p[2] > maxB) maxB = p[2];
+        sumR += p[0];
+        sumG += p[1];
+        sumB += p[2];
+      }
+
+      const n = pixels.length;
+      return {
+        pixels,
+        count: n,
+        avg: [Math.round(sumR / n), Math.round(sumG / n), Math.round(sumB / n)],
+        rangeR: maxR - minR,
+        rangeG: maxG - minG,
+        rangeB: maxB - minB
+      };
+    }
+
+    function rgbToHex(r, g, b) {
+      return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('').toUpperCase();
+    }
+
+    function textColorForBg(r, g, b) {
+      // Relative luminance
+      const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+      return lum > 0.55 ? '#1E293B' : '#FFFFFF';
+    }
+
+    function renderPalette() {
+      paletteDisplay.style.display = 'block';
+
+      // Image preview
+      imagePreview.innerHTML = '';
+      const previewImg = document.createElement('img');
+      previewImg.src = currentImg.src;
+      previewImg.alt = 'Uploaded image';
+      imagePreview.appendChild(previewImg);
+
+      // Palette preview bar
+      palettePreview.innerHTML = '';
+      currentPalette.forEach(c => {
+        const bar = document.createElement('div');
+        bar.className = 'palette-preview-bar';
+        bar.style.background = c.hex;
+        bar.title = c.hex + ' — click to copy';
+        bar.addEventListener('click', () => copyHex(c.hex));
+        palettePreview.appendChild(bar);
+      });
+
+      // Swatches
+      paletteSwatches.innerHTML = '';
+      currentPalette.forEach(c => {
+        const swatch = document.createElement('div');
+        swatch.className = 'swatch';
+        swatch.title = 'Click to copy ' + c.hex;
+
+        const colorDiv = document.createElement('div');
+        colorDiv.className = 'swatch-color';
+        colorDiv.style.background = c.hex;
+
+        const infoDiv = document.createElement('div');
+        infoDiv.className = 'swatch-info';
+        infoDiv.innerHTML =
+          '<div class="swatch-hex">' + c.hex + '</div>' +
+          '<div class="swatch-rgb">rgb(' + c.r + ', ' + c.g + ', ' + c.b + ')</div>' +
+          '<div class="swatch-pct">' + c.pct + '% of image</div>';
+
+        swatch.appendChild(colorDiv);
+        swatch.appendChild(infoDiv);
+        swatch.addEventListener('click', () => copyHex(c.hex));
+        paletteSwatches.appendChild(swatch);
+      });
+    }
+
+    function copyHex(hex) {
+      navigator.clipboard.writeText(hex).then(() => {
+        copiedToast.textContent = 'Copied ' + hex;
+        copiedToast.classList.add('show');
+        setTimeout(() => copiedToast.classList.remove('show'), 1500);
+      }).catch(() => {
+        // Fallback
+        const ta = document.createElement('textarea');
+        ta.value = hex;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        copiedToast.textContent = 'Copied ' + hex;
+        copiedToast.classList.add('show');
+        setTimeout(() => copiedToast.classList.remove('show'), 1500);
+      });
+    }
+
+    // Download as PNG
+    downloadPng.addEventListener('click', () => {
+      if (!currentPalette.length) return;
+      const swatchW = 120;
+      const swatchH = 120;
+      const textH = 40;
+      const cols = currentPalette.length;
+      const canvasW = cols * swatchW;
+      const canvasH = swatchH + textH;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = canvasW;
+      canvas.height = canvasH;
+      const ctx = canvas.getContext('2d');
+
+      // White background
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, canvasW, canvasH);
+
+      currentPalette.forEach((c, i) => {
+        const x = i * swatchW;
+
+        // Color block
+        ctx.fillStyle = c.hex;
+        ctx.fillRect(x, 0, swatchW, swatchH);
+
+        // Text area
+        ctx.fillStyle = '#F8FAFC';
+        ctx.fillRect(x, swatchH, swatchW, textH);
+
+        // Hex text
+        ctx.fillStyle = '#1E293B';
+        ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(c.hex, x + swatchW / 2, swatchH + 18);
+
+        // RGB text
+        ctx.fillStyle = '#64748B';
+        ctx.font = '10px -apple-system, BlinkMacSystemFont, sans-serif';
+        ctx.fillText('rgb(' + c.r + ',' + c.g + ',' + c.b + ')', x + swatchW / 2, swatchH + 33);
+      });
+
+      canvas.toBlob(blob => {
+        downloadBlob(blob, 'palette.png');
+      }, 'image/png');
+    });
+
+    // Download as JSON
+    downloadJson.addEventListener('click', () => {
+      if (!currentPalette.length) return;
+      const data = currentPalette.map(c => ({
+        hex: c.hex,
+        rgb: { r: c.r, g: c.g, b: c.b },
+        percentage: c.pct
+      }));
+      const json = JSON.stringify(data, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      downloadBlob(blob, 'palette.json');
+    });
+
+    function escHTML(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+  })();
+  </script>
+  <script data-goatcounter="https://dairylea.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
