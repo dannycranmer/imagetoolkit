@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Remove Image Background Online Free — ImageToolkit</title>
+  <meta name="description" content="Remove backgrounds from images for free. Click to pick the background color, adjust tolerance, and get a transparent PNG. 100% private — your images never leave your device.">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .picker-canvas-wrap {
+      position: relative;
+      display: inline-block;
+      cursor: crosshair;
+    }
+    .picker-canvas-wrap canvas { display: block; max-width: 100%; border-radius: 6px; }
+    .checkerboard {
+      background-image:
+        linear-gradient(45deg, #ccc 25%, transparent 25%),
+        linear-gradient(-45deg, #ccc 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #ccc 75%),
+        linear-gradient(-45deg, transparent 75%, #ccc 75%);
+      background-size: 16px 16px;
+      background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+    }
+    .color-swatch {
+      width: 36px;
+      height: 36px;
+      border-radius: 6px;
+      border: 2px solid var(--border);
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .pick-hint {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">Image<span>Toolkit</span></a>
+      <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">&#9776;</button>
+      <ul class="nav-links" role="menubar">
+        <li><a href="index.html" role="menuitem">Home</a></li>
+        <li><a href="compress.html" role="menuitem">Compress</a></li>
+        <li><a href="resize.html" role="menuitem">Resize</a></li>
+        <li><a href="convert.html" role="menuitem">Convert</a></li>
+        <li><a href="crop.html" role="menuitem">Crop</a></li>
+        <li><a href="watermark.html" role="menuitem">Watermark</a></li>
+        <li><a href="flip-rotate.html" role="menuitem">Flip &amp; Rotate</a></li>
+        <li><a href="background-remover.html" class="active" role="menuitem">BG Remover</a></li>
+        <li><a href="https://buymeacoffee.com/dairylea" class="nav-coffee" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="tool-header">
+      <h1>Remove Background</h1>
+      <p>Click on your image to pick the background color, adjust tolerance, and download a transparent PNG. Your images never leave your device.</p>
+    </div>
+
+    <div class="drop-zone" id="dropZone">
+      <div class="drop-zone-icon">&#128396;</div>
+      <div class="drop-zone-text"><strong>Drop images here</strong> or click to browse<br>JPEG, PNG, WebP supported</div>
+      <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" multiple>
+    </div>
+
+    <div class="controls" id="controls" style="display:none">
+      <div class="control-row">
+        <label>Background Color</label>
+        <span class="color-swatch" id="colorSwatch" style="background:#ffffff"></span>
+        <input type="color" id="colorPicker" value="#ffffff" style="width:40px;height:36px;border:none;padding:0;cursor:pointer;">
+        <span id="colorHex" style="font-size:0.85rem;color:var(--text-muted)">#FFFFFF</span>
+      </div>
+      <p class="pick-hint" id="pickHint">&#128073; Click on the image below to pick the background color, or use the color picker above.</p>
+      <div class="control-row">
+        <label for="tolerance">Tolerance</label>
+        <input type="range" id="tolerance" min="0" max="150" value="30">
+        <span class="quality-value" id="toleranceValue">30</span>
+      </div>
+      <div class="control-row">
+        <label>Mode</label>
+        <div class="presets" id="modePresets">
+          <button class="preset-btn active" data-mode="flood">Flood Fill</button>
+          <button class="preset-btn" data-mode="global">Global Color</button>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="applyBtn">Remove Background</button>
+        <button class="btn btn-outline" id="clearBtn">Clear All</button>
+      </div>
+    </div>
+
+    <div class="preview-area" id="previewArea" style="display:none">
+      <h3 style="margin-bottom:0.5rem">Click to pick background color</h3>
+      <div class="picker-canvas-wrap">
+        <canvas id="pickCanvas"></canvas>
+      </div>
+    </div>
+
+    <div class="progress-bar" id="progressBar"><div class="progress-bar-fill" id="progressFill"></div></div>
+    <div class="error-msg" id="errorMsg"></div>
+
+    <div class="results" id="results" style="display:none">
+      <div class="results-header">
+        <h2>Results</h2>
+        <button class="btn btn-green" id="downloadAllBtn">Download All (ZIP)</button>
+      </div>
+      <div class="file-list" id="fileList"></div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <p>Powered by <strong>ImageToolkit</strong> — Free &amp; Private</p>
+      <div class="footer-links">
+        <a href="https://buymeacoffee.com/dairylea" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a>
+        <a href="https://dannycranmer.github.io/parchment/" target="_blank" rel="noopener">PDF Tools (Parchment)</a>
+        <a href="https://dannycranmer.github.io/devtoolbox/" target="_blank" rel="noopener">Dev Tools (DevToolbox)</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/common.js"></script>
+  <script>
+  (() => {
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const controls = document.getElementById('controls');
+    const colorSwatch = document.getElementById('colorSwatch');
+    const colorPicker = document.getElementById('colorPicker');
+    const colorHex = document.getElementById('colorHex');
+    const pickHint = document.getElementById('pickHint');
+    const tolerance = document.getElementById('tolerance');
+    const toleranceValue = document.getElementById('toleranceValue');
+    const applyBtn = document.getElementById('applyBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const previewArea = document.getElementById('previewArea');
+    const pickCanvas = document.getElementById('pickCanvas');
+    const progressBar = document.getElementById('progressBar');
+    const progressFill = document.getElementById('progressFill');
+    const errorMsg = document.getElementById('errorMsg');
+    const results = document.getElementById('results');
+    const fileList = document.getElementById('fileList');
+    const downloadAllBtn = document.getElementById('downloadAllBtn');
+
+    let sourceFiles = [];
+    let processedBlobs = [];
+    let previewImg = null;
+    let pickCtx = null;
+    let bgColor = { r: 255, g: 255, b: 255 };
+    let mode = 'flood'; // 'flood' or 'global'
+
+    tolerance.addEventListener('input', () => {
+      toleranceValue.textContent = tolerance.value;
+    });
+
+    colorPicker.addEventListener('input', () => {
+      const hex = colorPicker.value;
+      bgColor = hexToRgb(hex);
+      colorSwatch.style.background = hex;
+      colorHex.textContent = hex.toUpperCase();
+    });
+
+    // Mode presets
+    document.getElementById('modePresets').addEventListener('click', e => {
+      const btn = e.target.closest('.preset-btn');
+      if (!btn) return;
+      document.querySelectorAll('#modePresets .preset-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      mode = btn.dataset.mode;
+    });
+
+    // Pick color from canvas
+    pickCanvas.addEventListener('click', e => {
+      if (!pickCtx) return;
+      const rect = pickCanvas.getBoundingClientRect();
+      const scaleX = pickCanvas.width / rect.width;
+      const scaleY = pickCanvas.height / rect.height;
+      const x = Math.round((e.clientX - rect.left) * scaleX);
+      const y = Math.round((e.clientY - rect.top) * scaleY);
+      const pixel = pickCtx.getImageData(x, y, 1, 1).data;
+      bgColor = { r: pixel[0], g: pixel[1], b: pixel[2] };
+      const hex = rgbToHex(bgColor.r, bgColor.g, bgColor.b);
+      colorPicker.value = hex;
+      colorSwatch.style.background = hex;
+      colorHex.textContent = hex.toUpperCase();
+    });
+
+    setupDropZone(dropZone, fileInput, files => {
+      sourceFiles = sourceFiles.concat(files);
+      controls.style.display = 'block';
+      results.style.display = 'none';
+      fileList.innerHTML = '';
+      processedBlobs = [];
+      updateDropLabel();
+      // Show first image for color picking
+      loadImage(sourceFiles[0]).then(img => {
+        previewImg = img;
+        showPickPreview(img);
+      });
+    });
+
+    function updateDropLabel() {
+      const t = dropZone.querySelector('.drop-zone-text');
+      t.innerHTML = '<strong>' + sourceFiles.length + ' image' + (sourceFiles.length > 1 ? 's' : '') + ' selected</strong><br>Drop more or click to add';
+    }
+
+    function showPickPreview(img) {
+      previewArea.style.display = 'block';
+      const maxDim = 600;
+      const scale = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight));
+      pickCanvas.width = Math.round(img.naturalWidth * scale);
+      pickCanvas.height = Math.round(img.naturalHeight * scale);
+      pickCtx = pickCanvas.getContext('2d', { willReadFrequently: true });
+      pickCtx.drawImage(img, 0, 0, pickCanvas.width, pickCanvas.height);
+    }
+
+    clearBtn.addEventListener('click', () => {
+      sourceFiles = [];
+      processedBlobs = [];
+      previewImg = null;
+      pickCtx = null;
+      controls.style.display = 'none';
+      results.style.display = 'none';
+      previewArea.style.display = 'none';
+      fileList.innerHTML = '';
+      dropZone.querySelector('.drop-zone-text').innerHTML = '<strong>Drop images here</strong> or click to browse<br>JPEG, PNG, WebP supported';
+    });
+
+    applyBtn.addEventListener('click', async () => {
+      if (!sourceFiles.length) return;
+      hideError(errorMsg);
+      processedBlobs = [];
+      fileList.innerHTML = '';
+      progressBar.style.display = 'block';
+      progressFill.style.width = '0%';
+      applyBtn.disabled = true;
+
+      const tol = parseInt(tolerance.value);
+      let done = 0;
+
+      for (const file of sourceFiles) {
+        try {
+          const img = await loadImage(file);
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          const ctx = canvas.getContext('2d', { willReadFrequently: true });
+          ctx.drawImage(img, 0, 0);
+
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+          if (mode === 'global') {
+            removeColorGlobal(imageData, bgColor, tol);
+          } else {
+            removeColorFlood(imageData, bgColor, tol);
+          }
+
+          ctx.putImageData(imageData, 0, 0);
+
+          // Always output as PNG for transparency
+          const blob = await canvasToBlob(canvas, 'image/png', 1);
+          const outName = baseName(file.name) + '_nobg.png';
+
+          processedBlobs.push({ blob, name: outName });
+          addFileRow(file, blob, outName);
+        } catch (e) {
+          showError(errorMsg, 'Failed to process ' + file.name + ': ' + e.message);
+        }
+        done++;
+        progressFill.style.width = (done / sourceFiles.length * 100) + '%';
+      }
+
+      progressBar.style.display = 'none';
+      applyBtn.disabled = false;
+      if (processedBlobs.length) results.style.display = 'block';
+    });
+
+    function removeColorGlobal(imageData, color, tol) {
+      const d = imageData.data;
+      for (let i = 0; i < d.length; i += 4) {
+        const dist = colorDistance(d[i], d[i + 1], d[i + 2], color.r, color.g, color.b);
+        if (dist <= tol) {
+          d[i + 3] = 0; // fully transparent
+        } else if (dist <= tol + 20) {
+          // Feather edges for smoother result
+          const alpha = Math.round(((dist - tol) / 20) * d[i + 3]);
+          d[i + 3] = alpha;
+        }
+      }
+    }
+
+    function removeColorFlood(imageData, color, tol) {
+      const w = imageData.width;
+      const h = imageData.height;
+      const d = imageData.data;
+      const visited = new Uint8Array(w * h);
+
+      // Flood fill from all four edges
+      const queue = [];
+
+      // Add edge pixels that match the color
+      for (let x = 0; x < w; x++) {
+        enqueueIfMatch(x, 0);
+        enqueueIfMatch(x, h - 1);
+      }
+      for (let y = 1; y < h - 1; y++) {
+        enqueueIfMatch(0, y);
+        enqueueIfMatch(w - 1, y);
+      }
+
+      function enqueueIfMatch(x, y) {
+        const idx = y * w + x;
+        if (visited[idx]) return;
+        const pi = idx * 4;
+        const dist = colorDistance(d[pi], d[pi + 1], d[pi + 2], color.r, color.g, color.b);
+        if (dist <= tol) {
+          visited[idx] = 1;
+          queue.push(idx);
+        }
+      }
+
+      // BFS flood fill
+      let head = 0;
+      while (head < queue.length) {
+        const idx = queue[head++];
+        const pi = idx * 4;
+        const dist = colorDistance(d[pi], d[pi + 1], d[pi + 2], color.r, color.g, color.b);
+
+        if (dist <= tol) {
+          d[pi + 3] = 0;
+        } else if (dist <= tol + 20) {
+          d[pi + 3] = Math.round(((dist - tol) / 20) * d[pi + 3]);
+        }
+
+        const x = idx % w;
+        const y = (idx - x) / w;
+
+        // 4-connected neighbors
+        if (x > 0) tryEnqueue(idx - 1);
+        if (x < w - 1) tryEnqueue(idx + 1);
+        if (y > 0) tryEnqueue(idx - w);
+        if (y < h - 1) tryEnqueue(idx + w);
+      }
+
+      function tryEnqueue(nIdx) {
+        if (visited[nIdx]) return;
+        const pi = nIdx * 4;
+        const dist = colorDistance(d[pi], d[pi + 1], d[pi + 2], color.r, color.g, color.b);
+        if (dist <= tol + 20) {
+          visited[nIdx] = 1;
+          queue.push(nIdx);
+        }
+      }
+    }
+
+    function colorDistance(r1, g1, b1, r2, g2, b2) {
+      return Math.sqrt((r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2);
+    }
+
+    function hexToRgb(hex) {
+      const r = parseInt(hex.slice(1, 3), 16);
+      const g = parseInt(hex.slice(3, 5), 16);
+      const b = parseInt(hex.slice(5, 7), 16);
+      return { r, g, b };
+    }
+
+    function rgbToHex(r, g, b) {
+      return '#' + [r, g, b].map(c => c.toString(16).padStart(2, '0')).join('');
+    }
+
+    function addFileRow(original, blob, name) {
+      const thumb = URL.createObjectURL(blob);
+      const row = document.createElement('div');
+      row.className = 'file-item';
+      row.innerHTML =
+        '<div class="checkerboard" style="width:60px;height:60px;border-radius:6px;overflow:hidden;flex-shrink:0"><img class="file-thumb" src="' + thumb + '" alt="" style="width:60px;height:60px;object-fit:cover;display:block"></div>' +
+        '<div class="file-info">' +
+          '<div class="file-name">' + escHTML(name) + '</div>' +
+          '<div class="file-meta">' + formatBytes(original.size) + ' → ' + formatBytes(blob.size) + ' (PNG with transparency)</div>' +
+        '</div>' +
+        '<div class="file-actions"><button class="btn btn-primary btn-sm">Download</button></div>';
+      row.querySelector('button').addEventListener('click', () => downloadBlob(blob, name));
+      fileList.appendChild(row);
+    }
+
+    downloadAllBtn.addEventListener('click', async () => {
+      if (processedBlobs.length === 1) {
+        downloadBlob(processedBlobs[0].blob, processedBlobs[0].name);
+        return;
+      }
+      downloadAllBtn.disabled = true;
+      downloadAllBtn.textContent = 'Creating ZIP...';
+      try {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+        await new Promise((res, rej) => { script.onload = res; script.onerror = rej; document.head.appendChild(script); });
+        const zip = new JSZip();
+        processedBlobs.forEach(f => zip.file(f.name, f.blob));
+        const content = await zip.generateAsync({ type: 'blob' });
+        downloadBlob(content, 'imagetoolkit-bg-removed.zip');
+      } catch (e) {
+        showError(errorMsg, 'Failed to create ZIP: ' + e.message);
+      }
+      downloadAllBtn.disabled = false;
+      downloadAllBtn.textContent = 'Download All (ZIP)';
+    });
+
+    function escHTML(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+  })();
+  </script>
+  <script data-goatcounter="https://dairylea.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
