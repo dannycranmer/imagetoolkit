@@ -244,9 +244,14 @@
   </footer>
 
   <script src="js/common.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
   (() => {
+    if (!window.jspdf) {
+      document.getElementById('errorMsg').textContent = 'PDF library failed to load. Please refresh the page.';
+      document.getElementById('errorMsg').classList.add('show');
+      return;
+    }
     const { jsPDF } = window.jspdf;
 
     const dropZone = document.getElementById('dropZone');
