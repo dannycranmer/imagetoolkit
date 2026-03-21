@@ -167,6 +167,18 @@
     let position = 'center';
     let previewImg = null;
 
+    function updateSizeSliderRange(img) {
+      // Scale font size range relative to image dimensions
+      const refDim = Math.max(img.naturalWidth, img.naturalHeight);
+      const minSize = Math.max(10, Math.round(refDim * 0.01));
+      const maxSize = Math.round(refDim * 0.20);
+      const defaultSize = Math.round(refDim * 0.05);
+      wmSize.min = minSize;
+      wmSize.max = maxSize;
+      wmSize.value = defaultSize;
+      wmSizeValue.textContent = defaultSize + 'px';
+    }
+
     // Slider updates
     wmSize.addEventListener('input', () => { wmSizeValue.textContent = wmSize.value + 'px'; updatePreview(); });
     wmOpacity.addEventListener('input', () => { wmOpacityValue.textContent = wmOpacity.value + '%'; updatePreview(); });
@@ -192,8 +204,8 @@
       fileList.innerHTML = '';
       watermarkedBlobs = [];
       updateDropLabel();
-      // Show preview of first image
-      loadImage(sourceFiles[0]).then(img => { previewImg = img; updatePreview(); });
+      // Show preview of first image and scale font size to image dimensions
+      loadImage(sourceFiles[0]).then(img => { previewImg = img; updateSizeSliderRange(img); updatePreview(); });
     });
 
     function updateDropLabel() {
