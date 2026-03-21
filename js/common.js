@@ -47,6 +47,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const isOpen = moreLi.classList.toggle('open');
         btn.setAttribute('aria-expanded', isOpen);
       });
+      dd.addEventListener('click', e => {
+        e.stopPropagation();
+      });
       document.addEventListener('click', () => {
         moreLi.classList.remove('open');
         btn.setAttribute('aria-expanded', 'false');
