@@ -47,8 +47,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const isOpen = moreLi.classList.toggle('open');
         btn.setAttribute('aria-expanded', isOpen);
       });
+      // Clicking inside dropdown: don't close it via document handler
       dd.addEventListener('click', e => {
         e.stopPropagation();
+      });
+      // Ensure dropdown links navigate reliably (especially on touch devices)
+      dd.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', e => {
+          const href = link.getAttribute('href');
+          if (href) {
+            moreLi.classList.remove('open');
+            window.location.href = href;
+          }
+        });
       });
       document.addEventListener('click', () => {
         moreLi.classList.remove('open');
