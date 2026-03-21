@@ -11,9 +11,22 @@
     .crop-wrapper { position: relative; display: inline-block; max-width: 100%; cursor: crosshair; touch-action: none; }
     .crop-wrapper canvas { display: block; max-width: 100%; }
     .crop-overlay {
-      position: absolute; border: 2px dashed #3B82F6; background: rgba(59,130,246,0.08);
-      pointer-events: none; display: none;
+      position: absolute; border: 2px solid #3B82F6; background: rgba(59,130,246,0.08);
+      display: none; box-sizing: border-box;
     }
+    .crop-overlay.active { cursor: move; }
+    .crop-handle {
+      position: absolute; width: 12px; height: 12px; background: #fff; border: 2px solid #3B82F6;
+      border-radius: 2px; box-sizing: border-box; z-index: 2;
+    }
+    .crop-handle-nw { top: -6px; left: -6px; cursor: nw-resize; }
+    .crop-handle-ne { top: -6px; right: -6px; cursor: ne-resize; }
+    .crop-handle-sw { bottom: -6px; left: -6px; cursor: sw-resize; }
+    .crop-handle-se { bottom: -6px; right: -6px; cursor: se-resize; }
+    .crop-handle-n { top: -6px; left: 50%; margin-left: -6px; cursor: n-resize; }
+    .crop-handle-s { bottom: -6px; left: 50%; margin-left: -6px; cursor: s-resize; }
+    .crop-handle-w { top: 50%; margin-top: -6px; left: -6px; cursor: w-resize; }
+    .crop-handle-e { top: 50%; margin-top: -6px; right: -6px; cursor: e-resize; }
     .crop-dims {
       position: absolute; bottom: -24px; left: 0; font-size: 0.75rem; color: var(--accent);
       font-weight: 600; white-space: nowrap;
@@ -92,10 +105,20 @@
     <div class="error-msg" id="errorMsg"></div>
 
     <div class="preview-area" id="canvasArea" style="display:none">
-      <p style="margin-bottom:0.75rem;color:var(--text-muted);font-size:0.85rem">Click and drag to select crop region</p>
+      <p style="margin-bottom:0.75rem;color:var(--text-muted);font-size:0.85rem">Click and drag to select crop region — then drag to move or use handles to resize</p>
       <div class="crop-wrapper" id="cropWrapper">
         <canvas id="srcCanvas"></canvas>
-        <div class="crop-overlay" id="cropOverlay"><span class="crop-dims" id="cropDims"></span></div>
+        <div class="crop-overlay" id="cropOverlay">
+          <div class="crop-handle crop-handle-nw" data-handle="nw"></div>
+          <div class="crop-handle crop-handle-ne" data-handle="ne"></div>
+          <div class="crop-handle crop-handle-sw" data-handle="sw"></div>
+          <div class="crop-handle crop-handle-se" data-handle="se"></div>
+          <div class="crop-handle crop-handle-n" data-handle="n"></div>
+          <div class="crop-handle crop-handle-s" data-handle="s"></div>
+          <div class="crop-handle crop-handle-w" data-handle="w"></div>
+          <div class="crop-handle crop-handle-e" data-handle="e"></div>
+          <span class="crop-dims" id="cropDims"></span>
+        </div>
       </div>
     </div>
 
@@ -148,13 +171,20 @@
     let sourceImg = null;
     let sourceFile = null;
     let displayScale = 1;
-    let aspectRatio = null; // null = free
-    let isDragging = false;
-    let startX = 0, startY = 0;
+    let aspectRatio = null;
     let croppedBlob = null;
     let croppedName = '';
 
-    // Aspect ratio buttons
+    // Interaction state
+    let mode = 'none'; // 'none' | 'draw' | 'move' | 'resize'
+    let activeHandle = null; // which handle is being dragged
+    let dragStartX = 0, dragStartY = 0;
+    // Crop region in display pixels
+    let cropLeft = 0, cropTop = 0, cropWidth = 0, cropHeight = 0;
+    // Snapshot at drag start
+    let snapLeft = 0, snapTop = 0, snapWidth = 0, snapHeight = 0;
+    let hasRegion = false;
+
     document.getElementById('aspectBtns').addEventListener('click', e => {
       const btn = e.target.closest('.preset-btn');
       if (!btn) return;
@@ -165,6 +195,16 @@
       else {
         const [a, b2] = r.split(':').map(Number);
         aspectRatio = a / b2;
+      }
+      // If region exists, enforce new aspect ratio
+      if (hasRegion && aspectRatio) {
+        cropHeight = cropWidth / aspectRatio;
+        if (cropTop + cropHeight > srcCanvas.height) {
+          cropHeight = srcCanvas.height - cropTop;
+          cropWidth = cropHeight * aspectRatio;
+        }
+        updateOverlay();
+        syncInputs();
       }
     });
 
@@ -183,6 +223,8 @@
       canvasArea.style.display = 'block';
       resultArea.style.display = 'none';
       cropOverlay.style.display = 'none';
+      cropOverlay.classList.remove('active');
+      hasRegion = false;
 
       const maxW = Math.min(800, cropWrapper.parentElement.clientWidth - 48);
       displayScale = sourceImg.naturalWidth > maxW ? maxW / sourceImg.naturalWidth : 1;
@@ -193,7 +235,6 @@
       srcCanvas.height = dh;
       ctx.drawImage(sourceImg, 0, 0, dw, dh);
 
-      // Default crop = full image
       cropX.value = 0; cropY.value = 0;
       cropW.value = sourceImg.naturalWidth;
       cropH.value = sourceImg.naturalHeight;
@@ -203,7 +244,6 @@
       cropH.max = sourceImg.naturalHeight;
     }
 
-    // Mouse drag crop
     function getPos(e) {
       const rect = srcCanvas.getBoundingClientRect();
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -214,57 +254,218 @@
       };
     }
 
-    srcCanvas.addEventListener('mousedown', onStart);
-    srcCanvas.addEventListener('touchstart', onStart, { passive: false });
-
-    function onStart(e) {
-      e.preventDefault();
-      isDragging = true;
-      const pos = getPos(e);
-      startX = pos.x;
-      startY = pos.y;
-      cropOverlay.style.display = 'block';
-      document.addEventListener('mousemove', onMove);
-      document.addEventListener('mouseup', onEnd);
-      document.addEventListener('touchmove', onMove, { passive: false });
-      document.addEventListener('touchend', onEnd);
+    function updateOverlay() {
+      cropOverlay.style.left = cropLeft + 'px';
+      cropOverlay.style.top = cropTop + 'px';
+      cropOverlay.style.width = cropWidth + 'px';
+      cropOverlay.style.height = cropHeight + 'px';
     }
 
-    function onMove(e) {
-      if (!isDragging) return;
-      e.preventDefault();
-      const pos = getPos(e);
-      let x = Math.min(startX, pos.x);
-      let y = Math.min(startY, pos.y);
-      let w = Math.abs(pos.x - startX);
-      let h = Math.abs(pos.y - startY);
-
-      if (aspectRatio) {
-        h = w / aspectRatio;
-        if (y + h > srcCanvas.height) { h = srcCanvas.height - y; w = h * aspectRatio; }
-      }
-
-      cropOverlay.style.left = x + 'px';
-      cropOverlay.style.top = y + 'px';
-      cropOverlay.style.width = w + 'px';
-      cropOverlay.style.height = h + 'px';
-
-      // Update inputs (real pixels)
-      const rx = Math.round(x / displayScale);
-      const ry = Math.round(y / displayScale);
-      const rw = Math.round(w / displayScale);
-      const rh = Math.round(h / displayScale);
+    function syncInputs() {
+      const rx = Math.round(cropLeft / displayScale);
+      const ry = Math.round(cropTop / displayScale);
+      const rw = Math.round(cropWidth / displayScale);
+      const rh = Math.round(cropHeight / displayScale);
       cropX.value = rx; cropY.value = ry; cropW.value = rw; cropH.value = rh;
       cropDims.textContent = rw + ' x ' + rh;
     }
 
-    function onEnd() {
-      isDragging = false;
-      document.removeEventListener('mousemove', onMove);
-      document.removeEventListener('mouseup', onEnd);
-      document.removeEventListener('touchmove', onMove);
-      document.removeEventListener('touchend', onEnd);
+    function clampRegion() {
+      if (cropLeft < 0) cropLeft = 0;
+      if (cropTop < 0) cropTop = 0;
+      if (cropLeft + cropWidth > srcCanvas.width) cropLeft = srcCanvas.width - cropWidth;
+      if (cropTop + cropHeight > srcCanvas.height) cropTop = srcCanvas.height - cropHeight;
+      if (cropWidth < 5) cropWidth = 5;
+      if (cropHeight < 5) cropHeight = 5;
     }
+
+    // Detect if a point is inside the crop region (not on a handle)
+    function isInsideRegion(x, y) {
+      return hasRegion &&
+        x >= cropLeft && x <= cropLeft + cropWidth &&
+        y >= cropTop && y <= cropTop + cropHeight;
+    }
+
+    // Detect which handle is under the pointer (with generous hit area)
+    function hitTestHandle(x, y) {
+      if (!hasRegion) return null;
+      const margin = 10;
+      const l = cropLeft, t = cropTop, r = cropLeft + cropWidth, b = cropTop + cropHeight;
+      const mx = (l + r) / 2, my = (t + b) / 2;
+
+      // Corners first (higher priority)
+      if (Math.abs(x - l) < margin && Math.abs(y - t) < margin) return 'nw';
+      if (Math.abs(x - r) < margin && Math.abs(y - t) < margin) return 'ne';
+      if (Math.abs(x - l) < margin && Math.abs(y - b) < margin) return 'sw';
+      if (Math.abs(x - r) < margin && Math.abs(y - b) < margin) return 'se';
+      // Edges
+      if (Math.abs(y - t) < margin && x > l + margin && x < r - margin) return 'n';
+      if (Math.abs(y - b) < margin && x > l + margin && x < r - margin) return 's';
+      if (Math.abs(x - l) < margin && y > t + margin && y < b - margin) return 'w';
+      if (Math.abs(x - r) < margin && y > t + margin && y < b - margin) return 'e';
+      return null;
+    }
+
+    // --- Pointer event handlers ---
+    cropWrapper.addEventListener('mousedown', onPointerDown);
+    cropWrapper.addEventListener('touchstart', onPointerDown, { passive: false });
+
+    function onPointerDown(e) {
+      e.preventDefault();
+      const pos = getPos(e);
+      dragStartX = pos.x;
+      dragStartY = pos.y;
+
+      // Check handles first, then move, then new draw
+      const handle = hitTestHandle(pos.x, pos.y);
+      if (handle) {
+        mode = 'resize';
+        activeHandle = handle;
+        snapLeft = cropLeft; snapTop = cropTop;
+        snapWidth = cropWidth; snapHeight = cropHeight;
+      } else if (isInsideRegion(pos.x, pos.y)) {
+        mode = 'move';
+        snapLeft = cropLeft; snapTop = cropTop;
+      } else {
+        mode = 'draw';
+        cropOverlay.style.display = 'block';
+        cropOverlay.classList.remove('active');
+        hasRegion = false;
+      }
+
+      document.addEventListener('mousemove', onPointerMove);
+      document.addEventListener('mouseup', onPointerEnd);
+      document.addEventListener('touchmove', onPointerMove, { passive: false });
+      document.addEventListener('touchend', onPointerEnd);
+    }
+
+    function onPointerMove(e) {
+      if (mode === 'none') return;
+      e.preventDefault();
+      const pos = getPos(e);
+      const dx = pos.x - dragStartX;
+      const dy = pos.y - dragStartY;
+
+      if (mode === 'draw') {
+        let x = Math.min(dragStartX, pos.x);
+        let y = Math.min(dragStartY, pos.y);
+        let w = Math.abs(dx);
+        let h = Math.abs(dy);
+
+        if (aspectRatio) {
+          h = w / aspectRatio;
+          if (pos.y < dragStartY) y = dragStartY - h;
+          if (y < 0) { y = 0; h = dragStartY; w = h * aspectRatio; }
+          if (y + h > srcCanvas.height) { h = srcCanvas.height - y; w = h * aspectRatio; }
+        }
+        // Clamp to canvas
+        if (x < 0) { w += x; x = 0; }
+        if (y < 0) { h += y; y = 0; }
+        if (x + w > srcCanvas.width) w = srcCanvas.width - x;
+        if (y + h > srcCanvas.height) h = srcCanvas.height - y;
+
+        cropLeft = x; cropTop = y; cropWidth = w; cropHeight = h;
+        updateOverlay();
+        syncInputs();
+
+      } else if (mode === 'move') {
+        cropLeft = snapLeft + dx;
+        cropTop = snapTop + dy;
+        // Keep within bounds
+        if (cropLeft < 0) cropLeft = 0;
+        if (cropTop < 0) cropTop = 0;
+        if (cropLeft + cropWidth > srcCanvas.width) cropLeft = srcCanvas.width - cropWidth;
+        if (cropTop + cropHeight > srcCanvas.height) cropTop = srcCanvas.height - cropHeight;
+        updateOverlay();
+        syncInputs();
+
+      } else if (mode === 'resize') {
+        let newL = snapLeft, newT = snapTop, newW = snapWidth, newH = snapHeight;
+
+        // Compute new rect based on which handle
+        if (activeHandle.includes('e')) { newW = snapWidth + dx; }
+        if (activeHandle.includes('w')) { newL = snapLeft + dx; newW = snapWidth - dx; }
+        if (activeHandle.includes('s')) { newH = snapHeight + dy; }
+        if (activeHandle.includes('n')) { newT = snapTop + dy; newH = snapHeight - dy; }
+
+        // Enforce minimum size
+        if (newW < 10) { if (activeHandle.includes('w')) { newL = snapLeft + snapWidth - 10; } newW = 10; }
+        if (newH < 10) { if (activeHandle.includes('n')) { newT = snapTop + snapHeight - 10; } newH = 10; }
+
+        // Enforce aspect ratio
+        if (aspectRatio) {
+          if (activeHandle === 'n' || activeHandle === 's') {
+            newW = newH * aspectRatio;
+          } else if (activeHandle === 'w' || activeHandle === 'e') {
+            newH = newW / aspectRatio;
+          } else {
+            // Corner: use width as driver
+            newH = newW / aspectRatio;
+            if (activeHandle.includes('n')) { newT = snapTop + snapHeight - newH; }
+          }
+        }
+
+        // Clamp to canvas
+        if (newL < 0) { newW += newL; newL = 0; }
+        if (newT < 0) { newH += newT; newT = 0; }
+        if (newL + newW > srcCanvas.width) newW = srcCanvas.width - newL;
+        if (newT + newH > srcCanvas.height) newH = srcCanvas.height - newT;
+        if (newW < 10) newW = 10;
+        if (newH < 10) newH = 10;
+
+        cropLeft = newL; cropTop = newT; cropWidth = newW; cropHeight = newH;
+        updateOverlay();
+        syncInputs();
+      }
+    }
+
+    function onPointerEnd() {
+      if (mode === 'draw' && cropWidth > 5 && cropHeight > 5) {
+        hasRegion = true;
+        cropOverlay.classList.add('active');
+      } else if (mode === 'draw') {
+        // Too small — hide
+        cropOverlay.style.display = 'none';
+        hasRegion = false;
+      }
+      mode = 'none';
+      activeHandle = null;
+      document.removeEventListener('mousemove', onPointerMove);
+      document.removeEventListener('mouseup', onPointerEnd);
+      document.removeEventListener('touchmove', onPointerMove);
+      document.removeEventListener('touchend', onPointerEnd);
+    }
+
+    // Update cursor on hover
+    cropWrapper.addEventListener('mousemove', e => {
+      if (mode !== 'none') return;
+      const pos = getPos(e);
+      const handle = hitTestHandle(pos.x, pos.y);
+      if (handle) {
+        const cursors = { nw: 'nw-resize', ne: 'ne-resize', sw: 'sw-resize', se: 'se-resize', n: 'n-resize', s: 's-resize', w: 'w-resize', e: 'e-resize' };
+        cropWrapper.style.cursor = cursors[handle];
+      } else if (isInsideRegion(pos.x, pos.y)) {
+        cropWrapper.style.cursor = 'move';
+      } else {
+        cropWrapper.style.cursor = 'crosshair';
+      }
+    });
+
+    // Sync numeric inputs back to overlay
+    [cropX, cropY, cropW, cropH].forEach(input => {
+      input.addEventListener('input', () => {
+        cropLeft = (parseInt(cropX.value) || 0) * displayScale;
+        cropTop = (parseInt(cropY.value) || 0) * displayScale;
+        cropWidth = (parseInt(cropW.value) || 10) * displayScale;
+        cropHeight = (parseInt(cropH.value) || 10) * displayScale;
+        clampRegion();
+        updateOverlay();
+        cropOverlay.style.display = 'block';
+        cropOverlay.classList.add('active');
+        hasRegion = true;
+        syncInputs();
+      });
+    });
 
     clearBtn.addEventListener('click', () => {
       sourceImg = null;
@@ -273,6 +474,8 @@
       canvasArea.style.display = 'none';
       resultArea.style.display = 'none';
       cropOverlay.style.display = 'none';
+      cropOverlay.classList.remove('active');
+      hasRegion = false;
       croppedBlob = null;
       dropZone.querySelector('.drop-zone-text').innerHTML = '<strong>Drop an image here</strong> or click to browse<br>JPEG, PNG, WebP supported';
     });
