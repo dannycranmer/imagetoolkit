@@ -244,10 +244,22 @@
         controls.style.display = 'block';
         previewArea.style.display = 'block';
 
-        // Auto-scale font size based on image width
-        const autoSize = Math.max(16, Math.min(120, Math.round(img.naturalWidth / 12)));
+        // Scale slider range + defaults to image resolution
+        const imgW = img.naturalWidth;
+        const sliderMin = Math.max(8, Math.round(imgW / 80));
+        const sliderMax = Math.max(120, Math.round(imgW / 4));
+        const autoSize = Math.max(sliderMin, Math.round(imgW / 10));
+        fontSizeSlider.min = sliderMin;
+        fontSizeSlider.max = sliderMax;
         fontSizeSlider.value = autoSize;
         document.getElementById('fontSizeVal').textContent = autoSize + 'px';
+
+        // Scale stroke range proportionally
+        const strokeMax = Math.max(10, Math.round(imgW / 150));
+        const autoStroke = Math.max(1, Math.round(imgW / 400));
+        strokeWidthSlider.max = strokeMax;
+        strokeWidthSlider.value = autoStroke;
+        document.getElementById('strokeWidthVal').textContent = autoStroke + 'px';
 
         renderMeme();
         dropZone.querySelector('.drop-zone-text').innerHTML =
@@ -264,7 +276,10 @@
       previewArea.style.display = 'none';
       topTextInput.value = '';
       bottomTextInput.value = '';
+      fontSizeSlider.min = 16;
+      fontSizeSlider.max = 120;
       fontSizeSlider.value = 48;
+      strokeWidthSlider.max = 10;
       strokeWidthSlider.value = 3;
       textColorInput.value = '#ffffff';
       strokeColorInput.value = '#000000';
