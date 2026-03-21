@@ -227,7 +227,10 @@
       hasRegion = false;
 
       const maxW = Math.min(800, cropWrapper.parentElement.clientWidth - 48);
-      displayScale = sourceImg.naturalWidth > maxW ? maxW / sourceImg.naturalWidth : 1;
+      const maxH = 500; // match CSS max-height on .preview-area canvas
+      displayScale = 1;
+      if (sourceImg.naturalWidth > maxW) displayScale = maxW / sourceImg.naturalWidth;
+      if (sourceImg.naturalHeight * displayScale > maxH) displayScale = maxH / sourceImg.naturalHeight;
       const dw = Math.round(sourceImg.naturalWidth * displayScale);
       const dh = Math.round(sourceImg.naturalHeight * displayScale);
 
@@ -248,9 +251,12 @@
       const rect = srcCanvas.getBoundingClientRect();
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      // Scale from CSS rendered size to canvas buffer size to handle any CSS scaling
+      const cssScaleX = srcCanvas.width / rect.width;
+      const cssScaleY = srcCanvas.height / rect.height;
       return {
-        x: Math.max(0, Math.min(srcCanvas.width, clientX - rect.left)),
-        y: Math.max(0, Math.min(srcCanvas.height, clientY - rect.top))
+        x: Math.max(0, Math.min(srcCanvas.width, (clientX - rect.left) * cssScaleX)),
+        y: Math.max(0, Math.min(srcCanvas.height, (clientY - rect.top) * cssScaleY))
       };
     }
 
