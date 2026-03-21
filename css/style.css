@@ -86,6 +86,9 @@ body {
   cursor: pointer;
   color: var(--text);
 }
+.nav-mobile-header {
+  display: none;
+}
 
 /* Main */
 .main {
@@ -568,17 +571,86 @@ body {
   .nav-toggle { display: block; }
   .nav-links {
     display: none;
-    position: absolute;
-    top: 56px;
+    position: fixed;
+    top: 0;
     left: 0;
     right: 0;
+    bottom: 0;
     background: #fff;
     flex-direction: column;
-    padding: 1rem;
-    border-bottom: 1px solid var(--border);
-    box-shadow: var(--shadow-lg);
+    padding: 0;
+    z-index: 999;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
   .nav-links.open { display: flex; }
+
+  /* Close button at top of mobile menu */
+  .nav-mobile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1rem;
+    height: 56px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .nav-mobile-header .nav-brand {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text);
+    text-decoration: none;
+  }
+  .nav-mobile-header .nav-brand span { color: var(--accent); }
+  .nav-close {
+    background: none;
+    border: none;
+    font-size: 1.75rem;
+    cursor: pointer;
+    color: var(--text);
+    padding: 0.5rem;
+    line-height: 1;
+  }
+
+  /* Full-width tappable menu items */
+  .nav-links > li {
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-links > li:last-child {
+    border-bottom: none;
+  }
+  .nav-links a {
+    display: flex !important;
+    align-items: center;
+    width: 100%;
+    padding: 1rem 1.25rem !important;
+    font-size: 1.05rem !important;
+    font-weight: 500;
+    border-radius: 0 !important;
+    min-height: 52px;
+    color: var(--text) !important;
+  }
+  .nav-links a:hover,
+  .nav-links a:active {
+    background: #EFF6FF !important;
+    color: var(--accent) !important;
+  }
+  .nav-links a.active {
+    background: #EFF6FF !important;
+    color: var(--accent) !important;
+    font-weight: 700;
+  }
+  .nav-coffee {
+    background: #FEF3C7 !important;
+    color: #92400E !important;
+    font-weight: 600 !important;
+    justify-content: center;
+  }
+
+  /* Prevent body scroll when menu is open */
+  body.nav-open {
+    overflow: hidden;
+  }
 }
 
 @media (max-width: 768px) {

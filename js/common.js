@@ -5,15 +5,44 @@ document.addEventListener('DOMContentLoaded', () => {
   const toggle = document.querySelector('.nav-toggle');
   const navLinks = document.querySelector('.nav-links');
   if (toggle && navLinks) {
-    toggle.addEventListener('click', () => {
-      const open = navLinks.classList.toggle('open');
-      toggle.setAttribute('aria-expanded', open);
+    // Inject mobile header (brand + close button) at top of nav-links
+    const mobileHeader = document.createElement('div');
+    mobileHeader.className = 'nav-mobile-header';
+    const brandLink = document.querySelector('.nav-brand');
+    if (brandLink) {
+      const brandClone = brandLink.cloneNode(true);
+      mobileHeader.appendChild(brandClone);
+    }
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'nav-close';
+    closeBtn.setAttribute('aria-label', 'Close menu');
+    closeBtn.innerHTML = '&times;';
+    mobileHeader.appendChild(closeBtn);
+    navLinks.insertBefore(mobileHeader, navLinks.firstChild);
+
+    function openMenu() {
+      navLinks.classList.add('open');
+      toggle.setAttribute('aria-expanded', 'true');
+      document.body.classList.add('nav-open');
+    }
+    function closeMenu() {
+      navLinks.classList.remove('open');
+      toggle.setAttribute('aria-expanded', 'false');
+      document.body.classList.remove('nav-open');
+    }
+
+    toggle.addEventListener('click', openMenu);
+    closeBtn.addEventListener('click', closeMenu);
+
+    // Close menu when any nav link is tapped (delegation handles dynamic items)
+    navLinks.addEventListener('click', e => {
+      if (e.target.closest('a')) closeMenu();
     });
   }
 
   // Move overflow items into a "More" dropdown
   if (navLinks) {
-    const items = Array.from(navLinks.children);
+    const items = Array.from(navLinks.querySelectorAll(':scope > li'));
     const VISIBLE = 8;
     let coffeeItem = null;
     const toolItems = [];
