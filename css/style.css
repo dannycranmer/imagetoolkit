@@ -843,6 +843,7 @@ input, select, textarea {
   inset: 0;
   z-index: 200;
   background: linear-gradient(160deg, #0A0E14 0%, #0D1520 40%, #0A1018 100%);
+  overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
