@@ -268,503 +268,11 @@
   </footer>
 
   <script src="js/common.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
   <script>
   (() => {
-    // Minimal QR code generator — pure JS, no external library needed
-    // Implements QR code encoding with error correction level H (30% recovery)
-
-    // ── QR Code core (Reed-Solomon + matrix generation) ──
-
-    const QR = (() => {
-      // Error correction level H = highest (30% recovery)
-      const EC_H = 2;
-
-      // Galois field GF(256) with primitive polynomial 0x11d
-      const GF_EXP = new Uint8Array(512);
-      const GF_LOG = new Uint8Array(256);
-      (() => {
-        let x = 1;
-        for (let i = 0; i < 255; i++) {
-          GF_EXP[i] = x;
-          GF_LOG[x] = i;
-          x = (x << 1) ^ (x & 128 ? 0x11d : 0);
-        }
-        for (let i = 255; i < 512; i++) GF_EXP[i] = GF_EXP[i - 255];
-      })();
-
-      function gfMul(a, b) {
-        if (a === 0 || b === 0) return 0;
-        return GF_EXP[GF_LOG[a] + GF_LOG[b]];
-      }
-
-      function rsGenPoly(nsym) {
-        let g = [1];
-        for (let i = 0; i < nsym; i++) {
-          const ng = new Array(g.length + 1).fill(0);
-          for (let j = 0; j < g.length; j++) {
-            ng[j] ^= g[j];
-            ng[j + 1] ^= gfMul(g[j], GF_EXP[i]);
-          }
-          g = ng;
-        }
-        return g;
-      }
-
-      function rsEncode(data, nsym) {
-        const gen = rsGenPoly(nsym);
-        const rem = new Array(gen.length - 1).fill(0);
-        for (let i = 0; i < data.length; i++) {
-          const coef = data[i] ^ rem[0];
-          rem.shift();
-          rem.push(0);
-          for (let j = 0; j < rem.length; j++) {
-            rem[j] ^= gfMul(gen[j + 1], coef);
-          }
-        }
-        return rem;
-      }
-
-      // QR version capacity table for byte mode, EC level H
-      // [version, totalCodewords, ecCodewordsPerBlock, numBlocks1, dataPerBlock1, numBlocks2, dataPerBlock2]
-      const VERSION_TABLE = [
-        [1, 26, 17, 1, 9, 0, 0],
-        [2, 44, 28, 1, 16, 0, 0],
-        [3, 70, 22, 2, 13, 0, 0],
-        [4, 100, 28, 4, 9, 0, 0],
-        [5, 134, 26, 2, 11, 2, 12],
-        [6, 172, 28, 4, 15, 0, 0],
-        [7, 196, 26, 4, 13, 1, 14],
-        [8, 242, 26, 4, 14, 2, 15],
-        [9, 292, 24, 4, 12, 4, 13],
-        [10, 346, 28, 6, 15, 2, 16],
-        [11, 404, 24, 3, 12, 8, 13],
-        [12, 466, 28, 7, 14, 4, 15],
-        [13, 532, 22, 12, 11, 4, 12],
-        [14, 581, 24, 11, 12, 5, 13],
-        [15, 655, 24, 11, 12, 7, 13],
-        [16, 733, 30, 3, 15, 13, 16],
-        [17, 815, 28, 2, 14, 17, 15],
-        [18, 901, 28, 2, 14, 19, 15],
-        [19, 991, 26, 9, 13, 16, 14],
-        [20, 1085, 28, 15, 15, 10, 16],
-        [21, 1156, 30, 19, 16, 6, 17],
-        [22, 1258, 24, 34, 13, 0, 0],
-        [23, 1364, 30, 16, 15, 14, 16],
-        [24, 1474, 30, 30, 16, 2, 17],
-        [25, 1588, 30, 22, 15, 13, 16],
-        [26, 1706, 30, 33, 16, 4, 17],
-        [27, 1828, 30, 12, 15, 28, 16],
-        [28, 1921, 30, 11, 15, 31, 16],
-        [29, 2051, 30, 19, 15, 26, 16],
-        [30, 2185, 30, 23, 15, 25, 16],
-        [31, 2323, 30, 23, 15, 28, 16],
-        [32, 2465, 30, 19, 15, 35, 16],
-        [33, 2611, 30, 11, 15, 46, 16],
-        [34, 2761, 30, 59, 16, 1, 17],
-        [35, 2876, 30, 22, 15, 41, 16],
-        [36, 3034, 30, 2, 15, 64, 16],
-        [37, 3196, 30, 24, 15, 46, 16],
-        [38, 3362, 30, 42, 15, 32, 16],
-        [39, 3532, 30, 10, 15, 67, 16],
-        [40, 3706, 30, 20, 15, 61, 16],
-      ];
-
-      function getVersion(dataLen) {
-        for (const v of VERSION_TABLE) {
-          const dataCap = v[3] * v[4] + v[5] * v[6];
-          // Byte mode: 4 bit mode indicator + char count bits + data
-          const charCountBits = v[0] <= 9 ? 8 : 16;
-          const availBits = dataCap * 8;
-          const neededBits = 4 + charCountBits + dataLen * 8;
-          if (neededBits <= availBits) return v;
-        }
-        return null;
-      }
-
-      function encodeData(text, vInfo) {
-        const version = vInfo[0];
-        const charCountBits = version <= 9 ? 8 : 16;
-        const totalDataCodewords = vInfo[3] * vInfo[4] + vInfo[5] * vInfo[6];
-        const bytes = new TextEncoder().encode(text);
-
-        // Build bit stream
-        const bits = [];
-        function pushBits(val, len) {
-          for (let i = len - 1; i >= 0; i--) bits.push((val >> i) & 1);
-        }
-
-        // Mode indicator: byte mode = 0100
-        pushBits(4, 4);
-        // Character count
-        pushBits(bytes.length, charCountBits);
-        // Data
-        for (const b of bytes) pushBits(b, 8);
-        // Terminator (up to 4 zeros)
-        const cap = totalDataCodewords * 8;
-        for (let i = 0; i < 4 && bits.length < cap; i++) bits.push(0);
-        // Pad to byte boundary
-        while (bits.length % 8 !== 0) bits.push(0);
-        // Pad codewords
-        const pads = [0xEC, 0x11];
-        let pi = 0;
-        while (bits.length < cap) {
-          pushBits(pads[pi], 8);
-          pi = 1 - pi;
-        }
-
-        // Convert to bytes
-        const codewords = [];
-        for (let i = 0; i < bits.length; i += 8) {
-          let b = 0;
-          for (let j = 0; j < 8; j++) b = (b << 1) | bits[i + j];
-          codewords.push(b);
-        }
-
-        return codewords;
-      }
-
-      function interleaveBlocks(data, vInfo) {
-        const ecPerBlock = vInfo[2];
-        const blocks1 = vInfo[3], dw1 = vInfo[4];
-        const blocks2 = vInfo[5], dw2 = vInfo[6];
-
-        const dataBlocks = [];
-        const ecBlocks = [];
-        let offset = 0;
-
-        for (let i = 0; i < blocks1; i++) {
-          const block = data.slice(offset, offset + dw1);
-          dataBlocks.push(block);
-          ecBlocks.push(rsEncode(block, ecPerBlock));
-          offset += dw1;
-        }
-        for (let i = 0; i < blocks2; i++) {
-          const block = data.slice(offset, offset + dw2);
-          dataBlocks.push(block);
-          ecBlocks.push(rsEncode(block, ecPerBlock));
-          offset += dw2;
-        }
-
-        // Interleave data
-        const result = [];
-        const maxDataLen = Math.max(dw1, dw2);
-        for (let i = 0; i < maxDataLen; i++) {
-          for (const block of dataBlocks) {
-            if (i < block.length) result.push(block[i]);
-          }
-        }
-        // Interleave EC
-        for (let i = 0; i < ecPerBlock; i++) {
-          for (const block of ecBlocks) {
-            if (i < block.length) result.push(block[i]);
-          }
-        }
-
-        return result;
-      }
-
-      // Alignment pattern positions
-      const ALIGNMENT_POSITIONS = [
-        [], [], [6, 18], [6, 22], [6, 26], [6, 30], [6, 34],
-        [6, 22, 38], [6, 24, 42], [6, 26, 46], [6, 28, 50],
-        [6, 30, 54], [6, 32, 58], [6, 34, 62], [6, 26, 46, 66],
-        [6, 26, 48, 70], [6, 26, 50, 74], [6, 30, 54, 78],
-        [6, 30, 56, 82], [6, 30, 58, 86], [6, 34, 62, 90],
-        [6, 28, 50, 72, 94], [6, 26, 50, 74, 98], [6, 30, 54, 78, 102],
-        [6, 28, 54, 80, 106], [6, 32, 58, 84, 110], [6, 30, 58, 86, 114],
-        [6, 34, 62, 90, 118], [6, 26, 50, 74, 98, 122],
-        [6, 30, 54, 78, 102, 126], [6, 26, 52, 78, 104, 130],
-        [6, 30, 56, 82, 108, 134], [6, 34, 60, 86, 112, 138],
-        [6, 30, 58, 86, 114, 142], [6, 34, 62, 90, 118, 146],
-        [6, 30, 54, 78, 102, 126, 150], [6, 24, 50, 76, 102, 128, 154],
-        [6, 28, 54, 80, 106, 132, 158], [6, 32, 58, 84, 110, 136, 162],
-        [6, 26, 54, 82, 110, 138, 166], [6, 30, 58, 86, 114, 142, 170],
-      ];
-
-      function createMatrix(version) {
-        const size = version * 4 + 17;
-        // 0 = unset, 1 = dark function, 2 = light function, 3 = dark data, 4 = light data
-        const matrix = Array.from({ length: size }, () => new Uint8Array(size));
-
-        // Finder patterns
-        function drawFinder(row, col) {
-          for (let r = -1; r <= 7; r++) {
-            for (let c = -1; c <= 7; c++) {
-              const rr = row + r, cc = col + c;
-              if (rr < 0 || rr >= size || cc < 0 || cc >= size) continue;
-              const isDark = (r >= 0 && r <= 6 && (c === 0 || c === 6)) ||
-                             (c >= 0 && c <= 6 && (r === 0 || r === 6)) ||
-                             (r >= 2 && r <= 4 && c >= 2 && c <= 4);
-              matrix[rr][cc] = isDark ? 1 : 2;
-            }
-          }
-        }
-        drawFinder(0, 0);
-        drawFinder(0, size - 7);
-        drawFinder(size - 7, 0);
-
-        // Timing patterns
-        for (let i = 8; i < size - 8; i++) {
-          if (matrix[6][i] === 0) matrix[6][i] = (i % 2 === 0) ? 1 : 2;
-          if (matrix[i][6] === 0) matrix[i][6] = (i % 2 === 0) ? 1 : 2;
-        }
-
-        // Alignment patterns
-        if (version >= 2) {
-          const pos = ALIGNMENT_POSITIONS[version];
-          for (const r of pos) {
-            for (const c of pos) {
-              if (matrix[r][c] !== 0) continue;
-              for (let dr = -2; dr <= 2; dr++) {
-                for (let dc = -2; dc <= 2; dc++) {
-                  const isDark = Math.abs(dr) === 2 || Math.abs(dc) === 2 || (dr === 0 && dc === 0);
-                  matrix[r + dr][c + dc] = isDark ? 1 : 2;
-                }
-              }
-            }
-          }
-        }
-
-        // Version info (version >= 7)
-        if (version >= 7) {
-          const vBits = getVersionBits(version);
-          for (let i = 0; i < 18; i++) {
-            const bit = (vBits >> i) & 1;
-            const r = Math.floor(i / 3);
-            const c = size - 11 + (i % 3);
-            matrix[r][c] = bit ? 1 : 2;
-            matrix[c][r] = bit ? 1 : 2;
-          }
-        }
-
-        // Reserve format info areas
-        for (let i = 0; i < 8; i++) {
-          if (matrix[8][i] === 0) matrix[8][i] = 2;
-          if (matrix[8][size - 1 - i] === 0) matrix[8][size - 1 - i] = 2;
-          if (matrix[i][8] === 0) matrix[i][8] = 2;
-          if (matrix[size - 1 - i][8] === 0) matrix[size - 1 - i][8] = 2;
-        }
-        if (matrix[8][8] === 0) matrix[8][8] = 2;
-        // Dark module
-        matrix[size - 8][8] = 1;
-
-        return matrix;
-      }
-
-      function getVersionBits(version) {
-        // BCH(18,6) encoding for version info
-        let d = version << 12;
-        let g = 0x1F25; // generator polynomial
-        let rem = d;
-        for (let i = 5; i >= 0; i--) {
-          if (rem & (1 << (i + 12))) rem ^= g << i;
-        }
-        return d | rem;
-      }
-
-      function placeData(matrix, data, version) {
-        const size = matrix.length;
-        let bitIndex = 0;
-        const totalBits = data.length * 8;
-
-        // Traverse right-to-left in 2-column strips, bottom to top alternating
-        let col = size - 1;
-        while (col >= 0) {
-          if (col === 6) col--; // Skip timing column
-          const isUpward = ((size - 1 - col) >> 1) % 2 === 0;
-
-          for (let i = 0; i < size; i++) {
-            const row = isUpward ? (size - 1 - i) : i;
-            for (let dc = 0; dc <= 1; dc++) {
-              const c = col - dc;
-              if (c < 0) continue;
-              if (matrix[row][c] !== 0) continue;
-              let bit = 0;
-              if (bitIndex < totalBits) {
-                bit = (data[bitIndex >> 3] >> (7 - (bitIndex & 7))) & 1;
-                bitIndex++;
-              }
-              matrix[row][c] = bit ? 3 : 4; // data dark / data light
-            }
-          }
-          col -= 2;
-        }
-      }
-
-      // Mask patterns
-      const MASK_FNS = [
-        (r, c) => (r + c) % 2 === 0,
-        (r, c) => r % 2 === 0,
-        (r, c) => c % 3 === 0,
-        (r, c) => (r + c) % 3 === 0,
-        (r, c) => (Math.floor(r / 2) + Math.floor(c / 3)) % 2 === 0,
-        (r, c) => (r * c) % 2 + (r * c) % 3 === 0,
-        (r, c) => ((r * c) % 2 + (r * c) % 3) % 2 === 0,
-        (r, c) => ((r + c) % 2 + (r * c) % 3) % 2 === 0,
-      ];
-
-      function applyMask(matrix, maskIndex) {
-        const size = matrix.length;
-        const fn = MASK_FNS[maskIndex];
-        const result = matrix.map(r => r.slice());
-        for (let r = 0; r < size; r++) {
-          for (let c = 0; c < size; c++) {
-            if (result[r][c] >= 3) { // data module
-              const isDark = result[r][c] === 3;
-              const flip = fn(r, c);
-              result[r][c] = (isDark !== flip) ? 3 : 4;
-            }
-          }
-        }
-        return result;
-      }
-
-      function writeFormatInfo(matrix, maskIndex) {
-        const size = matrix.length;
-        // EC level H = 10 in format info
-        const data = (0b10 << 3) | maskIndex;
-        let d = data << 10;
-        let g = 0x537;
-        let rem = d;
-        for (let i = 4; i >= 0; i--) {
-          if (rem & (1 << (i + 10))) rem ^= g << i;
-        }
-        const bits = (d | rem) ^ 0x5412; // XOR mask
-
-        // Place format info bits
-        const positions1 = [
-          [8, 0], [8, 1], [8, 2], [8, 3], [8, 4], [8, 5],
-          [8, 7], [8, 8], [7, 8], [5, 8], [4, 8], [3, 8],
-          [2, 8], [1, 8], [0, 8]
-        ];
-        const positions2 = [
-          [size - 1, 8], [size - 2, 8], [size - 3, 8], [size - 4, 8],
-          [size - 5, 8], [size - 6, 8], [size - 7, 8],
-          [8, size - 8], [8, size - 7], [8, size - 6], [8, size - 5],
-          [8, size - 4], [8, size - 3], [8, size - 2], [8, size - 1]
-        ];
-
-        for (let i = 0; i < 15; i++) {
-          const bit = (bits >> i) & 1;
-          const [r1, c1] = positions1[i];
-          matrix[r1][c1] = bit ? 1 : 2;
-          const [r2, c2] = positions2[i];
-          matrix[r2][c2] = bit ? 1 : 2;
-        }
-      }
-
-      function penaltyScore(matrix) {
-        const size = matrix.length;
-        let score = 0;
-
-        function isDark(r, c) {
-          const v = matrix[r][c];
-          return v === 1 || v === 3;
-        }
-
-        // Rule 1: runs of same color
-        for (let r = 0; r < size; r++) {
-          let run = 1;
-          for (let c = 1; c < size; c++) {
-            if (isDark(r, c) === isDark(r, c - 1)) {
-              run++;
-              if (run === 5) score += 3;
-              else if (run > 5) score += 1;
-            } else run = 1;
-          }
-        }
-        for (let c = 0; c < size; c++) {
-          let run = 1;
-          for (let r = 1; r < size; r++) {
-            if (isDark(r, c) === isDark(r - 1, c)) {
-              run++;
-              if (run === 5) score += 3;
-              else if (run > 5) score += 1;
-            } else run = 1;
-          }
-        }
-
-        // Rule 2: 2x2 blocks
-        for (let r = 0; r < size - 1; r++) {
-          for (let c = 0; c < size - 1; c++) {
-            const a = isDark(r, c);
-            if (a === isDark(r, c + 1) && a === isDark(r + 1, c) && a === isDark(r + 1, c + 1)) {
-              score += 3;
-            }
-          }
-        }
-
-        // Rule 3: finder-like patterns
-        for (let r = 0; r < size; r++) {
-          for (let c = 0; c < size - 10; c++) {
-            const row = [];
-            for (let i = 0; i < 11; i++) row.push(isDark(r, c + i));
-            if (matchesFinder(row)) score += 40;
-          }
-        }
-        for (let c = 0; c < size; c++) {
-          for (let r = 0; r < size - 10; r++) {
-            const col = [];
-            for (let i = 0; i < 11; i++) col.push(isDark(r + i, c));
-            if (matchesFinder(col)) score += 40;
-          }
-        }
-
-        // Rule 4: proportion
-        let darkCount = 0;
-        for (let r = 0; r < size; r++)
-          for (let c = 0; c < size; c++)
-            if (isDark(r, c)) darkCount++;
-        const pct = (darkCount * 100) / (size * size);
-        const prev5 = Math.floor(pct / 5) * 5;
-        const next5 = prev5 + 5;
-        score += Math.min(Math.abs(prev5 - 50) / 5, Math.abs(next5 - 50) / 5) * 10;
-
-        return score;
-      }
-
-      function matchesFinder(bits) {
-        const p1 = [true, false, true, true, true, false, true, false, false, false, false];
-        const p2 = [false, false, false, false, true, false, true, true, true, false, true];
-        let m1 = true, m2 = true;
-        for (let i = 0; i < 11; i++) {
-          if (bits[i] !== p1[i]) m1 = false;
-          if (bits[i] !== p2[i]) m2 = false;
-        }
-        return m1 || m2;
-      }
-
-      function generate(text) {
-        const bytes = new TextEncoder().encode(text);
-        const vInfo = getVersion(bytes.length);
-        if (!vInfo) throw new Error('Text is too long for QR code (max ~1200 chars at EC level H)');
-
-        const version = vInfo[0];
-        const data = encodeData(text, vInfo);
-        const codewords = interleaveBlocks(data, vInfo);
-
-        const matrix = createMatrix(version);
-        placeData(matrix, codewords, version);
-
-        // Try all 8 masks, pick best
-        let bestMask = 0, bestScore = Infinity;
-        for (let m = 0; m < 8; m++) {
-          const masked = applyMask(matrix, m);
-          writeFormatInfo(masked, m);
-          const s = penaltyScore(masked);
-          if (s < bestScore) { bestScore = s; bestMask = m; }
-        }
-
-        const result = applyMask(matrix, bestMask);
-        writeFormatInfo(result, bestMask);
-
-        return { matrix: result, version, size: version * 4 + 17 };
-      }
-
-      return { generate };
-    })();
-
-    // ── UI ──
+    // QR Code Generator — uses qrcode-generator library (proven, well-tested)
+    // EC level H (30% recovery) for center logo support
 
     const qrText = document.getElementById('qrText');
     const qrSize = document.getElementById('qrSize');
@@ -784,7 +292,7 @@
     const qrInfo = document.getElementById('qrInfo');
 
     let logoImg = null;
-    let lastGenerated = null;
+    let lastQR = null;
 
     qrSize.addEventListener('input', () => {
       qrSizeVal.textContent = qrSize.value + 'px';
@@ -799,7 +307,7 @@
         logoThumb.src = img.src;
         logoName.textContent = file.name;
         logoPreview.style.display = 'flex';
-        if (lastGenerated) renderQR();
+        if (lastQR) renderQR();
       };
       img.onerror = () => showError(errorMsg, 'Failed to load logo image');
       img.src = URL.createObjectURL(file);
@@ -809,7 +317,7 @@
       logoImg = null;
       logoInput.value = '';
       logoPreview.style.display = 'none';
-      if (lastGenerated) renderQR();
+      if (lastQR) renderQR();
     });
 
     generateBtn.addEventListener('click', () => {
@@ -818,17 +326,26 @@
         showError(errorMsg, 'Please enter text or a URL');
         return;
       }
+      if (typeof qrcode === 'undefined') {
+        showError(errorMsg, 'QR code library failed to load. Please refresh and try again.');
+        return;
+      }
       hideError(errorMsg);
       try {
-        lastGenerated = QR.generate(text);
+        // typeNumber 0 = auto-detect version, 'H' = highest error correction
+        const qr = qrcode(0, 'H');
+        qr.addData(text);
+        qr.make();
+        lastQR = qr;
         renderQR();
         placeholder.style.display = 'none';
         qrCanvas.style.display = 'block';
         qrInfo.style.display = 'block';
         downloadBtn.style.display = 'inline-flex';
-        qrInfo.textContent = 'Version ' + lastGenerated.version + ' — ' + lastGenerated.size + '×' + lastGenerated.size + ' modules — EC Level H (30% recovery)';
+        const modules = qr.getModuleCount();
+        qrInfo.textContent = modules + '×' + modules + ' modules — EC Level H (30% recovery)';
       } catch (e) {
-        showError(errorMsg, e.message);
+        showError(errorMsg, e.message || 'Failed to generate QR code. Text may be too long.');
       }
     });
 
@@ -841,13 +358,13 @@
     });
 
     // Re-render on setting changes
-    qrFgColor.addEventListener('input', () => { if (lastGenerated) renderQR(); });
-    qrBgColor.addEventListener('input', () => { if (lastGenerated) renderQR(); });
-    qrSize.addEventListener('input', () => { if (lastGenerated) renderQR(); });
+    qrFgColor.addEventListener('input', () => { if (lastQR) renderQR(); });
+    qrBgColor.addEventListener('input', () => { if (lastQR) renderQR(); });
+    qrSize.addEventListener('input', () => { if (lastQR) renderQR(); });
 
     function renderQR() {
-      if (!lastGenerated) return;
-      const { matrix, size: modules } = lastGenerated;
+      if (!lastQR) return;
+      const modules = lastQR.getModuleCount();
       const canvasSize = parseInt(qrSize.value);
       const quietZone = 4;
       const totalModules = modules + quietZone * 2;
@@ -865,8 +382,7 @@
       ctx.fillStyle = qrFgColor.value;
       for (let r = 0; r < modules; r++) {
         for (let c = 0; c < modules; c++) {
-          const v = matrix[r][c];
-          if (v === 1 || v === 3) {
+          if (lastQR.isDark(r, c)) {
             const x = (c + quietZone) * moduleSize;
             const y = (r + quietZone) * moduleSize;
             ctx.fillRect(x, y, Math.ceil(moduleSize), Math.ceil(moduleSize));
@@ -917,7 +433,7 @@
     }
 
     downloadBtn.addEventListener('click', () => {
-      if (!lastGenerated) return;
+      if (!lastQR) return;
       qrCanvas.toBlob(blob => {
         if (blob) downloadBlob(blob, 'qrcode-picbrew.png');
       }, 'image/png');
