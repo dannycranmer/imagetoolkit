@@ -26,7 +26,10 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+html { overflow-x: hidden; }
+
 body {
+  overflow-x: hidden;
   font-family: var(--font-body);
   background: var(--bg);
   color: var(--text);
@@ -952,6 +955,7 @@ input, select, textarea {
 /* Section headings */
 .mobile-nav-section {
   padding: 0.8rem 1rem 0.2rem;
+  max-width: 100%;
 }
 .mobile-nav-section-title {
   font-size: 0.72rem;
