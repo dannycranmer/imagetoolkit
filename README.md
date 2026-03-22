@@ -47,7 +47,7 @@ Your images never leave your device. No uploads, no servers, no tracking — jus
 ## Sister Projects
 
 - [Parchment](https://parchpdf.com/) — Free, private PDF tools
-- [DevToolbox](https://dannycranmer.github.io/devtoolbox/) — Free developer tools
+- [DevToolbox](https://devbrew.org/) — Free developer tools
 
 ## Support
 
