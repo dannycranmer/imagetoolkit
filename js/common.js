@@ -1,4 +1,4 @@
-/* ImageToolkit — Shared Utilities */
+/* PicBrew — Shared Utilities */
 
 // Mobile nav toggle + "More" dropdown for nav overflow
 document.addEventListener('DOMContentLoaded', () => {

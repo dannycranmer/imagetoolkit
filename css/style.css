@@ -1,5 +1,5 @@
-/* ImageToolkit — "Glacial" Arctic Precision Theme */
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Outfit:wght@300;400;500;600;700&display=swap');
+/* PicBrew — "Glacial" Arctic Precision Theme */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Outfit:wght@300;400;500;600;700&display=swap');
 
 :root {
   --bg: #0A0E14;
@@ -17,7 +17,7 @@
   --radius: 12px;
   --shadow: 0 2px 8px rgba(0,0,0,0.4), 0 1px 3px rgba(0,0,0,0.3);
   --shadow-lg: 0 16px 48px rgba(0,0,0,0.5), 0 0 24px var(--accent-glow);
-  --font-display: 'Syne', 'Segoe UI', sans-serif;
+  --font-display: 'Space Grotesk', 'Segoe UI', sans-serif;
   --font-body: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
   --max-width: 1100px;
   --violet: #7C5CFC;
@@ -85,7 +85,7 @@ body::before {
 .nav-brand {
   font-family: var(--font-display);
   font-size: 1.3rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text);
   text-decoration: none;
   letter-spacing: -0.03em;
@@ -168,7 +168,7 @@ body::before {
 }
 .hero-title {
   font-family: var(--font-display);
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1.1;
   margin-bottom: 1rem;
   letter-spacing: -0.04em;
@@ -392,7 +392,7 @@ body::before {
 .tool-header h1 {
   font-family: var(--font-display);
   font-size: 2.2rem;
-  font-weight: 800;
+  font-weight: 700;
   margin-bottom: 0.5rem;
   letter-spacing: -0.04em;
 }
@@ -837,7 +837,7 @@ body::before {
   .nav-mobile-header .nav-brand {
     font-family: var(--font-display);
     font-size: 1.3rem;
-    font-weight: 800;
+    font-weight: 700;
     color: var(--text);
     text-decoration: none;
   }

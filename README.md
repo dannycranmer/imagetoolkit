@@ -1,4 +1,4 @@
-# ImageToolkit
+# PicBrew
 
 **Free, private image tools that run entirely in your browser.**
 
@@ -26,7 +26,7 @@ Your images never leave your device. No uploads, no servers, no tracking — jus
 | [Screenshot Mockup Generator](https://dannycranmer.github.io/imagetoolkit/mockup.html) | Place screenshots in device frames (iPhone, MacBook, iPad, Android, browser). |
 | [Image to PDF](https://dannycranmer.github.io/imagetoolkit/image-to-pdf.html) | Combine multiple images into a single PDF with layout controls. |
 
-## Why ImageToolkit?
+## Why PicBrew?
 
 - **Privacy-first** — All processing happens in your browser. Your images are never uploaded anywhere.
 - **Free** — No subscriptions, no paywalls, no usage limits.
@@ -47,11 +47,11 @@ Your images never leave your device. No uploads, no servers, no tracking — jus
 ## Sister Projects
 
 - [Parchment](https://parchpdf.com/) — Free, private PDF tools
-- [DevToolbox](https://devbrew.org/) — Free developer tools
+- [DevToolbox](https://dannycranmer.github.io/devtoolbox/) — Free developer tools
 
 ## Support
 
-If you find ImageToolkit useful, consider [buying me a coffee](https://buymeacoffee.com/dairylea).
+If you find PicBrew useful, consider [buying me a coffee](https://buymeacoffee.com/dairylea).
 
 ## License
 
