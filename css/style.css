@@ -488,6 +488,26 @@ body::before {
   border-radius: 6px;
   background: var(--bg);
 }
+.control-row input[type="text"],
+.control-row textarea {
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.88rem;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.control-row input[type="text"]:focus,
+.control-row textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+input, select, textarea {
+  color: var(--text);
+}
 .quality-value {
   font-weight: 700;
   font-size: 0.9rem;
