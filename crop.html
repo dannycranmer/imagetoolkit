@@ -239,12 +239,14 @@
     const clearBtn = document.getElementById('clearBtn');
     const errorMsg = document.getElementById('errorMsg');
     const resultArea = document.getElementById('resultArea');
-    const resultImg = document.getElementById('resultImg');
+    const resultContainer = document.getElementById('resultContainer');
     const downloadBtn = document.getElementById('downloadBtn');
     const cropX = document.getElementById('cropX');
     const cropY = document.getElementById('cropY');
     const cropW = document.getElementById('cropW');
     const cropH = document.getElementById('cropH');
+    const shapeMask = document.getElementById('shapeMask');
+    const shapePath = document.getElementById('shapePath');
 
     let sourceImg = null;
     let sourceFile = null;
@@ -252,16 +254,119 @@
     let aspectRatio = null;
     let croppedBlob = null;
     let croppedName = '';
+    let cropShape = 'rect';
 
     // Interaction state
-    let mode = 'none'; // 'none' | 'draw' | 'move' | 'resize'
-    let activeHandle = null; // which handle is being dragged
+    let mode = 'none';
+    let activeHandle = null;
     let dragStartX = 0, dragStartY = 0;
-    // Crop region in display pixels
     let cropLeft = 0, cropTop = 0, cropWidth = 0, cropHeight = 0;
-    // Snapshot at drag start
     let snapLeft = 0, snapTop = 0, snapWidth = 0, snapHeight = 0;
     let hasRegion = false;
+
+    // --- Shape path generators ---
+    function getShapeSVGPath(shape, w, h) {
+      const cx = w / 2, cy = h / 2, rx = w / 2, ry = h / 2;
+      switch (shape) {
+        case 'circle': {
+          const r = Math.min(rx, ry);
+          return `M${cx-r},${cy} A${r},${r} 0 1,1 ${cx+r},${cy} A${r},${r} 0 1,1 ${cx-r},${cy}Z`;
+        }
+        case 'oval':
+          return `M${cx-rx},${cy} A${rx},${ry} 0 1,1 ${cx+rx},${cy} A${rx},${ry} 0 1,1 ${cx-rx},${cy}Z`;
+        case 'triangle':
+          return `M${cx},0 L${w},${h} L0,${h}Z`;
+        case 'hexagon': {
+          const pts = [];
+          for (let i = 0; i < 6; i++) {
+            const a = Math.PI / 6 + i * Math.PI / 3;
+            pts.push(`${cx + rx * Math.cos(a)},${cy + ry * Math.sin(a)}`);
+          }
+          return `M${pts[0]} L${pts.slice(1).join(' L')}Z`;
+        }
+        case 'star': {
+          const pts = [];
+          for (let i = 0; i < 10; i++) {
+            const a = -Math.PI / 2 + i * Math.PI / 5;
+            const r = i % 2 === 0 ? Math.min(rx, ry) : Math.min(rx, ry) * 0.4;
+            pts.push(`${cx + r * Math.cos(a)},${cy + r * Math.sin(a)}`);
+          }
+          return `M${pts[0]} L${pts.slice(1).join(' L')}Z`;
+        }
+        case 'heart':
+          return `M${cx},${h*0.85} C${w*0.05},${h*0.55} ${w*0.0},${h*0.15} ${cx},${h*0.3} C${w*1.0},${h*0.15} ${w*0.95},${h*0.55} ${cx},${h*0.85}Z`;
+        case 'rounded': {
+          const r = Math.min(w, h) * 0.15;
+          return `M${r},0 H${w-r} A${r},${r} 0 0,1 ${w},${r} V${h-r} A${r},${r} 0 0,1 ${w-r},${h} H${r} A${r},${r} 0 0,1 0,${h-r} V${r} A${r},${r} 0 0,1 ${r},0Z`;
+        }
+        default: return `M0,0 H${w} V${h} H0Z`;
+      }
+    }
+
+    function applyShapeClip(context, shape, w, h) {
+      const cx = w / 2, cy = h / 2, rx = w / 2, ry = h / 2;
+      context.beginPath();
+      switch (shape) {
+        case 'circle': {
+          const r = Math.min(rx, ry);
+          context.arc(cx, cy, r, 0, Math.PI * 2);
+          break;
+        }
+        case 'oval':
+          context.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+          break;
+        case 'triangle':
+          context.moveTo(cx, 0); context.lineTo(w, h); context.lineTo(0, h);
+          context.closePath(); break;
+        case 'hexagon':
+          for (let i = 0; i < 6; i++) {
+            const a = Math.PI / 6 + i * Math.PI / 3;
+            const px = cx + rx * Math.cos(a), py = cy + ry * Math.sin(a);
+            i === 0 ? context.moveTo(px, py) : context.lineTo(px, py);
+          }
+          context.closePath(); break;
+        case 'star':
+          for (let i = 0; i < 10; i++) {
+            const a = -Math.PI / 2 + i * Math.PI / 5;
+            const r = i % 2 === 0 ? Math.min(rx, ry) : Math.min(rx, ry) * 0.4;
+            const px = cx + r * Math.cos(a), py = cy + r * Math.sin(a);
+            i === 0 ? context.moveTo(px, py) : context.lineTo(px, py);
+          }
+          context.closePath(); break;
+        case 'heart':
+          context.moveTo(cx, h * 0.85);
+          context.bezierCurveTo(w * 0.05, h * 0.55, 0, h * 0.15, cx, h * 0.3);
+          context.bezierCurveTo(w, h * 0.15, w * 0.95, h * 0.55, cx, h * 0.85);
+          context.closePath(); break;
+        case 'rounded': {
+          const r = Math.min(w, h) * 0.15;
+          context.moveTo(r, 0); context.lineTo(w - r, 0);
+          context.arcTo(w, 0, w, r, r); context.lineTo(w, h - r);
+          context.arcTo(w, h, w - r, h, r); context.lineTo(r, h);
+          context.arcTo(0, h, 0, h - r, r); context.lineTo(0, r);
+          context.arcTo(0, 0, r, 0, r);
+          context.closePath(); break;
+        }
+        default: context.rect(0, 0, w, h); break;
+      }
+      context.clip();
+    }
+
+    function updateShapeMask() {
+      if (cropShape === 'rect' || !hasRegion) { shapeMask.style.display = 'none'; return; }
+      shapeMask.style.display = 'block';
+      shapePath.setAttribute('d', getShapeSVGPath(cropShape, cropWidth, cropHeight));
+    }
+
+    // Shape selector
+    document.getElementById('shapeBtns').addEventListener('click', e => {
+      const btn = e.target.closest('.shape-btn');
+      if (!btn) return;
+      document.querySelectorAll('#shapeBtns .shape-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      cropShape = btn.dataset.shape;
+      updateShapeMask();
+    });
 
     document.getElementById('aspectBtns').addEventListener('click', e => {
       const btn = e.target.closest('.preset-btn');
@@ -274,7 +379,6 @@
         const [a, b2] = r.split(':').map(Number);
         aspectRatio = a / b2;
       }
-      // If region exists, enforce new aspect ratio
       if (hasRegion && aspectRatio) {
         cropHeight = cropWidth / aspectRatio;
         if (cropTop + cropHeight > srcCanvas.height) {
@@ -302,10 +406,11 @@
       resultArea.style.display = 'none';
       cropOverlay.style.display = 'none';
       cropOverlay.classList.remove('active');
+      shapeMask.style.display = 'none';
       hasRegion = false;
 
       const maxW = Math.min(800, cropWrapper.parentElement.clientWidth - 48);
-      const maxH = 500; // match CSS max-height on .preview-area canvas
+      const maxH = 500;
       displayScale = 1;
       if (sourceImg.naturalWidth > maxW) displayScale = maxW / sourceImg.naturalWidth;
       if (sourceImg.naturalHeight * displayScale > maxH) displayScale = maxH / sourceImg.naturalHeight;
@@ -329,7 +434,6 @@
       const rect = srcCanvas.getBoundingClientRect();
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      // Scale from CSS rendered size to canvas buffer size to handle any CSS scaling
       const cssScaleX = srcCanvas.width / rect.width;
       const cssScaleY = srcCanvas.height / rect.height;
       return {
@@ -343,6 +447,7 @@
       cropOverlay.style.top = cropTop + 'px';
       cropOverlay.style.width = cropWidth + 'px';
       cropOverlay.style.height = cropHeight + 'px';
+      updateShapeMask();
     }
 
     function syncInputs() {
@@ -363,26 +468,18 @@
       if (cropHeight < 5) cropHeight = 5;
     }
 
-    // Detect if a point is inside the crop region (not on a handle)
     function isInsideRegion(x, y) {
-      return hasRegion &&
-        x >= cropLeft && x <= cropLeft + cropWidth &&
-        y >= cropTop && y <= cropTop + cropHeight;
+      return hasRegion && x >= cropLeft && x <= cropLeft + cropWidth && y >= cropTop && y <= cropTop + cropHeight;
     }
 
-    // Detect which handle is under the pointer (with generous hit area)
     function hitTestHandle(x, y) {
       if (!hasRegion) return null;
       const margin = 10;
       const l = cropLeft, t = cropTop, r = cropLeft + cropWidth, b = cropTop + cropHeight;
-      const mx = (l + r) / 2, my = (t + b) / 2;
-
-      // Corners first (higher priority)
       if (Math.abs(x - l) < margin && Math.abs(y - t) < margin) return 'nw';
       if (Math.abs(x - r) < margin && Math.abs(y - t) < margin) return 'ne';
       if (Math.abs(x - l) < margin && Math.abs(y - b) < margin) return 'sw';
       if (Math.abs(x - r) < margin && Math.abs(y - b) < margin) return 'se';
-      // Edges
       if (Math.abs(y - t) < margin && x > l + margin && x < r - margin) return 'n';
       if (Math.abs(y - b) < margin && x > l + margin && x < r - margin) return 's';
       if (Math.abs(x - l) < margin && y > t + margin && y < b - margin) return 'w';
@@ -390,33 +487,26 @@
       return null;
     }
 
-    // --- Pointer event handlers ---
     cropWrapper.addEventListener('mousedown', onPointerDown);
     cropWrapper.addEventListener('touchstart', onPointerDown, { passive: false });
 
     function onPointerDown(e) {
       e.preventDefault();
       const pos = getPos(e);
-      dragStartX = pos.x;
-      dragStartY = pos.y;
-
-      // Check handles first, then move, then new draw
+      dragStartX = pos.x; dragStartY = pos.y;
       const handle = hitTestHandle(pos.x, pos.y);
       if (handle) {
-        mode = 'resize';
-        activeHandle = handle;
-        snapLeft = cropLeft; snapTop = cropTop;
-        snapWidth = cropWidth; snapHeight = cropHeight;
+        mode = 'resize'; activeHandle = handle;
+        snapLeft = cropLeft; snapTop = cropTop; snapWidth = cropWidth; snapHeight = cropHeight;
       } else if (isInsideRegion(pos.x, pos.y)) {
-        mode = 'move';
-        snapLeft = cropLeft; snapTop = cropTop;
+        mode = 'move'; snapLeft = cropLeft; snapTop = cropTop;
       } else {
         mode = 'draw';
         cropOverlay.style.display = 'block';
         cropOverlay.classList.remove('active');
+        shapeMask.style.display = 'none';
         hasRegion = false;
       }
-
       document.addEventListener('mousemove', onPointerMove);
       document.addEventListener('mouseup', onPointerEnd);
       document.addEventListener('touchmove', onPointerMove, { passive: false });
@@ -427,79 +517,51 @@
       if (mode === 'none') return;
       e.preventDefault();
       const pos = getPos(e);
-      const dx = pos.x - dragStartX;
-      const dy = pos.y - dragStartY;
+      const dx = pos.x - dragStartX, dy = pos.y - dragStartY;
 
       if (mode === 'draw') {
-        let x = Math.min(dragStartX, pos.x);
-        let y = Math.min(dragStartY, pos.y);
-        let w = Math.abs(dx);
-        let h = Math.abs(dy);
-
+        let x = Math.min(dragStartX, pos.x), y = Math.min(dragStartY, pos.y);
+        let w = Math.abs(dx), h = Math.abs(dy);
         if (aspectRatio) {
           h = w / aspectRatio;
           if (pos.y < dragStartY) y = dragStartY - h;
           if (y < 0) { y = 0; h = dragStartY; w = h * aspectRatio; }
           if (y + h > srcCanvas.height) { h = srcCanvas.height - y; w = h * aspectRatio; }
         }
-        // Clamp to canvas
         if (x < 0) { w += x; x = 0; }
         if (y < 0) { h += y; y = 0; }
         if (x + w > srcCanvas.width) w = srcCanvas.width - x;
         if (y + h > srcCanvas.height) h = srcCanvas.height - y;
-
         cropLeft = x; cropTop = y; cropWidth = w; cropHeight = h;
-        updateOverlay();
-        syncInputs();
-
+        updateOverlay(); syncInputs();
       } else if (mode === 'move') {
-        cropLeft = snapLeft + dx;
-        cropTop = snapTop + dy;
-        // Keep within bounds
+        cropLeft = snapLeft + dx; cropTop = snapTop + dy;
         if (cropLeft < 0) cropLeft = 0;
         if (cropTop < 0) cropTop = 0;
         if (cropLeft + cropWidth > srcCanvas.width) cropLeft = srcCanvas.width - cropWidth;
         if (cropTop + cropHeight > srcCanvas.height) cropTop = srcCanvas.height - cropHeight;
-        updateOverlay();
-        syncInputs();
-
+        updateOverlay(); syncInputs();
       } else if (mode === 'resize') {
         let newL = snapLeft, newT = snapTop, newW = snapWidth, newH = snapHeight;
-
-        // Compute new rect based on which handle
-        if (activeHandle.includes('e')) { newW = snapWidth + dx; }
+        if (activeHandle.includes('e')) newW = snapWidth + dx;
         if (activeHandle.includes('w')) { newL = snapLeft + dx; newW = snapWidth - dx; }
-        if (activeHandle.includes('s')) { newH = snapHeight + dy; }
+        if (activeHandle.includes('s')) newH = snapHeight + dy;
         if (activeHandle.includes('n')) { newT = snapTop + dy; newH = snapHeight - dy; }
-
-        // Enforce minimum size
-        if (newW < 10) { if (activeHandle.includes('w')) { newL = snapLeft + snapWidth - 10; } newW = 10; }
-        if (newH < 10) { if (activeHandle.includes('n')) { newT = snapTop + snapHeight - 10; } newH = 10; }
-
-        // Enforce aspect ratio
+        if (newW < 10) { if (activeHandle.includes('w')) newL = snapLeft + snapWidth - 10; newW = 10; }
+        if (newH < 10) { if (activeHandle.includes('n')) newT = snapTop + snapHeight - 10; newH = 10; }
         if (aspectRatio) {
-          if (activeHandle === 'n' || activeHandle === 's') {
-            newW = newH * aspectRatio;
-          } else if (activeHandle === 'w' || activeHandle === 'e') {
-            newH = newW / aspectRatio;
-          } else {
-            // Corner: use width as driver
-            newH = newW / aspectRatio;
-            if (activeHandle.includes('n')) { newT = snapTop + snapHeight - newH; }
-          }
+          if (activeHandle === 'n' || activeHandle === 's') newW = newH * aspectRatio;
+          else if (activeHandle === 'w' || activeHandle === 'e') newH = newW / aspectRatio;
+          else { newH = newW / aspectRatio; if (activeHandle.includes('n')) newT = snapTop + snapHeight - newH; }
         }
-
-        // Clamp to canvas
         if (newL < 0) { newW += newL; newL = 0; }
         if (newT < 0) { newH += newT; newT = 0; }
         if (newL + newW > srcCanvas.width) newW = srcCanvas.width - newL;
         if (newT + newH > srcCanvas.height) newH = srcCanvas.height - newT;
         if (newW < 10) newW = 10;
         if (newH < 10) newH = 10;
-
         cropLeft = newL; cropTop = newT; cropWidth = newW; cropHeight = newH;
-        updateOverlay();
-        syncInputs();
+        updateOverlay(); syncInputs();
       }
     }
 
@@ -507,20 +569,19 @@
       if (mode === 'draw' && cropWidth > 5 && cropHeight > 5) {
         hasRegion = true;
         cropOverlay.classList.add('active');
+        updateShapeMask();
       } else if (mode === 'draw') {
-        // Too small — hide
         cropOverlay.style.display = 'none';
+        shapeMask.style.display = 'none';
         hasRegion = false;
       }
-      mode = 'none';
-      activeHandle = null;
+      mode = 'none'; activeHandle = null;
       document.removeEventListener('mousemove', onPointerMove);
       document.removeEventListener('mouseup', onPointerEnd);
       document.removeEventListener('touchmove', onPointerMove);
       document.removeEventListener('touchend', onPointerEnd);
     }
 
-    // Update cursor on hover
     cropWrapper.addEventListener('mousemove', e => {
       if (mode !== 'none') return;
       const pos = getPos(e);
@@ -535,32 +596,28 @@
       }
     });
 
-    // Sync numeric inputs back to overlay
     [cropX, cropY, cropW, cropH].forEach(input => {
       input.addEventListener('input', () => {
         cropLeft = (parseInt(cropX.value) || 0) * displayScale;
         cropTop = (parseInt(cropY.value) || 0) * displayScale;
         cropWidth = (parseInt(cropW.value) || 10) * displayScale;
         cropHeight = (parseInt(cropH.value) || 10) * displayScale;
-        clampRegion();
-        updateOverlay();
+        clampRegion(); updateOverlay();
         cropOverlay.style.display = 'block';
         cropOverlay.classList.add('active');
-        hasRegion = true;
-        syncInputs();
+        hasRegion = true; syncInputs();
       });
     });
 
     clearBtn.addEventListener('click', () => {
-      sourceImg = null;
-      sourceFile = null;
+      sourceImg = null; sourceFile = null;
       controls.style.display = 'none';
       canvasArea.style.display = 'none';
       resultArea.style.display = 'none';
       cropOverlay.style.display = 'none';
       cropOverlay.classList.remove('active');
-      hasRegion = false;
-      croppedBlob = null;
+      shapeMask.style.display = 'none';
+      hasRegion = false; croppedBlob = null;
       dropZone.querySelector('.drop-zone-text').innerHTML = '<strong>Drop an image here</strong> or click to browse<br>JPEG, PNG, WebP supported';
     });
 
@@ -574,22 +631,52 @@
 
       if (cw < 1 || ch < 1) { showError(errorMsg, 'Crop dimensions must be at least 1 pixel'); return; }
       if (cx + cw > sourceImg.naturalWidth || cy + ch > sourceImg.naturalHeight) {
-        showError(errorMsg, 'Crop region exceeds image bounds');
-        return;
+        showError(errorMsg, 'Crop region exceeds image bounds'); return;
       }
 
       const outCanvas = document.createElement('canvas');
-      outCanvas.width = cw;
-      outCanvas.height = ch;
+      outCanvas.width = cw; outCanvas.height = ch;
       const outCtx = outCanvas.getContext('2d');
-      outCtx.drawImage(sourceImg, cx, cy, cw, ch, 0, 0, cw, ch);
 
-      const mime = sourceFile.type || 'image/png';
+      const useShape = cropShape !== 'rect';
+      if (useShape) { outCtx.save(); applyShapeClip(outCtx, cropShape, cw, ch); }
+      outCtx.drawImage(sourceImg, cx, cy, cw, ch, 0, 0, cw, ch);
+      if (useShape) outCtx.restore();
+
+      const mime = useShape ? 'image/png' : (sourceFile.type || 'image/png');
       croppedBlob = await canvasToBlob(outCanvas, mime, 0.92);
-      const ext = mime === 'image/png' ? 'png' : mime === 'image/webp' ? 'webp' : 'jpg';
+      const ext = useShape ? 'png' : (mime === 'image/png' ? 'png' : mime === 'image/webp' ? 'webp' : 'jpg');
       croppedName = baseName(sourceFile.name) + '_cropped.' + ext;
 
-      resultImg.src = URL.createObjectURL(croppedBlob);
+      resultContainer.innerHTML = '';
+      if (useShape) {
+        const previewCanvas = document.createElement('canvas');
+        previewCanvas.style.maxWidth = '100%';
+        previewCanvas.style.maxHeight = '400px';
+        previewCanvas.style.borderRadius = '6px';
+        previewCanvas.style.border = '1px solid var(--border)';
+        previewCanvas.classList.add('checkerboard-bg');
+        let pw = cw, ph = ch;
+        if (pw > 800) { const s = 800 / pw; pw = 800; ph = Math.round(ch * s); }
+        previewCanvas.width = pw; previewCanvas.height = ph;
+        const pCtx = previewCanvas.getContext('2d');
+        const ts = 8;
+        for (let ty = 0; ty < ph; ty += ts) {
+          for (let tx = 0; tx < pw; tx += ts) {
+            pCtx.fillStyle = ((tx / ts + ty / ts) % 2 === 0) ? '#2a2a2a' : '#1a1a1a';
+            pCtx.fillRect(tx, ty, ts, ts);
+          }
+        }
+        pCtx.drawImage(outCanvas, 0, 0, pw, ph);
+        resultContainer.appendChild(previewCanvas);
+      } else {
+        const img = document.createElement('img');
+        img.alt = 'Cropped result';
+        img.style.maxWidth = '100%'; img.style.maxHeight = '400px';
+        img.style.borderRadius = '6px'; img.style.border = '1px solid var(--border)';
+        img.src = URL.createObjectURL(croppedBlob);
+        resultContainer.appendChild(img);
+      }
       resultArea.style.display = 'block';
     });
 
