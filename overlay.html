@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Overlay &amp; Compositing Tool — PicBrew</title>
+  <meta name="description" content="Layer images on top of each other with drag, resize, rotate, and opacity controls. Free, private — your images never leave your device.">
+  <link rel="canonical" href="https://picbrew.org/overlay.html">
+  <meta property="og:title" content="Image Overlay & Compositing Tool — PicBrew">
+  <meta property="og:description" content="Layer images on top of each other with drag, resize, rotate, and opacity controls. Free, private — your images never leave your device.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://picbrew.org/overlay.html">
+  <meta property="og:image" content="https://picbrew.org/og-image.png">
+  <meta property="og:site_name" content="PicBrew">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Image Overlay & Compositing Tool — PicBrew">
+  <meta name="twitter:description" content="Layer images on top of each other with drag, resize, rotate, and opacity controls. Free, private — your images never leave your device.">
+  <meta name="twitter:image" content="https://picbrew.org/og-image.png">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .overlay-workspace {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .canvas-container {
+      flex: 1;
+      min-width: 0;
+      position: relative;
+    }
+    .canvas-container canvas {
+      display: block;
+      max-width: 100%;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      cursor: default;
+      background-image: linear-gradient(45deg, #1A2636 25%, transparent 25%),
+        linear-gradient(-45deg, #1A2636 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #1A2636 75%),
+        linear-gradient(-45deg, transparent 75%, #1A2636 75%);
+      background-size: 16px 16px;
+      background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+    }
+    .layers-panel {
+      width: 260px;
+      flex-shrink: 0;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.75rem;
+      max-height: 600px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .layers-panel h3 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 0.25rem;
+    }
+    .layer-item {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.5rem;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .layer-item.selected {
+      border-color: var(--accent);
+      box-shadow: 0 0 8px var(--accent-glow);
+    }
+    .layer-item-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.4rem;
+    }
+    .layer-thumb {
+      width: 36px;
+      height: 36px;
+      border-radius: 4px;
+      object-fit: cover;
+      background: var(--bg);
+      border: 1px solid var(--border);
+    }
+    .layer-name {
+      flex: 1;
+      font-size: 0.8rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--text);
+    }
+    .layer-badge {
+      font-size: 0.65rem;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: var(--accent-glow);
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .layer-controls {
+      display: none;
+      flex-direction: column;
+      gap: 0.4rem;
+      margin-top: 0.4rem;
+    }
+    .layer-item.selected .layer-controls {
+      display: flex;
+    }
+    .layer-control-row {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .layer-control-row label {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      width: 52px;
+      flex-shrink: 0;
+    }
+    .layer-control-row input[type="range"] {
+      flex: 1;
+      min-width: 0;
+    }
+    .layer-control-row .val {
+      font-size: 0.7rem;
+      color: var(--accent);
+      width: 36px;
+      text-align: right;
+      font-weight: 600;
+    }
+    .layer-actions {
+      display: flex;
+      gap: 0.25rem;
+      margin-top: 0.3rem;
+    }
+    .layer-actions button {
+      flex: 1;
+      font-size: 0.7rem;
+      padding: 3px 6px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--bg);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .layer-actions button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .layer-actions button.delete-btn:hover {
+      border-color: #ef4444;
+      color: #ef4444;
+    }
+    .add-overlay-zone {
+      border: 2px dashed var(--border);
+      border-radius: 8px;
+      padding: 0.6rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+    .add-overlay-zone:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    /* Selection handles on canvas */
+    .canvas-overlay-ui {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+    /* Download area */
+    .download-area {
+      margin-top: 1rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .download-area select {
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text);
+      font-size: 0.85rem;
+    }
+    @media (max-width: 768px) {
+      .overlay-workspace {
+        flex-direction: column;
+      }
+      .layers-panel {
+        width: 100%;
+        max-height: 300px;
+      }
+    }
+  </style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Image Overlay & Compositing — PicBrew",
+    "description": "Layer images on top of each other with drag, resize, rotate, and opacity controls. Free, private — your images never leave your device.",
+    "url": "https://picbrew.org/overlay.html",
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "Any",
+    "browserRequirements": "Requires JavaScript",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "creator": {
+      "@type": "Organization",
+      "name": "PicBrew",
+      "url": "https://picbrew.org"
+    }
+  }
+  </script>
+</head>
+<body>
+
+  <nav class="nav" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">Pic<span>Brew</span></a>
+      <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">&#9776;</button>
+      <ul class="nav-links" role="menubar">
+        <li><a href="index.html" role="menuitem">Home</a></li>
+        <li><a href="compress.html" role="menuitem">Compress</a></li>
+        <li><a href="resize.html" role="menuitem">Resize</a></li>
+        <li><a href="convert.html" role="menuitem">Convert</a></li>
+        <li><a href="crop.html" role="menuitem">Crop</a></li>
+        <li><a href="watermark.html" role="menuitem">Watermark</a></li>
+        <li><a href="flip-rotate.html" role="menuitem">Flip &amp; Rotate</a></li>
+        <li><a href="background-remover.html" role="menuitem">BG Remover</a></li>
+        <li><a href="filters.html" role="menuitem">Filters</a></li>
+        <li><a href="palette.html" role="menuitem">Palette</a></li>
+        <li><a href="meme.html" role="menuitem">Meme</a></li>
+        <li><a href="base64.html" role="menuitem">Base64</a></li>
+        <li><a href="collage.html" role="menuitem">Collage</a></li>
+        <li><a href="denoise.html" role="menuitem">Denoise</a></li>
+        <li><a href="mockup.html" role="menuitem">Mockup</a></li>
+        <li><a href="image-to-pdf.html" role="menuitem">To PDF</a></li>
+        <li><a href="qrcode.html" role="menuitem">QR Code</a></li>
+        <li><a href="overlay.html" class="active" role="menuitem">Overlay</a></li>
+        <li><a href="https://buymeacoffee.com/dairylea" class="nav-coffee" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="tool-header">
+      <h1>Image Overlay &amp; Compositing</h1>
+      <p>Layer images on top of each other — drag, resize, rotate, and adjust opacity. Your images never leave your device.</p>
+    </div>
+
+    <div class="drop-zone" id="baseDropZone">
+      <div class="drop-zone-icon">&#128444;</div>
+      <div class="drop-zone-text"><strong>Drop a base image here</strong> or click to browse<br>JPEG, PNG, WebP supported</div>
+      <input type="file" id="baseFileInput" accept="image/jpeg,image/png,image/webp">
+    </div>
+
+    <div class="error-msg" id="errorMsg"></div>
+
+    <div id="workArea" style="display:none">
+      <div class="overlay-workspace">
+        <div class="canvas-container" id="canvasContainer">
+          <canvas id="compositeCanvas"></canvas>
+        </div>
+        <div class="layers-panel" id="layersPanel">
+          <h3>Layers</h3>
+          <div id="layersList"></div>
+          <div class="add-overlay-zone" id="addOverlayZone">
+            + Add Overlay Image
+            <input type="file" id="overlayFileInput" accept="image/jpeg,image/png,image/webp" multiple style="display:none">
+          </div>
+        </div>
+      </div>
+
+      <div class="download-area">
+        <select id="outputFormat">
+          <option value="png">PNG (transparency)</option>
+          <option value="jpeg">JPEG</option>
+          <option value="webp">WebP</option>
+        </select>
+        <button class="btn btn-green" id="downloadBtn">&#11015; Download Composed Image</button>
+        <button class="btn btn-outline" id="resetBtn">Clear All</button>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <p>Powered by <strong>PicBrew</strong> — Free &amp; Private</p>
+      <div class="footer-links">
+        <a href="https://buymeacoffee.com/dairylea" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a>
+        <a href="https://parchpdf.com/" target="_blank" rel="noopener">PDF Tools (Parchment)</a>
+        <a href="https://devbrew.org/" target="_blank" rel="noopener">Dev Tools (DevBrew)</a>
+        <a href="https://github.com/dannycranmer/imagetoolkit" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="vertical-align:-2px;margin-right:3px"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/common.js"></script>
+  <script>
+  (() => {
+    const baseDropZone = document.getElementById('baseDropZone');
+    const baseFileInput = document.getElementById('baseFileInput');
+    const overlayFileInput = document.getElementById('overlayFileInput');
+    const addOverlayZone = document.getElementById('addOverlayZone');
+    const workArea = document.getElementById('workArea');
+    const canvas = document.getElementById('compositeCanvas');
+    const ctx = canvas.getContext('2d');
+    const canvasContainer = document.getElementById('canvasContainer');
+    const layersList = document.getElementById('layersList');
+    const errorMsg = document.getElementById('errorMsg');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const outputFormat = document.getElementById('outputFormat');
+
+    // Layer model: { id, img, x, y, width, height, rotation, opacity, name }
+    let layers = []; // index 0 = base image
+    let selectedLayerId = null;
+    let nextId = 1;
+    let displayScale = 1; // ratio of canvas buffer to full image
+    let baseNatW = 0, baseNatH = 0;
+
+    // Interaction state
+    let dragState = null; // { type: 'move'|'resize'|'rotate', layerId, startX, startY, snapLayer }
+    const HANDLE_SIZE = 8;
+
+    // ── Base image upload ──
+    setupDropZone(baseDropZone, baseFileInput, async files => {
+      try {
+        const img = await loadImage(files[0]);
+        layers = [];
+        nextId = 1;
+        baseNatW = img.naturalWidth;
+        baseNatH = img.naturalHeight;
+        layers.push({
+          id: nextId++,
+          img,
+          x: 0, y: 0,
+          width: img.naturalWidth,
+          height: img.naturalHeight,
+          rotation: 0,
+          opacity: 100,
+          name: files[0].name,
+          isBase: true
+        });
+        selectedLayerId = null;
+        workArea.style.display = 'block';
+        baseDropZone.querySelector('.drop-zone-text').innerHTML =
+          '<strong>' + files[0].name + '</strong> — ' + img.naturalWidth + '×' + img.naturalHeight;
+        sizeCanvas();
+        render();
+        rebuildLayersUI();
+      } catch (e) {
+        showError(errorMsg, "This file doesn't appear to be a valid image");
+      }
+    });
+
+    // ── Overlay upload ──
+    addOverlayZone.addEventListener('click', () => overlayFileInput.click());
+    overlayFileInput.addEventListener('change', async () => {
+      const files = Array.from(overlayFileInput.files).filter(f => f.type.startsWith('image/'));
+      for (const file of files) {
+        try {
+          const img = await loadImage(file);
+          // Size overlay to 40% of base width, maintain aspect ratio
+          let w = Math.round(baseNatW * 0.4);
+          let h = Math.round(w * (img.naturalHeight / img.naturalWidth));
+          if (h > baseNatH * 0.4) {
+            h = Math.round(baseNatH * 0.4);
+            w = Math.round(h * (img.naturalWidth / img.naturalHeight));
+          }
+          // Center on base
+          const x = Math.round((baseNatW - w) / 2);
+          const y = Math.round((baseNatH - h) / 2);
+          const layer = {
+            id: nextId++,
+            img,
+            x, y,
+            width: w,
+            height: h,
+            rotation: 0,
+            opacity: 100,
+            name: file.name,
+            isBase: false
+          };
+          layers.push(layer);
+          selectedLayerId = layer.id;
+        } catch (e) {
+          // skip bad files
+        }
+      }
+      overlayFileInput.value = '';
+      render();
+      rebuildLayersUI();
+    });
+
+    // Also support drag-and-drop on the overlay zone
+    addOverlayZone.addEventListener('dragover', e => { e.preventDefault(); addOverlayZone.style.borderColor = 'var(--accent)'; });
+    addOverlayZone.addEventListener('dragleave', () => { addOverlayZone.style.borderColor = ''; });
+    addOverlayZone.addEventListener('drop', e => {
+      e.preventDefault();
+      addOverlayZone.style.borderColor = '';
+      const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+      if (files.length) {
+        // Simulate file input
+        const dt = new DataTransfer();
+        files.forEach(f => dt.items.add(f));
+        overlayFileInput.files = dt.files;
+        overlayFileInput.dispatchEvent(new Event('change'));
+      }
+    });
+
+    // ── Canvas sizing ──
+    function sizeCanvas() {
+      const containerW = canvasContainer.clientWidth - 2; // minus border
+      displayScale = 1;
+      if (baseNatW > containerW) displayScale = containerW / baseNatW;
+      const maxH = 600;
+      if (baseNatH * displayScale > maxH) displayScale = maxH / baseNatH;
+      canvas.width = Math.round(baseNatW * displayScale);
+      canvas.height = Math.round(baseNatH * displayScale);
+    }
+
+    // ── Render composite ──
+    function render() {
+      if (!layers.length) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (const layer of layers) {
+        const s = displayScale;
+        ctx.save();
+        ctx.globalAlpha = layer.opacity / 100;
+
+        const cx = (layer.x + layer.width / 2) * s;
+        const cy = (layer.y + layer.height / 2) * s;
+        ctx.translate(cx, cy);
+        ctx.rotate(layer.rotation * Math.PI / 180);
+        ctx.drawImage(layer.img, -layer.width * s / 2, -layer.height * s / 2, layer.width * s, layer.height * s);
+        ctx.restore();
+      }
+
+      // Draw selection handles for selected overlay
+      const sel = layers.find(l => l.id === selectedLayerId && !l.isBase);
+      if (sel) {
+        drawSelectionUI(sel);
+      }
+    }
+
+    function drawSelectionUI(layer) {
+      const s = displayScale;
+      const cx = (layer.x + layer.width / 2) * s;
+      const cy = (layer.y + layer.height / 2) * s;
+      const hw = layer.width * s / 2;
+      const hh = layer.height * s / 2;
+      const rot = layer.rotation * Math.PI / 180;
+
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(rot);
+
+      // Bounding box
+      ctx.strokeStyle = '#00D4FF';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 4]);
+      ctx.strokeRect(-hw, -hh, hw * 2, hh * 2);
+      ctx.setLineDash([]);
+
+      // Corner handles
+      const corners = [[-hw, -hh], [hw, -hh], [hw, hh], [-hw, hh]];
+      ctx.fillStyle = '#fff';
+      ctx.strokeStyle = '#00D4FF';
+      ctx.lineWidth = 2;
+      for (const [hx, hy] of corners) {
+        ctx.fillRect(hx - HANDLE_SIZE / 2, hy - HANDLE_SIZE / 2, HANDLE_SIZE, HANDLE_SIZE);
+        ctx.strokeRect(hx - HANDLE_SIZE / 2, hy - HANDLE_SIZE / 2, HANDLE_SIZE, HANDLE_SIZE);
+      }
+
+      // Rotation handle (line + circle above top center)
+      const rotLineLen = 24;
+      ctx.beginPath();
+      ctx.moveTo(0, -hh);
+      ctx.lineTo(0, -hh - rotLineLen);
+      ctx.strokeStyle = '#00D4FF';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(0, -hh - rotLineLen, 6, 0, Math.PI * 2);
+      ctx.fillStyle = '#00D4FF';
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    // ── Hit testing ──
+    function getCanvasPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      return {
+        x: (clientX - rect.left) * scaleX,
+        y: (clientY - rect.top) * scaleY
+      };
+    }
+
+    // Transform point into layer-local coords (accounting for rotation)
+    function toLocalCoords(layer, px, py) {
+      const s = displayScale;
+      const cx = (layer.x + layer.width / 2) * s;
+      const cy = (layer.y + layer.height / 2) * s;
+      const rot = -layer.rotation * Math.PI / 180;
+      const dx = px - cx;
+      const dy = py - cy;
+      return {
+        x: dx * Math.cos(rot) - dy * Math.sin(rot),
+        y: dx * Math.sin(rot) + dy * Math.cos(rot)
+      };
+    }
+
+    function hitTestLayer(px, py) {
+      const sel = layers.find(l => l.id === selectedLayerId && !l.isBase);
+      if (sel) {
+        const s = displayScale;
+        const hw = sel.width * s / 2;
+        const hh = sel.height * s / 2;
+        const local = toLocalCoords(sel, px, py);
+
+        // Rotation handle
+        const rotLineLen = 24;
+        const rdx = local.x;
+        const rdy = local.y - (-hh - rotLineLen);
+        if (rdx * rdx + rdy * rdy < 15 * 15) {
+          return { type: 'rotate', layer: sel };
+        }
+
+        // Corner handles
+        const corners = [
+          { name: 'nw', x: -hw, y: -hh },
+          { name: 'ne', x: hw, y: -hh },
+          { name: 'se', x: hw, y: hh },
+          { name: 'sw', x: -hw, y: hh }
+        ];
+        for (const c of corners) {
+          if (Math.abs(local.x - c.x) < 12 && Math.abs(local.y - c.y) < 12) {
+            return { type: 'resize', layer: sel, handle: c.name };
+          }
+        }
+
+        // Inside bounding box = move
+        if (Math.abs(local.x) <= hw && Math.abs(local.y) <= hh) {
+          return { type: 'move', layer: sel };
+        }
+      }
+
+      // Check all layers top-to-bottom for click-to-select
+      for (let i = layers.length - 1; i >= 0; i--) {
+        const layer = layers[i];
+        if (layer.isBase) continue;
+        const s = displayScale;
+        const hw = layer.width * s / 2;
+        const hh = layer.height * s / 2;
+        const local = toLocalCoords(layer, px, py);
+        if (Math.abs(local.x) <= hw && Math.abs(local.y) <= hh) {
+          return { type: 'select', layer };
+        }
+      }
+
+      return null;
+    }
+
+    // ── Pointer events on canvas ──
+    canvas.addEventListener('mousedown', onDown);
+    canvas.addEventListener('touchstart', onDown, { passive: false });
+
+    function onDown(e) {
+      e.preventDefault();
+      const pos = getCanvasPos(e);
+      const hit = hitTestLayer(pos.x, pos.y);
+
+      if (!hit) {
+        selectedLayerId = null;
+        render();
+        rebuildLayersUI();
+        return;
+      }
+
+      if (hit.type === 'select') {
+        selectedLayerId = hit.layer.id;
+        render();
+        rebuildLayersUI();
+        // Start moving immediately
+        dragState = {
+          type: 'move',
+          layerId: hit.layer.id,
+          startX: pos.x,
+          startY: pos.y,
+          snapX: hit.layer.x,
+          snapY: hit.layer.y,
+          snapW: hit.layer.width,
+          snapH: hit.layer.height,
+          snapRot: hit.layer.rotation
+        };
+      } else {
+        dragState = {
+          type: hit.type,
+          layerId: hit.layer.id,
+          handle: hit.handle,
+          startX: pos.x,
+          startY: pos.y,
+          snapX: hit.layer.x,
+          snapY: hit.layer.y,
+          snapW: hit.layer.width,
+          snapH: hit.layer.height,
+          snapRot: hit.layer.rotation
+        };
+      }
+
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+      document.addEventListener('touchmove', onMove, { passive: false });
+      document.addEventListener('touchend', onUp);
+    }
+
+    function onMove(e) {
+      if (!dragState) return;
+      e.preventDefault();
+      const pos = getCanvasPos(e);
+      const layer = layers.find(l => l.id === dragState.layerId);
+      if (!layer) return;
+      const s = displayScale;
+
+      if (dragState.type === 'move') {
+        const dx = (pos.x - dragState.startX) / s;
+        const dy = (pos.y - dragState.startY) / s;
+        layer.x = dragState.snapX + dx;
+        layer.y = dragState.snapY + dy;
+        render();
+
+      } else if (dragState.type === 'resize') {
+        // Resize from corner — maintain aspect ratio
+        const cx = (dragState.snapX + dragState.snapW / 2) * s;
+        const cy = (dragState.snapY + dragState.snapH / 2) * s;
+
+        // Distance from center to current mouse (in rotated frame)
+        const rot = -layer.rotation * Math.PI / 180;
+        const dx = pos.x - cx;
+        const dy = pos.y - cy;
+        const localX = dx * Math.cos(rot) - dy * Math.sin(rot);
+        const localY = dx * Math.sin(rot) + dy * Math.cos(rot);
+
+        // Use the larger dimension change to drive proportional resize
+        const origAspect = dragState.snapW / dragState.snapH;
+        let newW, newH;
+
+        // Determine new half-size from handle position
+        const absLX = Math.abs(localX) / s;
+        const absLY = Math.abs(localY) / s;
+        // Try width-driven
+        newW = Math.max(20, absLX * 2);
+        newH = newW / origAspect;
+        // If height-driven gives bigger
+        const altH = Math.max(20, absLY * 2);
+        const altW = altH * origAspect;
+        if (altW > newW) {
+          newW = altW;
+          newH = altH;
+        }
+
+        // Keep centered
+        layer.width = Math.round(newW);
+        layer.height = Math.round(newH);
+        layer.x = dragState.snapX + dragState.snapW / 2 - layer.width / 2;
+        layer.y = dragState.snapY + dragState.snapH / 2 - layer.height / 2;
+        render();
+
+      } else if (dragState.type === 'rotate') {
+        const cx = (layer.x + layer.width / 2) * s;
+        const cy = (layer.y + layer.height / 2) * s;
+        const angle = Math.atan2(pos.x - cx, -(pos.y - cy)) * 180 / Math.PI;
+        layer.rotation = Math.round(angle);
+        render();
+        rebuildLayersUI();
+      }
+    }
+
+    function onUp() {
+      dragState = null;
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('touchend', onUp);
+    }
+
+    // Update cursor on hover
+    canvas.addEventListener('mousemove', e => {
+      if (dragState) return;
+      const pos = getCanvasPos(e);
+      const hit = hitTestLayer(pos.x, pos.y);
+      if (!hit) { canvas.style.cursor = 'default'; return; }
+      if (hit.type === 'move' || hit.type === 'select') canvas.style.cursor = 'move';
+      else if (hit.type === 'resize') canvas.style.cursor = 'nwse-resize';
+      else if (hit.type === 'rotate') canvas.style.cursor = 'grab';
+    });
+
+    // ── Layers panel UI ──
+    function rebuildLayersUI() {
+      layersList.innerHTML = '';
+      // Show layers in reverse order (top-most first)
+      for (let i = layers.length - 1; i >= 0; i--) {
+        const layer = layers[i];
+        const div = document.createElement('div');
+        div.className = 'layer-item' + (layer.id === selectedLayerId ? ' selected' : '');
+        div.dataset.id = layer.id;
+
+        const thumbSrc = layerThumbSrc(layer);
+
+        div.innerHTML = `
+          <div class="layer-item-header">
+            <img class="layer-thumb" src="${thumbSrc}" alt="">
+            <span class="layer-name">${escHtml(layer.name)}</span>
+            ${layer.isBase ? '<span class="layer-badge">Base</span>' : ''}
+          </div>
+          ${!layer.isBase ? `
+          <div class="layer-controls">
+            <div class="layer-control-row">
+              <label>Opacity</label>
+              <input type="range" min="0" max="100" value="${layer.opacity}" data-ctrl="opacity">
+              <span class="val">${layer.opacity}%</span>
+            </div>
+            <div class="layer-control-row">
+              <label>Rotation</label>
+              <input type="range" min="-180" max="180" value="${layer.rotation}" data-ctrl="rotation">
+              <span class="val">${layer.rotation}°</span>
+            </div>
+            <div class="layer-actions">
+              ${i < layers.length - 1 ? '<button data-act="up" title="Move up">&#9650; Up</button>' : ''}
+              ${i > 1 ? '<button data-act="down" title="Move down">&#9660; Down</button>' : ''}
+              ${!layer.isBase ? '<button data-act="delete" class="delete-btn" title="Remove">&#10005; Remove</button>' : ''}
+            </div>
+          </div>
+          ` : ''}
+        `;
+
+        // Click to select
+        div.addEventListener('click', e => {
+          if (e.target.closest('button') || e.target.closest('input')) return;
+          if (!layer.isBase) {
+            selectedLayerId = layer.id;
+          } else {
+            selectedLayerId = null;
+          }
+          render();
+          rebuildLayersUI();
+        });
+
+        // Slider controls
+        div.querySelectorAll('input[type="range"]').forEach(input => {
+          input.addEventListener('input', () => {
+            const ctrl = input.dataset.ctrl;
+            const val = parseInt(input.value);
+            layer[ctrl] = val;
+            input.nextElementSibling.textContent = val + (ctrl === 'opacity' ? '%' : '°');
+            render();
+          });
+        });
+
+        // Action buttons
+        div.querySelectorAll('button[data-act]').forEach(btn => {
+          btn.addEventListener('click', e => {
+            e.stopPropagation();
+            const act = btn.dataset.act;
+            const idx = layers.indexOf(layer);
+            if (act === 'up' && idx < layers.length - 1) {
+              [layers[idx], layers[idx + 1]] = [layers[idx + 1], layers[idx]];
+            } else if (act === 'down' && idx > 1) {
+              [layers[idx], layers[idx - 1]] = [layers[idx - 1], layers[idx]];
+            } else if (act === 'delete') {
+              layers.splice(idx, 1);
+              if (selectedLayerId === layer.id) selectedLayerId = null;
+            }
+            render();
+            rebuildLayersUI();
+          });
+        });
+
+        layersList.appendChild(div);
+      }
+    }
+
+    function layerThumbSrc(layer) {
+      const tc = document.createElement('canvas');
+      tc.width = 36;
+      tc.height = 36;
+      const tctx = tc.getContext('2d');
+      const aspect = layer.img.naturalWidth / layer.img.naturalHeight;
+      let dw = 36, dh = 36;
+      if (aspect > 1) { dh = 36 / aspect; } else { dw = 36 * aspect; }
+      tctx.drawImage(layer.img, (36 - dw) / 2, (36 - dh) / 2, dw, dh);
+      return tc.toDataURL('image/png');
+    }
+
+    function escHtml(s) {
+      const d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    // ── Download ──
+    downloadBtn.addEventListener('click', async () => {
+      if (!layers.length) return;
+      // Render at full resolution
+      const outCanvas = document.createElement('canvas');
+      outCanvas.width = baseNatW;
+      outCanvas.height = baseNatH;
+      const outCtx = outCanvas.getContext('2d');
+
+      const fmt = outputFormat.value;
+      // Fill white for JPEG
+      if (fmt === 'jpeg') {
+        outCtx.fillStyle = '#fff';
+        outCtx.fillRect(0, 0, baseNatW, baseNatH);
+      }
+
+      for (const layer of layers) {
+        outCtx.save();
+        outCtx.globalAlpha = layer.opacity / 100;
+        const cx = layer.x + layer.width / 2;
+        const cy = layer.y + layer.height / 2;
+        outCtx.translate(cx, cy);
+        outCtx.rotate(layer.rotation * Math.PI / 180);
+        outCtx.drawImage(layer.img, -layer.width / 2, -layer.height / 2, layer.width, layer.height);
+        outCtx.restore();
+      }
+
+      const mime = getMimeType(fmt);
+      const blob = await canvasToBlob(outCanvas, mime, 0.92);
+      const ext = fmt === 'jpeg' ? 'jpg' : fmt;
+      downloadBlob(blob, 'picbrew_composite.' + ext);
+    });
+
+    // ── Reset ──
+    resetBtn.addEventListener('click', () => {
+      layers = [];
+      selectedLayerId = null;
+      workArea.style.display = 'none';
+      baseDropZone.querySelector('.drop-zone-text').innerHTML =
+        '<strong>Drop a base image here</strong> or click to browse<br>JPEG, PNG, WebP supported';
+    });
+
+    // Handle window resize
+    window.addEventListener('resize', () => {
+      if (layers.length) {
+        sizeCanvas();
+        render();
+      }
+    });
+  })();
+  </script>
+  <script data-goatcounter="https://picbrew.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
