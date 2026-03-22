@@ -1,1 +1,3 @@
-User-agent: *\nAllow: /\nSitemap: https://dannycranmer.github.io/imagetoolkit/sitemap.xml
+User-agent: *
+Allow: /
+Sitemap: https://picbrew.org/sitemap.xml
