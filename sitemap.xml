@@ -1,82 +1,82 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://picbrew.org/</loc>
+    <loc>https://dannycranmer.github.io/imagetoolkit/</loc>
     <lastmod>2026-03-20</lastmod>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://picbrew.org/compress.html</loc>
+    <loc>https://dannycranmer.github.io/imagetoolkit/compress.html</loc>
     <lastmod>2026-03-19</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://picbrew.org/resize.html</loc>
+    <loc>https://dannycranmer.github.io/imagetoolkit/resize.html</loc>
     <lastmod>2026-03-19</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://picbrew.org/convert.html</loc>
+    <loc>https://dannycranmer.github.io/imagetoolkit/convert.html</loc>
     <lastmod>2026-03-19</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://picbrew.org/crop.html</loc>
+    <loc>https://dannycranmer.github.io/imagetoolkit/crop.html</loc>
     <lastmod>2026-03-19</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://picbrew.org/watermark.html</loc>
+    <loc>https://dannycranmer.github.io/imagetoolkit/watermark.html</loc>
     <lastmod>2026-03-19</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://picbrew.org/flip-rotate.html</loc>
+    <loc>https://dannycranmer.github.io/imagetoolkit/flip-rotate.html</loc>
     <lastmod>2026-03-20</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://picbrew.org/background-remover.html</loc>
+    <loc>https://dannycranmer.github.io/imagetoolkit/background-remover.html</loc>
     <lastmod>2026-03-20</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://picbrew.org/palette.html</loc>
+    <loc>https://dannycranmer.github.io/imagetoolkit/palette.html</loc>
     <lastmod>2026-03-20</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://picbrew.org/filters.html</loc>
+    <loc>https://dannycranmer.github.io/imagetoolkit/filters.html</loc>
     <lastmod>2026-03-20</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://picbrew.org/meme.html</loc>
+    <loc>https://dannycranmer.github.io/imagetoolkit/meme.html</loc>
     <lastmod>2026-03-20</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://picbrew.org/base64.html</loc>
+    <loc>https://dannycranmer.github.io/imagetoolkit/base64.html</loc>
     <lastmod>2026-03-20</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://picbrew.org/collage.html</loc>
+    <loc>https://dannycranmer.github.io/imagetoolkit/collage.html</loc>
     <lastmod>2026-03-20</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://picbrew.org/denoise.html</loc>
+    <loc>https://dannycranmer.github.io/imagetoolkit/denoise.html</loc>
     <lastmod>2026-03-20</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://picbrew.org/mockup.html</loc>
+    <loc>https://dannycranmer.github.io/imagetoolkit/mockup.html</loc>
     <lastmod>2026-03-20</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://picbrew.org/image-to-pdf.html</loc>
+    <loc>https://dannycranmer.github.io/imagetoolkit/image-to-pdf.html</loc>
     <lastmod>2026-03-20</lastmod>
     <priority>0.8</priority>
   </url>
