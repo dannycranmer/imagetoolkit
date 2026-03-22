@@ -89,6 +89,7 @@ function initMobileNav() {
       { href: 'meme.html', icon: '😂', label: 'Meme' },
       { href: 'collage.html', icon: '🖼️', label: 'Collage' },
       { href: 'mockup.html', icon: '📱', label: 'Mockup' },
+      { href: 'qrcode.html', icon: '📱', label: 'QR Code' },
     ]},
     { title: '🔧 Developer', items: [
       { href: 'base64.html', icon: '🔣', label: 'Base64' },
