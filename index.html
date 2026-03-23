@@ -105,6 +105,13 @@
       </div>
     </section>
 
+    <div id="bmcBanner" style="max-width:900px;margin:0 auto 1.5rem;padding:0.75rem 1.25rem;background:rgba(255,221,0,0.07);border:1px solid rgba(255,221,0,0.18);border-radius:10px;display:flex;align-items:center;justify-content:center;gap:1rem;flex-wrap:wrap;font-size:0.95rem;color:#ccc;">
+      <span style="flex:1 1 auto;text-align:center;">These tools are free forever. If they saved you time, consider buying us a coffee.</span>
+      <a href="https://buymeacoffee.com/dairylea" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:0.4rem;background:#FFDD00;color:#1a1a1a;font-weight:600;padding:0.45rem 1rem;border-radius:6px;text-decoration:none;font-size:0.9rem;white-space:nowrap;">&#9749; Buy Me a Coffee</a>
+      <button onclick="document.getElementById('bmcBanner').style.display='none';try{sessionStorage.setItem('bmc_dismissed','1')}catch(e){}" style="background:none;border:none;color:#888;cursor:pointer;font-size:1.2rem;padding:0 0.25rem;line-height:1;" aria-label="Dismiss">&times;</button>
+    </div>
+    <script>try{if(sessionStorage.getItem('bmc_dismissed')==='1')document.getElementById('bmcBanner').style.display='none'}catch(e){}</script>
+
     <div class="tool-grid">
       <a href="compress.html" class="tool-card">
         <div class="tool-card-icon" aria-hidden="true">&#128230;</div>
