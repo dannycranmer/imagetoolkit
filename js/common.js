@@ -235,6 +235,50 @@ function getMimeType(fmt) {
   return map[fmt.toLowerCase()] || 'image/png';
 }
 
+/* ── Post-action donation CTA ── */
+
+function showPostActionCTA() {
+  if (sessionStorage.getItem('picbrew_cta_shown')) return;
+  sessionStorage.setItem('picbrew_cta_shown', '1');
+
+  setTimeout(() => {
+    const toast = document.createElement('a');
+    toast.href = 'https://buymeacoffee.com/dairylea';
+    toast.target = '_blank';
+    toast.rel = 'noopener';
+    toast.className = 'picbrew-cta-toast';
+    toast.innerHTML = 'Glad this helped? ☕ <strong>Buy us a coffee</strong>';
+
+    // Styles
+    Object.assign(toast.style, {
+      position: 'fixed', bottom: '24px', right: '24px', zIndex: '9999',
+      background: '#1a1a2e', color: '#fff', padding: '12px 20px',
+      borderRadius: '10px', fontSize: '14px', fontFamily: 'inherit',
+      textDecoration: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
+      display: 'flex', alignItems: 'center', gap: '6px',
+      opacity: '0', transform: 'translateY(16px)',
+      transition: 'opacity 0.3s ease, transform 0.3s ease',
+      cursor: 'pointer'
+    });
+
+    document.body.appendChild(toast);
+    // Trigger animation
+    requestAnimationFrame(() => {
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateY(0)';
+    });
+
+    function dismiss() {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(16px)';
+      setTimeout(() => toast.remove(), 300);
+    }
+
+    toast.addEventListener('click', dismiss);
+    setTimeout(dismiss, 10000);
+  }, 1000);
+}
+
 /* ── Download helpers ── */
 
 function downloadBlob(blob, filename) {
@@ -246,6 +290,7 @@ function downloadBlob(blob, filename) {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+  showPostActionCTA();
 }
 
 /* ── Error display ── */
