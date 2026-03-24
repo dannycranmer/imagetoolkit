@@ -235,48 +235,152 @@ function getMimeType(fmt) {
   return map[fmt.toLowerCase()] || 'image/png';
 }
 
+/* ── Usage tracking ── */
+
+function trackUsage() {
+  const count = parseInt(localStorage.getItem('picbrew_uses') || '0', 10) + 1;
+  localStorage.setItem('picbrew_uses', String(count));
+  return count;
+}
+
+function getUsageCount() {
+  return parseInt(localStorage.getItem('picbrew_uses') || '0', 10);
+}
+
 /* ── Post-action donation CTA ── */
 
 function showPostActionCTA() {
-  if (sessionStorage.getItem('picbrew_cta_shown')) return;
-  sessionStorage.setItem('picbrew_cta_shown', '1');
+  const uses = getUsageCount();
 
-  setTimeout(() => {
-    const toast = document.createElement('a');
-    toast.href = 'https://buymeacoffee.com/dairylea';
-    toast.target = '_blank';
-    toast.rel = 'noopener';
-    toast.className = 'picbrew-cta-toast';
-    toast.innerHTML = 'Glad this helped? ☕ <strong>Buy us a coffee</strong>';
+  // Toast CTA (once per session)
+  if (!sessionStorage.getItem('picbrew_cta_shown')) {
+    sessionStorage.setItem('picbrew_cta_shown', '1');
 
-    // Styles
-    Object.assign(toast.style, {
-      position: 'fixed', bottom: '24px', right: '24px', zIndex: '9999',
-      background: '#1a1a2e', color: '#fff', padding: '12px 20px',
-      borderRadius: '10px', fontSize: '14px', fontFamily: 'inherit',
-      textDecoration: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
-      display: 'flex', alignItems: 'center', gap: '6px',
-      opacity: '0', transform: 'translateY(16px)',
-      transition: 'opacity 0.3s ease, transform 0.3s ease',
-      cursor: 'pointer'
-    });
+    setTimeout(() => {
+      const toast = document.createElement('a');
+      toast.href = 'https://buymeacoffee.com/dairylea';
+      toast.target = '_blank';
+      toast.rel = 'noopener';
+      toast.className = 'picbrew-cta-toast';
 
-    document.body.appendChild(toast);
-    // Trigger animation
-    requestAnimationFrame(() => {
-      toast.style.opacity = '1';
-      toast.style.transform = 'translateY(0)';
-    });
+      if (uses >= 3) {
+        toast.innerHTML = "You've processed " + uses + " images for free — help keep PicBrew free ☕ <strong>Support us</strong>";
+      } else {
+        toast.innerHTML = 'Glad this helped? ☕ <strong>Buy us a coffee</strong>';
+      }
 
-    function dismiss() {
-      toast.style.opacity = '0';
-      toast.style.transform = 'translateY(16px)';
-      setTimeout(() => toast.remove(), 300);
-    }
+      Object.assign(toast.style, {
+        position: 'fixed', bottom: '24px', right: '24px', zIndex: '9999',
+        background: '#1a1a2e', color: '#fff', padding: uses >= 3 ? '14px 24px' : '12px 20px',
+        borderRadius: '10px', fontSize: uses >= 3 ? '15px' : '14px', fontFamily: 'inherit',
+        textDecoration: 'none', boxShadow: uses >= 3 ? '0 6px 28px rgba(0,0,0,0.35)' : '0 4px 20px rgba(0,0,0,0.25)',
+        display: 'flex', alignItems: 'center', gap: '6px',
+        opacity: '0', transform: 'translateY(16px)',
+        transition: 'opacity 0.3s ease, transform 0.3s ease',
+        cursor: 'pointer', maxWidth: '380px', lineHeight: '1.4'
+      });
 
-    toast.addEventListener('click', dismiss);
-    setTimeout(dismiss, 10000);
-  }, 1000);
+      if (uses >= 3) {
+        toast.style.border = '1px solid rgba(255,200,60,0.3)';
+      }
+
+      document.body.appendChild(toast);
+      requestAnimationFrame(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateY(0)';
+      });
+
+      function dismiss() {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(16px)';
+        setTimeout(() => toast.remove(), 300);
+      }
+
+      toast.addEventListener('click', dismiss);
+      setTimeout(dismiss, uses >= 3 ? 14000 : 10000);
+    }, 1000);
+  }
+
+  // Persistent banner at 5+ uses (once per session, dismissible)
+  if (uses >= 5 && !sessionStorage.getItem('picbrew_banner_dismissed') && !document.getElementById('picbrew-support-banner')) {
+    setTimeout(() => {
+      if (document.getElementById('picbrew-support-banner')) return;
+
+      const banner = document.createElement('div');
+      banner.id = 'picbrew-support-banner';
+
+      Object.assign(banner.style, {
+        position: 'fixed', bottom: '0', left: '0', right: '0', zIndex: '9990',
+        background: 'rgba(20, 20, 40, 0.95)', backdropFilter: 'blur(8px)',
+        color: '#fff', padding: '14px 20px',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px',
+        fontFamily: 'inherit', fontSize: '14px', lineHeight: '1.4',
+        boxShadow: '0 -2px 20px rgba(0,0,0,0.3)',
+        borderTop: '1px solid rgba(255,200,60,0.2)',
+        flexWrap: 'wrap'
+      });
+
+      const text = document.createElement('span');
+      text.textContent = "You're a power user! \uD83C\uDF89 You've processed " + uses + " images for free. Consider supporting PicBrew";
+      text.style.flex = '1 1 auto';
+      text.style.textAlign = 'center';
+      text.style.minWidth = '200px';
+
+      const bmcLink = document.createElement('a');
+      bmcLink.href = 'https://buymeacoffee.com/dairylea';
+      bmcLink.target = '_blank';
+      bmcLink.rel = 'noopener';
+      bmcLink.textContent = '☕ Buy Me a Coffee';
+      Object.assign(bmcLink.style, {
+        background: '#ffdd00', color: '#1a1a2e', padding: '8px 18px',
+        borderRadius: '8px', fontSize: '14px', fontWeight: '700',
+        textDecoration: 'none', whiteSpace: 'nowrap',
+        boxShadow: '0 2px 8px rgba(255,221,0,0.3)',
+        transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+        flexShrink: '0'
+      });
+      bmcLink.addEventListener('mouseenter', () => {
+        bmcLink.style.transform = 'scale(1.05)';
+        bmcLink.style.boxShadow = '0 4px 14px rgba(255,221,0,0.45)';
+      });
+      bmcLink.addEventListener('mouseleave', () => {
+        bmcLink.style.transform = 'scale(1)';
+        bmcLink.style.boxShadow = '0 2px 8px rgba(255,221,0,0.3)';
+      });
+
+      const closeBtn = document.createElement('button');
+      closeBtn.innerHTML = '\u2715';
+      closeBtn.setAttribute('aria-label', 'Dismiss banner');
+      Object.assign(closeBtn.style, {
+        background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)',
+        fontSize: '18px', cursor: 'pointer', padding: '4px 8px',
+        lineHeight: '1', flexShrink: '0',
+        transition: 'color 0.15s ease'
+      });
+      closeBtn.addEventListener('mouseenter', () => { closeBtn.style.color = '#fff'; });
+      closeBtn.addEventListener('mouseleave', () => { closeBtn.style.color = 'rgba(255,255,255,0.6)'; });
+      closeBtn.addEventListener('click', () => {
+        sessionStorage.setItem('picbrew_banner_dismissed', '1');
+        banner.style.transform = 'translateY(100%)';
+        banner.style.opacity = '0';
+        setTimeout(() => banner.remove(), 300);
+      });
+
+      banner.appendChild(text);
+      banner.appendChild(bmcLink);
+      banner.appendChild(closeBtn);
+
+      banner.style.transform = 'translateY(100%)';
+      banner.style.opacity = '0';
+      banner.style.transition = 'transform 0.4s ease, opacity 0.4s ease';
+
+      document.body.appendChild(banner);
+      requestAnimationFrame(() => {
+        banner.style.transform = 'translateY(0)';
+        banner.style.opacity = '1';
+      });
+    }, 2000);
+  }
 }
 
 /* ── Download helpers ── */
@@ -290,6 +394,7 @@ function downloadBlob(blob, filename) {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+  trackUsage();
   showPostActionCTA();
 }
 
