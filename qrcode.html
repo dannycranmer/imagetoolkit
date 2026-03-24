@@ -428,29 +428,30 @@
 
       // Draw logo in center if provided
       if (logoImg) {
-        const logoMaxSize = canvasSize * 0.22; // ~22% of QR — safe with EC H
+        // Total cleared area is ~22% of QR — safe with EC H
+        const clearSize = canvasSize * 0.22;
         const aspect = logoImg.naturalWidth / logoImg.naturalHeight;
-        let logoW, logoH;
+        let clearW, clearH;
         if (aspect >= 1) {
-          logoW = logoMaxSize;
-          logoH = logoMaxSize / aspect;
+          clearW = clearSize;
+          clearH = clearSize / aspect;
         } else {
-          logoH = logoMaxSize;
-          logoW = logoMaxSize * aspect;
+          clearH = clearSize;
+          clearW = clearSize * aspect;
         }
 
-        const logoX = (canvasSize - logoW) / 2;
-        const logoY = (canvasSize - logoH) / 2;
-        const pad = moduleSize * 2;
+        const clearX = (canvasSize - clearW) / 2;
+        const clearY = (canvasSize - clearH) / 2;
+        const pad = moduleSize; // minimal padding for clean edge
 
-        // White background behind logo
+        // White background behind logo (slightly larger for clean boundary)
         ctx.fillStyle = qrBgColor.value;
-        const bgR = Math.min(logoW, logoH) * 0.12;
-        roundRect(ctx, logoX - pad, logoY - pad, logoW + pad * 2, logoH + pad * 2, bgR);
+        const bgR = Math.min(clearW, clearH) * 0.08;
+        roundRect(ctx, clearX - pad, clearY - pad, clearW + pad * 2, clearH + pad * 2, bgR);
         ctx.fill();
 
-        // Draw logo
-        ctx.drawImage(logoImg, logoX, logoY, logoW, logoH);
+        // Draw logo filling the full cleared area
+        ctx.drawImage(logoImg, clearX, clearY, clearW, clearH);
       }
     }
 
