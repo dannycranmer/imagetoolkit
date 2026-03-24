@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Text to Image Online Free — PicBrew</title>
+  <meta name="description" content="Add custom text to images for free. Choose font, size, color — drag, resize, and rotate text anywhere on your image. 100% private — your images never leave your device.">
+  <link rel="canonical" href="https://picbrew.org/text.html">
+  <meta property="og:title" content="Add Text to Image Online Free — PicBrew">
+  <meta property="og:description" content="Add custom text to images for free. Choose font, size, color — drag, resize, and rotate text anywhere on your image. 100% private — your images never leave your device.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://picbrew.org/text.html">
+  <meta property="og:image" content="https://picbrew.org/og-image.png">
+  <meta property="og:site_name" content="PicBrew">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Add Text to Image Online Free — PicBrew">
+  <meta name="twitter:description" content="Add custom text to images for free. Choose font, size, color — drag, resize, and rotate text anywhere on your image. 100% private — your images never leave your device.">
+  <meta name="twitter:image" content="https://picbrew.org/og-image.png">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .text-workspace {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .canvas-container {
+      flex: 1;
+      min-width: 0;
+      position: relative;
+    }
+    .canvas-container canvas {
+      display: block;
+      max-width: 100%;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      cursor: default;
+    }
+    .text-panel {
+      width: 280px;
+      flex-shrink: 0;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.75rem;
+      max-height: 700px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+    .text-panel h3 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 0.15rem;
+    }
+    .text-input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    .text-input-group label {
+      font-weight: 600;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    .text-input-group textarea {
+      padding: 0.5rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      background: var(--bg-card);
+      color: var(--text);
+      resize: vertical;
+      min-height: 60px;
+    }
+    .text-input-group textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+    }
+    .text-input-group select,
+    .text-input-group input[type="text"] {
+      padding: 0.45rem 0.6rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      background: var(--bg-card);
+      color: var(--text);
+    }
+    .ctrl-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .ctrl-row label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      width: 56px;
+      flex-shrink: 0;
+      font-weight: 600;
+    }
+    .ctrl-row input[type="range"] {
+      flex: 1;
+      min-width: 0;
+    }
+    .ctrl-row .val {
+      font-size: 0.75rem;
+      color: var(--accent);
+      width: 40px;
+      text-align: right;
+      font-weight: 600;
+    }
+    .ctrl-row input[type="color"] {
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      padding: 2px;
+    }
+    .color-group {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .color-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .color-item label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .text-layers-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .text-layer-item {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.5rem;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .text-layer-item.selected {
+      border-color: var(--accent);
+      box-shadow: 0 0 8px var(--accent-glow);
+    }
+    .text-layer-header {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .text-layer-preview {
+      flex: 1;
+      font-size: 0.8rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--text);
+    }
+    .text-layer-actions {
+      display: flex;
+      gap: 0.25rem;
+    }
+    .text-layer-actions button {
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--bg);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .text-layer-actions button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .text-layer-actions button.delete-btn:hover {
+      border-color: #ef4444;
+      color: #ef4444;
+    }
+    .add-text-btn {
+      border: 2px dashed var(--border);
+      border-radius: 8px;
+      padding: 0.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      background: none;
+      width: 100%;
+    }
+    .add-text-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .download-area {
+      margin-top: 1rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .download-area select {
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text);
+      font-size: 0.85rem;
+    }
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 0.25rem 0;
+    }
+    @media (max-width: 768px) {
+      .text-workspace {
+        flex-direction: column;
+      }
+      .text-panel {
+        width: 100%;
+        max-height: 400px;
+      }
+    }
+  </style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Add Text to Image — PicBrew",
+    "description": "Add custom text to images for free. Choose font, size, color — drag, resize, and rotate text anywhere on your image. 100% private — your images never leave your device.",
+    "url": "https://picbrew.org/text.html",
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "Any",
+    "browserRequirements": "Requires JavaScript",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "creator": {
+      "@type": "Organization",
+      "name": "PicBrew",
+      "url": "https://picbrew.org"
+    }
+  }
+  </script>
+</head>
+<body>
+
+  <nav class="nav" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">Pic<span>Brew</span></a>
+      <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">&#9776;</button>
+      <ul class="nav-links" role="menubar">
+        <li><a href="index.html" role="menuitem">Home</a></li>
+        <li><a href="compress.html" role="menuitem">Compress</a></li>
+        <li><a href="resize.html" role="menuitem">Resize</a></li>
+        <li><a href="convert.html" role="menuitem">Convert</a></li>
+        <li><a href="crop.html" role="menuitem">Crop</a></li>
+        <li><a href="watermark.html" role="menuitem">Watermark</a></li>
+        <li><a href="flip-rotate.html" role="menuitem">Flip &amp; Rotate</a></li>
+        <li><a href="background-remover.html" role="menuitem">BG Remover</a></li>
+        <li><a href="filters.html" role="menuitem">Filters</a></li>
+        <li><a href="palette.html" role="menuitem">Palette</a></li>
+        <li><a href="meme.html" role="menuitem">Meme</a></li>
+        <li><a href="base64.html" role="menuitem">Base64</a></li>
+        <li><a href="collage.html" role="menuitem">Collage</a></li>
+        <li><a href="denoise.html" role="menuitem">Denoise</a></li>
+        <li><a href="mockup.html" role="menuitem">Mockup</a></li>
+        <li><a href="image-to-pdf.html" role="menuitem">To PDF</a></li>
+        <li><a href="qrcode.html" role="menuitem">QR Code</a></li>
+        <li><a href="overlay.html" role="menuitem">Overlay</a></li>
+        <li><a href="text.html" class="active" role="menuitem">Text</a></li>
+        <li><a href="https://buymeacoffee.com/dairylea" class="nav-coffee" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="tool-header">
+      <h1>Add Text to Image</h1>
+      <p>Add custom text to your images — choose font, size, color, then drag, resize, and rotate. Your images never leave your device.</p>
+    </div>
+
+    <div class="drop-zone" id="dropZone">
+      <div class="drop-zone-icon">&#128396;</div>
+      <div class="drop-zone-text"><strong>Drop an image here</strong> or click to browse<br>JPEG, PNG, WebP supported</div>
+      <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp">
+    </div>
+
+    <div class="error-msg" id="errorMsg"></div>
+
+    <div id="workArea" style="display:none">
+      <div class="text-workspace">
+        <div class="canvas-container" id="canvasContainer">
+          <canvas id="mainCanvas"></canvas>
+        </div>
+        <div class="text-panel" id="textPanel">
+          <h3>Text Layers</h3>
+          <div class="text-layers-list" id="layersList"></div>
+          <button class="add-text-btn" id="addTextBtn">+ Add Text</button>
+
+          <div class="divider"></div>
+          <h3>Selected Text</h3>
+          <div id="selectedControls" style="display:none">
+            <div class="text-input-group" style="margin-bottom:0.4rem">
+              <label for="textContent">Text</label>
+              <textarea id="textContent" rows="2" placeholder="Type your text here..."></textarea>
+            </div>
+            <div class="text-input-group" style="margin-bottom:0.4rem">
+              <label for="fontFamily">Font</label>
+              <select id="fontFamily">
+                <option value="Arial, sans-serif">Arial</option>
+                <option value="'Helvetica Neue', Helvetica, sans-serif">Helvetica</option>
+                <option value="Georgia, serif">Georgia</option>
+                <option value="'Times New Roman', serif">Times New Roman</option>
+                <option value="'Courier New', monospace">Courier New</option>
+                <option value="Impact, 'Arial Black', sans-serif">Impact</option>
+                <option value="Verdana, sans-serif">Verdana</option>
+                <option value="Tahoma, sans-serif">Tahoma</option>
+                <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+                <option value="'Comic Sans MS', cursive">Comic Sans MS</option>
+                <option value="'Lucida Console', monospace">Lucida Console</option>
+                <option value="Palatino, 'Palatino Linotype', serif">Palatino</option>
+              </select>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:0.4rem;">
+              <div class="ctrl-row">
+                <label for="fontSize">Size</label>
+                <input type="range" id="fontSize" min="12" max="200" value="48">
+                <span class="val" id="fontSizeVal">48px</span>
+              </div>
+              <div class="ctrl-row">
+                <label for="fontWeight">Bold</label>
+                <input type="checkbox" id="fontWeight" style="width:18px;height:18px;cursor:pointer">
+              </div>
+              <div class="ctrl-row">
+                <label for="fontItalic">Italic</label>
+                <input type="checkbox" id="fontItalic" style="width:18px;height:18px;cursor:pointer">
+              </div>
+              <div class="ctrl-row">
+                <label for="strokeWidth">Outline</label>
+                <input type="range" id="strokeWidth" min="0" max="20" value="0" step="0.5">
+                <span class="val" id="strokeWidthVal">0px</span>
+              </div>
+              <div class="ctrl-row">
+                <label for="textOpacity">Opacity</label>
+                <input type="range" id="textOpacity" min="5" max="100" value="100">
+                <span class="val" id="opacityVal">100%</span>
+              </div>
+              <div class="ctrl-row">
+                <label for="textRotation">Rotate</label>
+                <input type="range" id="textRotation" min="-180" max="180" value="0">
+                <span class="val" id="rotationVal">0°</span>
+              </div>
+            </div>
+            <div class="color-group" style="margin-top:0.4rem">
+              <div class="color-item">
+                <label for="textColor">Fill</label>
+                <input type="color" id="textColor" value="#ffffff">
+              </div>
+              <div class="color-item">
+                <label for="strokeColor">Stroke</label>
+                <input type="color" id="strokeColor" value="#000000">
+              </div>
+            </div>
+          </div>
+          <div id="noSelection" style="color:var(--text-muted);font-size:0.8rem;text-align:center;padding:0.5rem;">
+            Add or select a text layer to edit
+          </div>
+        </div>
+      </div>
+
+      <div class="download-area">
+        <select id="outputFormat">
+          <option value="png">PNG</option>
+          <option value="jpeg">JPEG</option>
+          <option value="webp">WebP</option>
+        </select>
+        <button class="btn btn-green" id="downloadBtn">&#11015; Download Image</button>
+        <button class="btn btn-outline" id="resetBtn">Clear All</button>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <p>Powered by <strong>PicBrew</strong> — Free &amp; Private</p>
+      <div class="footer-links">
+        <a href="https://buymeacoffee.com/dairylea" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a>
+        <a href="https://parchpdf.com/" target="_blank" rel="noopener">PDF Tools (Parchment)</a>
+        <a href="https://devbrew.org/" target="_blank" rel="noopener">Dev Tools (DevBrew)</a>
+        <a href="https://dannycranmer.github.io/eduplay/" target="_blank" rel="noopener">Kids Games (EduPlay)</a>
+        <a href="https://github.com/dannycranmer/imagetoolkit" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="vertical-align:-2px;margin-right:3px"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/common.js"></script>
+  <script>
+  (() => {
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const workArea = document.getElementById('workArea');
+    const canvas = document.getElementById('mainCanvas');
+    const ctx = canvas.getContext('2d');
+    const canvasContainer = document.getElementById('canvasContainer');
+    const errorMsg = document.getElementById('errorMsg');
+    const layersList = document.getElementById('layersList');
+    const addTextBtn = document.getElementById('addTextBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const outputFormat = document.getElementById('outputFormat');
+    const selectedControls = document.getElementById('selectedControls');
+    const noSelection = document.getElementById('noSelection');
+
+    // Control elements
+    const textContentEl = document.getElementById('textContent');
+    const fontFamilyEl = document.getElementById('fontFamily');
+    const fontSizeEl = document.getElementById('fontSize');
+    const fontWeightEl = document.getElementById('fontWeight');
+    const fontItalicEl = document.getElementById('fontItalic');
+    const strokeWidthEl = document.getElementById('strokeWidth');
+    const textOpacityEl = document.getElementById('textOpacity');
+    const textRotationEl = document.getElementById('textRotation');
+    const textColorEl = document.getElementById('textColor');
+    const strokeColorEl = document.getElementById('strokeColor');
+
+    let baseImg = null;
+    let baseNatW = 0, baseNatH = 0;
+    let displayScale = 1;
+
+    // Text layer model: { id, text, fontFamily, fontSize, bold, italic, color, strokeColor, strokeWidth, opacity, rotation, x, y, width, height }
+    let textLayers = [];
+    let selectedId = null;
+    let nextId = 1;
+
+    // Drag state
+    let dragState = null;
+    const HANDLE_SIZE = 8;
+
+    // ── Image upload ──
+    setupDropZone(dropZone, fileInput, async files => {
+      try {
+        const img = await loadImage(files[0]);
+        baseImg = img;
+        baseNatW = img.naturalWidth;
+        baseNatH = img.naturalHeight;
+        textLayers = [];
+        selectedId = null;
+        nextId = 1;
+        workArea.style.display = 'block';
+        dropZone.querySelector('.drop-zone-text').innerHTML =
+          '<strong>' + escHtml(files[0].name) + '</strong> — ' + baseNatW + '×' + baseNatH + '<br>Drop another to replace';
+        sizeCanvas();
+        render();
+        rebuildLayersUI();
+        updateControlsPanel();
+      } catch (e) {
+        showError(errorMsg, "This file doesn't appear to be a valid image");
+      }
+    });
+
+    // ── Canvas sizing ──
+    function sizeCanvas() {
+      const containerW = canvasContainer.clientWidth - 2;
+      displayScale = 1;
+      if (baseNatW > containerW) displayScale = containerW / baseNatW;
+      const maxH = 600;
+      if (baseNatH * displayScale > maxH) displayScale = maxH / baseNatH;
+      canvas.width = Math.round(baseNatW * displayScale);
+      canvas.height = Math.round(baseNatH * displayScale);
+    }
+
+    // ── Measure text dimensions in native coords ──
+    function measureTextLayer(layer) {
+      const offCtx = document.createElement('canvas').getContext('2d');
+      const style = (layer.italic ? 'italic ' : '') + (layer.bold ? 'bold ' : '');
+      offCtx.font = style + layer.fontSize + 'px ' + layer.fontFamily;
+      const lines = layer.text.split('\n');
+      let maxW = 0;
+      for (const line of lines) {
+        const m = offCtx.measureText(line || ' ');
+        if (m.width > maxW) maxW = m.width;
+      }
+      const lineHeight = layer.fontSize * 1.25;
+      const totalH = lines.length * lineHeight;
+      return { width: maxW + layer.strokeWidth * 2, height: totalH + layer.strokeWidth * 2 };
+    }
+
+    // ── Add text layer ──
+    addTextBtn.addEventListener('click', () => {
+      if (!baseImg) return;
+      const layer = {
+        id: nextId++,
+        text: 'Your text',
+        fontFamily: 'Arial, sans-serif',
+        fontSize: Math.max(24, Math.round(baseNatW / 15)),
+        bold: false,
+        italic: false,
+        color: '#ffffff',
+        strokeColor: '#000000',
+        strokeWidth: 0,
+        opacity: 100,
+        rotation: 0,
+        x: 0, y: 0,
+        width: 0, height: 0
+      };
+      // Measure and center
+      const dims = measureTextLayer(layer);
+      layer.width = dims.width;
+      layer.height = dims.height;
+      layer.x = (baseNatW - layer.width) / 2;
+      layer.y = (baseNatH - layer.height) / 2;
+      textLayers.push(layer);
+      selectedId = layer.id;
+      render();
+      rebuildLayersUI();
+      updateControlsPanel();
+    });
+
+    // ── Render ──
+    function render() {
+      if (!baseImg) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const s = displayScale;
+
+      // Draw base image
+      ctx.drawImage(baseImg, 0, 0, baseNatW * s, baseNatH * s);
+
+      // Draw each text layer
+      for (const layer of textLayers) {
+        drawTextLayer(ctx, layer, s);
+      }
+
+      // Selection UI for selected
+      const sel = textLayers.find(l => l.id === selectedId);
+      if (sel) {
+        drawSelectionUI(sel);
+      }
+    }
+
+    function drawTextLayer(c, layer, scale) {
+      if (!layer.text) return;
+      const s = scale;
+      const fontSize = layer.fontSize * s;
+      const strokeWidth = layer.strokeWidth * s;
+      const lineHeight = fontSize * 1.25;
+      const lines = layer.text.split('\n');
+
+      c.save();
+      c.globalAlpha = layer.opacity / 100;
+
+      // Translate to center, rotate
+      const cx = (layer.x + layer.width / 2) * s;
+      const cy = (layer.y + layer.height / 2) * s;
+      c.translate(cx, cy);
+      c.rotate(layer.rotation * Math.PI / 180);
+
+      const style = (layer.italic ? 'italic ' : '') + (layer.bold ? 'bold ' : '');
+      c.font = style + fontSize + 'px ' + layer.fontFamily;
+      c.textAlign = 'center';
+      c.textBaseline = 'top';
+      c.fillStyle = layer.color;
+      c.strokeStyle = layer.strokeColor;
+      c.lineWidth = strokeWidth;
+      c.lineJoin = 'round';
+      c.miterLimit = 2;
+
+      const totalH = lines.length * lineHeight;
+      let yStart = -totalH / 2;
+
+      for (const line of lines) {
+        if (strokeWidth > 0) {
+          c.strokeText(line, 0, yStart);
+        }
+        c.fillText(line, 0, yStart);
+        yStart += lineHeight;
+      }
+
+      c.restore();
+    }
+
+    function drawSelectionUI(layer) {
+      const s = displayScale;
+      const cx = (layer.x + layer.width / 2) * s;
+      const cy = (layer.y + layer.height / 2) * s;
+      const hw = layer.width * s / 2;
+      const hh = layer.height * s / 2;
+      const rot = layer.rotation * Math.PI / 180;
+
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(rot);
+
+      // Bounding box
+      ctx.strokeStyle = '#00D4FF';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 4]);
+      ctx.strokeRect(-hw, -hh, hw * 2, hh * 2);
+      ctx.setLineDash([]);
+
+      // Corner handles
+      const corners = [[-hw, -hh], [hw, -hh], [hw, hh], [-hw, hh]];
+      ctx.fillStyle = '#fff';
+      ctx.strokeStyle = '#00D4FF';
+      ctx.lineWidth = 2;
+      for (const [hx, hy] of corners) {
+        ctx.fillRect(hx - HANDLE_SIZE / 2, hy - HANDLE_SIZE / 2, HANDLE_SIZE, HANDLE_SIZE);
+        ctx.strokeRect(hx - HANDLE_SIZE / 2, hy - HANDLE_SIZE / 2, HANDLE_SIZE, HANDLE_SIZE);
+      }
+
+      // Rotation handle
+      const rotLineLen = 24;
+      ctx.beginPath();
+      ctx.moveTo(0, -hh);
+      ctx.lineTo(0, -hh - rotLineLen);
+      ctx.strokeStyle = '#00D4FF';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(0, -hh - rotLineLen, 6, 0, Math.PI * 2);
+      ctx.fillStyle = '#00D4FF';
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    // ── Hit testing ──
+    function getCanvasPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      return {
+        x: (clientX - rect.left) * scaleX,
+        y: (clientY - rect.top) * scaleY
+      };
+    }
+
+    function toLocalCoords(layer, px, py) {
+      const s = displayScale;
+      const cx = (layer.x + layer.width / 2) * s;
+      const cy = (layer.y + layer.height / 2) * s;
+      const rot = -layer.rotation * Math.PI / 180;
+      const dx = px - cx;
+      const dy = py - cy;
+      return {
+        x: dx * Math.cos(rot) - dy * Math.sin(rot),
+        y: dx * Math.sin(rot) + dy * Math.cos(rot)
+      };
+    }
+
+    function hitTestLayer(px, py) {
+      // Check selected layer first for handles
+      const sel = textLayers.find(l => l.id === selectedId);
+      if (sel) {
+        const s = displayScale;
+        const hw = sel.width * s / 2;
+        const hh = sel.height * s / 2;
+        const local = toLocalCoords(sel, px, py);
+
+        // Rotation handle
+        const rotLineLen = 24;
+        const rdx = local.x;
+        const rdy = local.y - (-hh - rotLineLen);
+        if (rdx * rdx + rdy * rdy < 15 * 15) {
+          return { type: 'rotate', layer: sel };
+        }
+
+        // Corner handles
+        const corners = [
+          { name: 'nw', x: -hw, y: -hh },
+          { name: 'ne', x: hw, y: -hh },
+          { name: 'se', x: hw, y: hh },
+          { name: 'sw', x: -hw, y: hh }
+        ];
+        for (const c of corners) {
+          if (Math.abs(local.x - c.x) < 12 && Math.abs(local.y - c.y) < 12) {
+            return { type: 'resize', layer: sel, handle: c.name };
+          }
+        }
+
+        // Inside bounding box = move
+        if (Math.abs(local.x) <= hw && Math.abs(local.y) <= hh) {
+          return { type: 'move', layer: sel };
+        }
+      }
+
+      // Check all text layers top-to-bottom
+      for (let i = textLayers.length - 1; i >= 0; i--) {
+        const layer = textLayers[i];
+        const s = displayScale;
+        const hw = layer.width * s / 2;
+        const hh = layer.height * s / 2;
+        const local = toLocalCoords(layer, px, py);
+        if (Math.abs(local.x) <= hw && Math.abs(local.y) <= hh) {
+          return { type: 'select', layer };
+        }
+      }
+
+      return null;
+    }
+
+    // ── Pointer events ──
+    canvas.addEventListener('mousedown', onDown);
+    canvas.addEventListener('touchstart', onDown, { passive: false });
+
+    function onDown(e) {
+      e.preventDefault();
+      const pos = getCanvasPos(e);
+      const hit = hitTestLayer(pos.x, pos.y);
+
+      if (!hit) {
+        selectedId = null;
+        render();
+        rebuildLayersUI();
+        updateControlsPanel();
+        return;
+      }
+
+      if (hit.type === 'select') {
+        selectedId = hit.layer.id;
+        render();
+        rebuildLayersUI();
+        updateControlsPanel();
+        dragState = {
+          type: 'move',
+          layerId: hit.layer.id,
+          startX: pos.x, startY: pos.y,
+          snapX: hit.layer.x, snapY: hit.layer.y,
+          snapW: hit.layer.width, snapH: hit.layer.height,
+          snapFontSize: hit.layer.fontSize,
+          snapRot: hit.layer.rotation
+        };
+      } else {
+        const layer = hit.layer;
+        dragState = {
+          type: hit.type,
+          layerId: layer.id,
+          handle: hit.handle,
+          startX: pos.x, startY: pos.y,
+          snapX: layer.x, snapY: layer.y,
+          snapW: layer.width, snapH: layer.height,
+          snapFontSize: layer.fontSize,
+          snapRot: layer.rotation
+        };
+      }
+
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+      document.addEventListener('touchmove', onMove, { passive: false });
+      document.addEventListener('touchend', onUp);
+    }
+
+    function onMove(e) {
+      if (!dragState) return;
+      e.preventDefault();
+      const pos = getCanvasPos(e);
+      const layer = textLayers.find(l => l.id === dragState.layerId);
+      if (!layer) return;
+      const s = displayScale;
+
+      if (dragState.type === 'move') {
+        const dx = (pos.x - dragState.startX) / s;
+        const dy = (pos.y - dragState.startY) / s;
+        layer.x = dragState.snapX + dx;
+        layer.y = dragState.snapY + dy;
+        render();
+
+      } else if (dragState.type === 'resize') {
+        // Scale font size proportionally based on drag distance from center
+        const cx = (dragState.snapX + dragState.snapW / 2) * s;
+        const cy = (dragState.snapY + dragState.snapH / 2) * s;
+
+        const rot = -layer.rotation * Math.PI / 180;
+        const dx = pos.x - cx;
+        const dy = pos.y - cy;
+        const localX = Math.abs(dx * Math.cos(rot) - dy * Math.sin(rot));
+        const localY = Math.abs(dx * Math.sin(rot) + dy * Math.cos(rot));
+
+        const origHW = dragState.snapW * s / 2;
+        const origHH = dragState.snapH * s / 2;
+        const origDist = Math.sqrt(origHW * origHW + origHH * origHH);
+        const newDist = Math.sqrt(localX * localX + localY * localY);
+
+        if (origDist > 0) {
+          const scaleFactor = newDist / origDist;
+          const newFontSize = Math.max(8, Math.round(dragState.snapFontSize * scaleFactor));
+          layer.fontSize = newFontSize;
+
+          // Remeasure and reposition to keep center
+          const oldCx = dragState.snapX + dragState.snapW / 2;
+          const oldCy = dragState.snapY + dragState.snapH / 2;
+          const dims = measureTextLayer(layer);
+          layer.width = dims.width;
+          layer.height = dims.height;
+          layer.x = oldCx - layer.width / 2;
+          layer.y = oldCy - layer.height / 2;
+
+          // Sync the font size slider
+          fontSizeEl.value = newFontSize;
+          document.getElementById('fontSizeVal').textContent = newFontSize + 'px';
+        }
+        render();
+
+      } else if (dragState.type === 'rotate') {
+        const cx = (layer.x + layer.width / 2) * s;
+        const cy = (layer.y + layer.height / 2) * s;
+        const angle = Math.atan2(pos.x - cx, -(pos.y - cy)) * 180 / Math.PI;
+        layer.rotation = Math.round(angle);
+        textRotationEl.value = layer.rotation;
+        document.getElementById('rotationVal').textContent = layer.rotation + '°';
+        render();
+      }
+    }
+
+    function onUp() {
+      dragState = null;
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('touchend', onUp);
+    }
+
+    // Cursor on hover
+    canvas.addEventListener('mousemove', e => {
+      if (dragState) return;
+      const pos = getCanvasPos(e);
+      const hit = hitTestLayer(pos.x, pos.y);
+      if (!hit) { canvas.style.cursor = 'default'; return; }
+      if (hit.type === 'move' || hit.type === 'select') canvas.style.cursor = 'move';
+      else if (hit.type === 'resize') canvas.style.cursor = 'nwse-resize';
+      else if (hit.type === 'rotate') canvas.style.cursor = 'grab';
+    });
+
+    // ── Controls panel ──
+    function updateControlsPanel() {
+      const sel = textLayers.find(l => l.id === selectedId);
+      if (!sel) {
+        selectedControls.style.display = 'none';
+        noSelection.style.display = 'block';
+        return;
+      }
+      selectedControls.style.display = 'block';
+      noSelection.style.display = 'none';
+
+      textContentEl.value = sel.text;
+      fontFamilyEl.value = sel.fontFamily;
+      fontSizeEl.value = sel.fontSize;
+      document.getElementById('fontSizeVal').textContent = sel.fontSize + 'px';
+      fontWeightEl.checked = sel.bold;
+      fontItalicEl.checked = sel.italic;
+      strokeWidthEl.value = sel.strokeWidth;
+      document.getElementById('strokeWidthVal').textContent = sel.strokeWidth + 'px';
+      textOpacityEl.value = sel.opacity;
+      document.getElementById('opacityVal').textContent = sel.opacity + '%';
+      textRotationEl.value = sel.rotation;
+      document.getElementById('rotationVal').textContent = sel.rotation + '°';
+      textColorEl.value = sel.color;
+      strokeColorEl.value = sel.strokeColor;
+
+      // Update font size slider range based on image
+      const sliderMax = Math.max(200, Math.round(baseNatW / 3));
+      fontSizeEl.max = sliderMax;
+    }
+
+    function applyControlToSelected(prop, val) {
+      const sel = textLayers.find(l => l.id === selectedId);
+      if (!sel) return;
+      sel[prop] = val;
+
+      // Remeasure when text properties change
+      if (['text', 'fontFamily', 'fontSize', 'bold', 'italic', 'strokeWidth'].includes(prop)) {
+        const oldCx = sel.x + sel.width / 2;
+        const oldCy = sel.y + sel.height / 2;
+        const dims = measureTextLayer(sel);
+        sel.width = dims.width;
+        sel.height = dims.height;
+        sel.x = oldCx - sel.width / 2;
+        sel.y = oldCy - sel.height / 2;
+      }
+      render();
+      rebuildLayersUI();
+    }
+
+    textContentEl.addEventListener('input', () => {
+      applyControlToSelected('text', textContentEl.value);
+    });
+    fontFamilyEl.addEventListener('change', () => {
+      applyControlToSelected('fontFamily', fontFamilyEl.value);
+    });
+    fontSizeEl.addEventListener('input', () => {
+      const v = parseInt(fontSizeEl.value);
+      document.getElementById('fontSizeVal').textContent = v + 'px';
+      applyControlToSelected('fontSize', v);
+    });
+    fontWeightEl.addEventListener('change', () => {
+      applyControlToSelected('bold', fontWeightEl.checked);
+    });
+    fontItalicEl.addEventListener('change', () => {
+      applyControlToSelected('italic', fontItalicEl.checked);
+    });
+    strokeWidthEl.addEventListener('input', () => {
+      const v = parseFloat(strokeWidthEl.value);
+      document.getElementById('strokeWidthVal').textContent = v + 'px';
+      applyControlToSelected('strokeWidth', v);
+    });
+    textOpacityEl.addEventListener('input', () => {
+      const v = parseInt(textOpacityEl.value);
+      document.getElementById('opacityVal').textContent = v + '%';
+      applyControlToSelected('opacity', v);
+    });
+    textRotationEl.addEventListener('input', () => {
+      const v = parseInt(textRotationEl.value);
+      document.getElementById('rotationVal').textContent = v + '°';
+      applyControlToSelected('rotation', v);
+    });
+    textColorEl.addEventListener('input', () => {
+      applyControlToSelected('color', textColorEl.value);
+    });
+    strokeColorEl.addEventListener('input', () => {
+      applyControlToSelected('strokeColor', strokeColorEl.value);
+    });
+
+    // ── Layers list UI ──
+    function rebuildLayersUI() {
+      layersList.innerHTML = '';
+      for (let i = textLayers.length - 1; i >= 0; i--) {
+        const layer = textLayers[i];
+        const div = document.createElement('div');
+        div.className = 'text-layer-item' + (layer.id === selectedId ? ' selected' : '');
+
+        const preview = layer.text ? (layer.text.length > 24 ? layer.text.substring(0, 24) + '...' : layer.text) : '(empty)';
+        div.innerHTML = `
+          <div class="text-layer-header">
+            <span class="text-layer-preview">${escHtml(preview)}</span>
+            <div class="text-layer-actions">
+              <button data-act="duplicate" title="Duplicate">&#128203;</button>
+              <button data-act="delete" class="delete-btn" title="Remove">&#10005;</button>
+            </div>
+          </div>
+        `;
+
+        div.addEventListener('click', e => {
+          if (e.target.closest('button')) return;
+          selectedId = layer.id;
+          render();
+          rebuildLayersUI();
+          updateControlsPanel();
+        });
+
+        div.querySelectorAll('button[data-act]').forEach(btn => {
+          btn.addEventListener('click', e => {
+            e.stopPropagation();
+            const act = btn.dataset.act;
+            if (act === 'delete') {
+              textLayers.splice(textLayers.indexOf(layer), 1);
+              if (selectedId === layer.id) selectedId = null;
+            } else if (act === 'duplicate') {
+              const dup = Object.assign({}, layer);
+              dup.id = nextId++;
+              dup.x += 20;
+              dup.y += 20;
+              textLayers.push(dup);
+              selectedId = dup.id;
+            }
+            render();
+            rebuildLayersUI();
+            updateControlsPanel();
+          });
+        });
+
+        layersList.appendChild(div);
+      }
+    }
+
+    // ── Download ──
+    downloadBtn.addEventListener('click', async () => {
+      if (!baseImg) return;
+      const outCanvas = document.createElement('canvas');
+      outCanvas.width = baseNatW;
+      outCanvas.height = baseNatH;
+      const outCtx = outCanvas.getContext('2d');
+
+      const fmt = outputFormat.value;
+      if (fmt === 'jpeg') {
+        outCtx.fillStyle = '#fff';
+        outCtx.fillRect(0, 0, baseNatW, baseNatH);
+      }
+
+      outCtx.drawImage(baseImg, 0, 0, baseNatW, baseNatH);
+
+      for (const layer of textLayers) {
+        drawTextLayer(outCtx, layer, 1);
+      }
+
+      const mime = getMimeType(fmt);
+      const blob = await canvasToBlob(outCanvas, mime, 0.92);
+      const ext = fmt === 'jpeg' ? 'jpg' : fmt;
+      downloadBlob(blob, 'picbrew_text.' + ext);
+    });
+
+    // ── Reset ──
+    resetBtn.addEventListener('click', () => {
+      baseImg = null;
+      textLayers = [];
+      selectedId = null;
+      workArea.style.display = 'none';
+      dropZone.querySelector('.drop-zone-text').innerHTML =
+        '<strong>Drop an image here</strong> or click to browse<br>JPEG, PNG, WebP supported';
+    });
+
+    // Handle window resize
+    window.addEventListener('resize', () => {
+      if (baseImg) {
+        sizeCanvas();
+        render();
+      }
+    });
+
+    function escHtml(s) {
+      const d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+  })();
+  </script>
+  <script data-goatcounter="https://picbrew.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

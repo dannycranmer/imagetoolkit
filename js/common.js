@@ -91,6 +91,7 @@ function initMobileNav() {
       { href: 'mockup.html', icon: '📱', label: 'Mockup' },
       { href: 'qrcode.html', icon: '📱', label: 'QR Code' },
       { href: 'overlay.html', icon: '🔲', label: 'Overlay' },
+      { href: 'text.html', icon: '✏️', label: 'Add Text' },
     ]},
     { title: '🔧 Developer', items: [
       { href: 'base64.html', icon: '🔣', label: 'Base64' },
