@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Background Removal Free Online — PicBrew</title>
+  <meta name="description" content="Remove image backgrounds automatically with AI — no color picking, no manual work. Runs 100% in your browser. Free, private, no signup. Download transparent PNG instantly.">
+  <link rel="canonical" href="https://picbrew.org/background-removal.html">
+  <meta property="og:title" content="AI Background Removal Free Online — PicBrew">
+  <meta property="og:description" content="Remove image backgrounds automatically with AI. Runs 100% in your browser. Free, private, no signup. Download transparent PNG instantly.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://picbrew.org/background-removal.html">
+  <meta property="og:image" content="https://picbrew.org/og-image.png">
+  <meta property="og:site_name" content="PicBrew">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="AI Background Removal Free Online — PicBrew">
+  <meta name="twitter:description" content="Remove image backgrounds automatically with AI. Runs 100% in your browser. Free, private, no signup. Download transparent PNG instantly.">
+  <meta name="twitter:image" content="https://picbrew.org/og-image.png">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .ai-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.28rem 0.75rem;
+      border-radius: 20px;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      margin-bottom: 0.6rem;
+    }
+    .checkerboard {
+      background-image:
+        linear-gradient(45deg, #cbd5e1 25%, transparent 25%),
+        linear-gradient(-45deg, #cbd5e1 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #cbd5e1 75%),
+        linear-gradient(-45deg, transparent 75%, #cbd5e1 75%);
+      background-size: 20px 20px;
+      background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+      background-color: #f1f5f9;
+    }
+    .preview-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+    .preview-tab {
+      padding: 0.4rem 1.1rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg-card);
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .preview-tab.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    .preview-area {
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      min-height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .preview-area img {
+      display: block;
+      max-width: 100%;
+      max-height: 520px;
+      margin: 0 auto;
+    }
+    .processing-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2.5rem 2rem;
+      text-align: center;
+    }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 1.25rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .processing-label {
+      font-weight: 600;
+      color: var(--text);
+      font-size: 1rem;
+      margin-bottom: 0.4rem;
+    }
+    .processing-sub {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+    .processing-bar-wrap {
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+      max-width: 320px;
+      margin: 0 auto;
+    }
+    .processing-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), #10B981);
+      border-radius: 3px;
+      transition: width 0.3s ease;
+      width: 0%;
+    }
+    .result-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem 1rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .result-row strong { color: var(--text); }
+    .result-row .dl-btn { margin-left: auto; }
+  </style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "AI Background Removal — PicBrew",
+    "description": "Remove image backgrounds automatically with AI. No uploads — runs 100% in your browser. Free, private, no signup required. Download transparent PNG instantly.",
+    "url": "https://picbrew.org/background-removal.html",
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "Any",
+    "browserRequirements": "Requires JavaScript and WebAssembly",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "creator": {
+      "@type": "Organization",
+      "name": "PicBrew",
+      "url": "https://picbrew.org"
+    }
+  }
+  </script>
+</head>
+<body>
+
+  <nav class="nav" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">Pic<span>Brew</span></a>
+      <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">&#9776;</button>
+      <ul class="nav-links" role="menubar">
+        <li><a href="index.html" role="menuitem">Home</a></li>
+        <li><a href="compress.html" role="menuitem">Compress</a></li>
+        <li><a href="resize.html" role="menuitem">Resize</a></li>
+        <li><a href="convert.html" role="menuitem">Convert</a></li>
+        <li><a href="crop.html" role="menuitem">Crop</a></li>
+        <li><a href="watermark.html" role="menuitem">Watermark</a></li>
+        <li><a href="flip-rotate.html" role="menuitem">Flip &amp; Rotate</a></li>
+        <li><a href="background-remover.html" role="menuitem">BG Remover</a></li>
+        <li><a href="filters.html" role="menuitem">Filters</a></li>
+        <li><a href="palette.html" role="menuitem">Palette</a></li>
+        <li><a href="meme.html" role="menuitem">Meme</a></li>
+        <li><a href="base64.html" role="menuitem">Base64</a></li>
+        <li><a href="collage.html" role="menuitem">Collage</a></li>
+        <li><a href="denoise.html" role="menuitem">Denoise</a></li>
+        <li><a href="mockup.html" role="menuitem">Mockup</a></li>
+        <li><a href="image-to-pdf.html" role="menuitem">To PDF</a></li>
+        <li><a href="qrcode.html" role="menuitem">QR Code</a></li>
+        <li><a href="overlay.html" role="menuitem">Overlay</a></li>
+        <li><a href="text.html" role="menuitem">Text</a></li>
+        <li><a href="background-removal.html" class="active" role="menuitem">AI Erase BG</a></li>
+        <li><a href="https://buymeacoffee.com/dairylea" class="nav-coffee" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="tool-header">
+      <div class="ai-badge">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        AI-Powered
+      </div>
+      <h1>AI Background Removal</h1>
+      <p class="tool-desc">Automatically detect and erase backgrounds using a real ML model — no color picking, no manual work. Runs 100% in your browser. Your images never leave your device.</p>
+    </div>
+
+    <!-- Upload zone (shown until image is loaded) -->
+    <div id="uploadSection">
+      <div class="drop-zone" id="dropZone">
+        <div class="drop-zone-icon">🪄</div>
+        <p class="drop-zone-text">Drop an image here or click to upload</p>
+        <p class="drop-zone-sub">JPEG · PNG · WebP — processed locally with AI</p>
+        <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" style="display:none">
+      </div>
+    </div>
+
+    <!-- Tool UI (shown after image is loaded) -->
+    <div id="toolSection" style="display:none">
+
+      <!-- Action bar -->
+      <div class="controls">
+        <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;min-width:0;flex:1">
+          <span id="fileName" style="font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:260px;"></span>
+          <span id="fileSize" style="font-size:0.85rem;color:var(--text-muted);flex-shrink:0;"></span>
+        </div>
+        <button class="btn btn-primary" id="removeBtn">
+          &#10024; Remove Background
+        </button>
+        <label class="btn btn-secondary" style="cursor:pointer;display:inline-flex;align-items:center;gap:0.4rem;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-1px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          New Image
+          <input type="file" id="fileInput2" accept="image/jpeg,image/png,image/webp" style="display:none">
+        </label>
+      </div>
+
+      <!-- Processing state -->
+      <div id="processingSection" style="display:none">
+        <div class="processing-card">
+          <div class="spinner"></div>
+          <div class="processing-label" id="processingLabel">Loading AI model…</div>
+          <div class="processing-sub" id="processingSub">First run downloads ~5 MB model. Subsequent runs are near-instant.</div>
+          <div class="processing-bar-wrap">
+            <div class="processing-bar-fill" id="progressBar"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preview area -->
+      <div id="previewSection">
+        <!-- Before/after tab row (hidden until result is ready) -->
+        <div class="preview-tabs" id="previewTabs" style="display:none">
+          <button class="preview-tab active" id="tabOriginal">Original</button>
+          <button class="preview-tab" id="tabResult">Result</button>
+        </div>
+
+        <div id="originalView" class="preview-area">
+          <img id="originalImg" src="" alt="Original image">
+        </div>
+
+        <div id="resultView" class="preview-area checkerboard" style="display:none">
+          <img id="resultImg" src="" alt="Background removed">
+        </div>
+
+        <!-- Result meta + download (hidden until result is ready) -->
+        <div id="resultRow" class="result-row" style="display:none">
+          <span>&#10003; Background removed</span>
+          <span id="resultDims" style="color:var(--text-muted)"></span>
+          <button class="btn btn-cta dl-btn" id="downloadBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download PNG
+          </button>
+        </div>
+      </div>
+
+      <!-- Error state -->
+      <div id="errorSection" style="display:none">
+        <div class="error-msg" id="errorMsg"></div>
+      </div>
+
+    </div><!-- /toolSection -->
+
+    <!-- How it works -->
+    <section style="margin-top:3rem">
+      <h2 class="section-title">How it works</h2>
+      <div class="trust-grid">
+        <div class="trust-item">
+          <div class="icon">&#129668;</div>
+          <h3>AI-Powered</h3>
+          <p>Uses a real machine learning model (ONNX) to detect and remove backgrounds — handles hair, fur, and complex edges.</p>
+        </div>
+        <div class="trust-item">
+          <div class="icon">&#128274;</div>
+          <h3>100% Private</h3>
+          <p>Your images are processed locally via WebAssembly. Nothing is ever uploaded to any server.</p>
+        </div>
+        <div class="trust-item">
+          <div class="icon">&#9889;</div>
+          <h3>Fast After First Run</h3>
+          <p>The AI model downloads once (~5 MB) and is cached in your browser. Subsequent removals are near-instant.</p>
+        </div>
+        <div class="trust-item">
+          <div class="icon">&#127808;</div>
+          <h3>Transparent PNG Output</h3>
+          <p>Download a clean PNG with a transparent background — ready to drop onto any design or slide.</p>
+        </div>
+      </div>
+    </section>
+
+    <section style="margin-top:1.5rem;text-align:center">
+      <p style="color:var(--text-muted);font-size:0.9rem">
+        Also try: <a href="background-remover.html">Color-based BG Remover</a> (manual color picking, great for solid backgrounds)
+        &nbsp;|&nbsp; <a href="crop.html">Crop &amp; Shape</a>
+        &nbsp;|&nbsp; <a href="filters.html">Image Filters</a>
+      </p>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <p>Powered by <strong>PicBrew</strong> — Free &amp; Private</p>
+      <div class="footer-links">
+        <a href="https://buymeacoffee.com/dairylea" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a>
+        <a href="https://parchpdf.com/" target="_blank" rel="noopener">PDF Tools (Parchment)</a>
+        <a href="https://devbrew.org/" target="_blank" rel="noopener">Dev Tools (DevBrew)</a>
+        <a href="https://dannycranmer.github.io/eduplay/" target="_blank" rel="noopener">Kids Games (EduPlay)</a>
+        <a href="https://github.com/dannycranmer/imagetoolkit" target="_blank" rel="noopener">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="vertical-align:-2px;margin-right:3px"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub
+        </a>
+      </div>
+      <p style="margin-top:0.75rem">Built by <a href="https://github.com/dannycranmer">Hustle</a></p>
+    </div>
+  </footer>
+
+  <script src="js/common.js"></script>
+  <script type="module">
+    // @imgly/background-removal — pure browser AI background removal
+    import { removeBackground } from 'https://esm.sh/@imgly/background-removal@1.4.5';
+
+    const bgConfig = {
+      publicPath: 'https://unpkg.com/@imgly/background-removal@1.4.5/dist/',
+      model: 'small',
+      output: { format: 'image/png', quality: 1 },
+      progress: handleProgress,
+    };
+
+    let currentFile = null;
+    let resultBlob = null;
+    let currentObjUrl = null;
+
+    // ── DOM refs ──
+    const uploadSection    = document.getElementById('uploadSection');
+    const toolSection      = document.getElementById('toolSection');
+    const dropZone         = document.getElementById('dropZone');
+    const fileInput        = document.getElementById('fileInput');
+    const fileInput2       = document.getElementById('fileInput2');
+    const fileNameEl       = document.getElementById('fileName');
+    const fileSizeEl       = document.getElementById('fileSize');
+    const removeBtn        = document.getElementById('removeBtn');
+    const processingSection = document.getElementById('processingSection');
+    const processingLabel  = document.getElementById('processingLabel');
+    const processingSub    = document.getElementById('processingSub');
+    const progressBar      = document.getElementById('progressBar');
+    const previewTabs      = document.getElementById('previewTabs');
+    const originalView     = document.getElementById('originalView');
+    const resultView       = document.getElementById('resultView');
+    const originalImg      = document.getElementById('originalImg');
+    const resultImg        = document.getElementById('resultImg');
+    const resultRow        = document.getElementById('resultRow');
+    const resultDims       = document.getElementById('resultDims');
+    const downloadBtn      = document.getElementById('downloadBtn');
+    const errorSection     = document.getElementById('errorSection');
+    const errorMsg         = document.getElementById('errorMsg');
+    const tabOriginal      = document.getElementById('tabOriginal');
+    const tabResult        = document.getElementById('tabResult');
+
+    // ── File handling ──
+    function handleFile(file) {
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        showError("This doesn't appear to be a valid image file.");
+        return;
+      }
+      if (file.size > 30 * 1024 * 1024) {
+        showError("Image too large (max 30 MB). Please use a smaller image.");
+        return;
+      }
+
+      currentFile = file;
+      resultBlob = null;
+
+      if (currentObjUrl) URL.revokeObjectURL(currentObjUrl);
+      currentObjUrl = URL.createObjectURL(file);
+
+      fileNameEl.textContent = file.name.length > 40 ? file.name.slice(0, 37) + '…' : file.name;
+      fileSizeEl.textContent = formatBytes(file.size);
+
+      originalImg.src = currentObjUrl;
+
+      // Reset state
+      toolSection.style.display = '';
+      uploadSection.style.display = 'none';
+      processingSection.style.display = 'none';
+      originalView.style.display = '';
+      resultView.style.display = 'none';
+      previewTabs.style.display = 'none';
+      resultRow.style.display = 'none';
+      errorSection.style.display = 'none';
+      removeBtn.disabled = false;
+      progressBar.style.width = '0%';
+      showTab('original');
+    }
+
+    // ── Progress callback ──
+    function handleProgress(key, current, total) {
+      if (total > 0) {
+        const pct = Math.min(95, Math.round((current / total) * 100));
+        progressBar.style.width = pct + '%';
+        if (key.startsWith('fetch:') || key.includes('onnxruntime')) {
+          processingLabel.textContent = 'Downloading AI model…';
+          processingSub.textContent = formatBytes(current) + ' of ' + formatBytes(total);
+        }
+      } else if (key.includes('compute') || key.includes('inference') || key.includes('run')) {
+        processingLabel.textContent = 'Removing background…';
+        processingSub.textContent = 'Running AI inference in your browser…';
+        progressBar.style.width = '80%';
+      }
+    }
+
+    // ── Main removal ──
+    async function doRemoval() {
+      if (!currentFile || removeBtn.disabled) return;
+
+      removeBtn.disabled = true;
+      processingSection.style.display = '';
+      previewTabs.style.display = 'none';
+      resultView.style.display = 'none';
+      resultRow.style.display = 'none';
+      errorSection.style.display = 'none';
+      originalView.style.display = '';
+      progressBar.style.width = '5%';
+      processingLabel.textContent = 'Loading AI model…';
+      processingSub.textContent = 'First run downloads ~5 MB model and caches it. Subsequent runs are near-instant.';
+
+      try {
+        resultBlob = await removeBackground(currentFile, bgConfig);
+
+        const resultUrl = URL.createObjectURL(resultBlob);
+        resultImg.src = resultUrl;
+
+        // Get output dimensions
+        const tmpImg = new Image();
+        tmpImg.onload = () => {
+          resultDims.textContent = tmpImg.naturalWidth + '\u00D7' + tmpImg.naturalHeight + 'px';
+        };
+        tmpImg.src = resultUrl;
+
+        progressBar.style.width = '100%';
+        processingSection.style.display = 'none';
+        previewTabs.style.display = 'flex';
+        resultRow.style.display = 'flex';
+        removeBtn.disabled = false;
+        showTab('result');
+
+        // Revenue CTA via common.js
+        trackUsage();
+        showPostActionCTA();
+
+      } catch (err) {
+        console.error('[PicBrew] Background removal error:', err);
+        processingSection.style.display = 'none';
+        removeBtn.disabled = false;
+        const msg = err && err.message ? err.message : '';
+        if (msg.includes('WebAssembly') || msg.includes('wasm')) {
+          showError('Your browser does not support WebAssembly, which is required for AI background removal. Please use a modern browser such as Chrome, Firefox, or Edge.');
+        } else {
+          showError('Background removal failed. Please try a different image or browser. Error: ' + (msg || 'unknown'));
+        }
+      }
+    }
+
+    // ── Tab switching ──
+    function showTab(tab) {
+      const isResult = tab === 'result';
+      tabOriginal.classList.toggle('active', !isResult);
+      tabResult.classList.toggle('active', isResult);
+      originalView.style.display = isResult ? 'none' : '';
+      resultView.style.display = isResult ? '' : 'none';
+    }
+
+    // ── Error display ──
+    function showError(msg) {
+      errorSection.style.display = '';
+      errorMsg.textContent = msg;
+    }
+
+    // ── Download ──
+    downloadBtn.addEventListener('click', () => {
+      if (!resultBlob) return;
+      const name = (currentFile ? currentFile.name.replace(/\.[^.]+$/, '') : 'image') + '-no-bg.png';
+      downloadBlob(resultBlob, name); // downloadBlob from common.js handles tracking
+    });
+
+    // ── Wire up buttons ──
+    removeBtn.addEventListener('click', doRemoval);
+    tabOriginal.addEventListener('click', () => showTab('original'));
+    tabResult.addEventListener('click', () => showTab('result'));
+
+    // ── Drop zone ──
+    dropZone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
+    fileInput2.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
+
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      const file = Array.from(e.dataTransfer.files).find(f => f.type.startsWith('image/'));
+      if (file) handleFile(file);
+    });
+  </script>
+  <script data-goatcounter="https://picbrew.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

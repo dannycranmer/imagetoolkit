@@ -83,6 +83,7 @@ function initMobileNav() {
       { href: 'filters.html', icon: '🎛️', label: 'Filters' },
       { href: 'watermark.html', icon: '💧', label: 'Watermark' },
       { href: 'background-remover.html', icon: '🧹', label: 'BG Remover' },
+      { href: 'background-removal.html', icon: '🪄', label: 'AI Erase BG' },
       { href: 'denoise.html', icon: '✨', label: 'Denoise' },
     ]},
     { title: '🛠️ Create', items: [
