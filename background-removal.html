@@ -334,45 +334,39 @@
 
   <script src="js/common.js"></script>
   <script type="module">
-    // @imgly/background-removal — pure browser AI background removal
-    import { removeBackground } from 'https://esm.sh/@imgly/background-removal@1.4.5';
-
-    const bgConfig = {
-      publicPath: 'https://unpkg.com/@imgly/background-removal@1.4.5/dist/',
-      model: 'small',
-      output: { format: 'image/png', quality: 1 },
-      progress: handleProgress,
-    };
+    // No top-level static import — all event listeners are registered immediately.
+    // The heavy @imgly/background-removal library is loaded lazily on first button click.
 
     let currentFile = null;
     let resultBlob = null;
     let currentObjUrl = null;
+    let removeBackgroundFn = null; // cached after first successful load
 
     // ── DOM refs ──
-    const uploadSection    = document.getElementById('uploadSection');
-    const toolSection      = document.getElementById('toolSection');
-    const dropZone         = document.getElementById('dropZone');
-    const fileInput        = document.getElementById('fileInput');
-    const fileInput2       = document.getElementById('fileInput2');
-    const fileNameEl       = document.getElementById('fileName');
-    const fileSizeEl       = document.getElementById('fileSize');
-    const removeBtn        = document.getElementById('removeBtn');
+    const uploadSection     = document.getElementById('uploadSection');
+    const toolSection       = document.getElementById('toolSection');
+    const dropZone          = document.getElementById('dropZone');
+    const fileInput         = document.getElementById('fileInput');
+    const fileInput2        = document.getElementById('fileInput2');
+    const fileNameEl        = document.getElementById('fileName');
+    const fileSizeEl        = document.getElementById('fileSize');
+    const removeBtn         = document.getElementById('removeBtn');
     const processingSection = document.getElementById('processingSection');
-    const processingLabel  = document.getElementById('processingLabel');
-    const processingSub    = document.getElementById('processingSub');
-    const progressBar      = document.getElementById('progressBar');
-    const previewTabs      = document.getElementById('previewTabs');
-    const originalView     = document.getElementById('originalView');
-    const resultView       = document.getElementById('resultView');
-    const originalImg      = document.getElementById('originalImg');
-    const resultImg        = document.getElementById('resultImg');
-    const resultRow        = document.getElementById('resultRow');
-    const resultDims       = document.getElementById('resultDims');
-    const downloadBtn      = document.getElementById('downloadBtn');
-    const errorSection     = document.getElementById('errorSection');
-    const errorMsg         = document.getElementById('errorMsg');
-    const tabOriginal      = document.getElementById('tabOriginal');
-    const tabResult        = document.getElementById('tabResult');
+    const processingLabel   = document.getElementById('processingLabel');
+    const processingSub     = document.getElementById('processingSub');
+    const progressBar       = document.getElementById('progressBar');
+    const previewTabs       = document.getElementById('previewTabs');
+    const originalView      = document.getElementById('originalView');
+    const resultView        = document.getElementById('resultView');
+    const originalImg       = document.getElementById('originalImg');
+    const resultImg         = document.getElementById('resultImg');
+    const resultRow         = document.getElementById('resultRow');
+    const resultDims        = document.getElementById('resultDims');
+    const downloadBtn       = document.getElementById('downloadBtn');
+    const errorSection      = document.getElementById('errorSection');
+    const errorMsg          = document.getElementById('errorMsg');
+    const tabOriginal       = document.getElementById('tabOriginal');
+    const tabResult         = document.getElementById('tabResult');
 
     // ── File handling ──
     function handleFile(file) {
@@ -397,7 +391,6 @@
 
       originalImg.src = currentObjUrl;
 
-      // Reset state
       toolSection.style.display = '';
       uploadSection.style.display = 'none';
       processingSection.style.display = 'none';
@@ -439,16 +432,31 @@
       errorSection.style.display = 'none';
       originalView.style.display = '';
       progressBar.style.width = '5%';
-      processingLabel.textContent = 'Loading AI model…';
+      processingLabel.textContent = 'Loading AI library…';
       processingSub.textContent = 'First run downloads ~5 MB model and caches it. Subsequent runs are near-instant.';
 
       try {
-        resultBlob = await removeBackground(currentFile, bgConfig);
+        // Lazy-load the library on first click so event listeners are never blocked
+        if (!removeBackgroundFn) {
+          const mod = await import('https://esm.sh/@imgly/background-removal@1.4.5');
+          removeBackgroundFn = mod.removeBackground;
+        }
+
+        processingLabel.textContent = 'Loading AI model…';
+        progressBar.style.width = '10%';
+
+        const bgConfig = {
+          publicPath: 'https://unpkg.com/@imgly/background-removal@1.4.5/dist/',
+          model: 'small',
+          output: { format: 'image/png', quality: 1 },
+          progress: handleProgress,
+        };
+
+        resultBlob = await removeBackgroundFn(currentFile, bgConfig);
 
         const resultUrl = URL.createObjectURL(resultBlob);
         resultImg.src = resultUrl;
 
-        // Get output dimensions
         const tmpImg = new Image();
         tmpImg.onload = () => {
           resultDims.textContent = tmpImg.naturalWidth + '\u00D7' + tmpImg.naturalHeight + 'px';
@@ -462,19 +470,21 @@
         removeBtn.disabled = false;
         showTab('result');
 
-        // Revenue CTA via common.js
-        trackUsage();
-        showPostActionCTA();
+        if (typeof trackUsage === 'function') trackUsage();
+        if (typeof showPostActionCTA === 'function') showPostActionCTA();
 
       } catch (err) {
         console.error('[PicBrew] Background removal error:', err);
         processingSection.style.display = 'none';
         removeBtn.disabled = false;
-        const msg = err && err.message ? err.message : '';
+        removeBackgroundFn = null; // reset so next click retries the import
+        const msg = (err && err.message) ? err.message : String(err);
         if (msg.includes('WebAssembly') || msg.includes('wasm')) {
-          showError('Your browser does not support WebAssembly, which is required for AI background removal. Please use a modern browser such as Chrome, Firefox, or Edge.');
+          showError('Your browser does not support WebAssembly, which is required for AI background removal. Please use Chrome, Firefox, or Edge.');
+        } else if (msg.includes('fetch') || msg.includes('network') || msg.includes('Failed to load') || msg.includes('import')) {
+          showError('Could not load the AI model. Check your internet connection and try again. If this keeps happening, try a different browser.');
         } else {
-          showError('Background removal failed. Please try a different image or browser. Error: ' + (msg || 'unknown'));
+          showError('Background removal failed. Error: ' + (msg || 'unknown') + '. Please try a different image or browser.');
         }
       }
     }
@@ -498,7 +508,7 @@
     downloadBtn.addEventListener('click', () => {
       if (!resultBlob) return;
       const name = (currentFile ? currentFile.name.replace(/\.[^.]+$/, '') : 'image') + '-no-bg.png';
-      downloadBlob(resultBlob, name); // downloadBlob from common.js handles tracking
+      downloadBlob(resultBlob, name);
     });
 
     // ── Wire up buttons ──
