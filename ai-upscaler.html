@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Image Upscaler — Enlarge Photos 2x Free Online — PicBrew</title>
+  <meta name="description" content="Upscale and enlarge images 2x with AI. TensorFlow.js super-resolution runs 100% in your browser — private, free, no signup. Sharper results than standard upscaling.">
+  <link rel="canonical" href="https://picbrew.org/ai-upscaler.html">
+  <meta property="og:title" content="AI Image Upscaler — Enlarge Photos 2x Free Online — PicBrew">
+  <meta property="og:description" content="Upscale images 2x with AI super-resolution. Powered by TensorFlow.js — runs 100% in your browser. Private, free, no signup required.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://picbrew.org/ai-upscaler.html">
+  <meta property="og:image" content="https://picbrew.org/og-image.png">
+  <meta property="og:site_name" content="PicBrew">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="AI Image Upscaler — Enlarge Photos 2x Free Online — PicBrew">
+  <meta name="twitter:description" content="Upscale images 2x with AI super-resolution. Powered by TensorFlow.js — runs 100% in your browser.">
+  <meta name="twitter:image" content="https://picbrew.org/og-image.png">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .ai-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.28rem 0.75rem;
+      border-radius: 20px;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      margin-bottom: 0.6rem;
+    }
+    .upscale-progress-wrap {
+      margin-top: 0.75rem;
+    }
+    .upscale-progress-label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 0.4rem;
+      display: flex;
+      justify-content: space-between;
+    }
+    .upscale-progress-bar-wrap {
+      height: 8px;
+      background: var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .upscale-progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      border-radius: 4px;
+      transition: width 0.3s ease;
+      width: 0%;
+    }
+    .compare-wrap {
+      margin-top: 1.5rem;
+    }
+    .compare-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .compare-tab {
+      padding: 0.4rem 1rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .compare-tab.active {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+    .compare-panel {
+      display: none;
+    }
+    .compare-panel.active {
+      display: block;
+    }
+    .compare-side-by-side {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    @media (max-width: 600px) {
+      .compare-side-by-side {
+        grid-template-columns: 1fr;
+      }
+    }
+    .compare-image-wrap {
+      text-align: center;
+    }
+    .compare-image-wrap canvas,
+    .compare-image-wrap img {
+      max-width: 100%;
+      max-height: 400px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      object-fit: contain;
+      display: block;
+      margin: 0 auto;
+    }
+    .compare-label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+    }
+    .stats-row {
+      display: flex;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 0.75rem;
+    }
+    .stats-row span strong {
+      color: var(--text);
+    }
+    .result-actions {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 0.25rem 0.65rem;
+      border-radius: 12px;
+    }
+    .status-badge.processing {
+      background: #eff6ff;
+      color: var(--accent);
+    }
+    .status-badge.done {
+      background: #ecfdf5;
+      color: #10B981;
+    }
+    .status-badge.error {
+      background: #fef2f2;
+      color: #ef4444;
+    }
+    .spinner-sm {
+      width: 12px;
+      height: 12px;
+      border: 2px solid rgba(59,130,246,0.3);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: inline-block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .preview-thumb {
+      max-width: 100%;
+      max-height: 300px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      display: block;
+      margin: 0.75rem 0;
+      object-fit: contain;
+    }
+    .warn-msg {
+      background: #fffbeb;
+      border: 1px solid #fcd34d;
+      border-radius: var(--radius);
+      padding: 0.75rem 1rem;
+      font-size: 0.88rem;
+      color: #92400e;
+      margin-top: 0.75rem;
+    }
+  </style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "AI Image Upscaler — PicBrew",
+    "description": "Upscale and enlarge images 2x with AI super-resolution powered by TensorFlow.js. Runs 100% in your browser — private, free, no signup required.",
+    "url": "https://picbrew.org/ai-upscaler.html",
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "Any",
+    "browserRequirements": "Requires JavaScript and WebAssembly",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "creator": {
+      "@type": "Organization",
+      "name": "PicBrew",
+      "url": "https://picbrew.org"
+    }
+  }
+  </script>
+</head>
+<body>
+
+  <nav class="nav" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">Pic<span>Brew</span></a>
+      <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">&#9776;</button>
+      <ul class="nav-links" role="menubar">
+        <li><a href="index.html" role="menuitem">Home</a></li>
+        <li><a href="compress.html" role="menuitem">Compress</a></li>
+        <li><a href="resize.html" role="menuitem">Resize</a></li>
+        <li><a href="convert.html" role="menuitem">Convert</a></li>
+        <li><a href="crop.html" role="menuitem">Crop</a></li>
+        <li><a href="watermark.html" role="menuitem">Watermark</a></li>
+        <li><a href="flip-rotate.html" role="menuitem">Flip &amp; Rotate</a></li>
+        <li><a href="background-remover.html" role="menuitem">BG Remover</a></li>
+        <li><a href="filters.html" role="menuitem">Filters</a></li>
+        <li><a href="palette.html" role="menuitem">Palette</a></li>
+        <li><a href="meme.html" role="menuitem">Meme</a></li>
+        <li><a href="base64.html" role="menuitem">Base64</a></li>
+        <li><a href="collage.html" role="menuitem">Collage</a></li>
+        <li><a href="denoise.html" role="menuitem">Denoise</a></li>
+        <li><a href="mockup.html" role="menuitem">Mockup</a></li>
+        <li><a href="image-to-pdf.html" role="menuitem">To PDF</a></li>
+        <li><a href="qrcode.html" role="menuitem">QR Code</a></li>
+        <li><a href="overlay.html" role="menuitem">Overlay</a></li>
+        <li><a href="text.html" role="menuitem">Text</a></li>
+        <li><a href="background-removal.html" role="menuitem">AI Erase BG</a></li>
+        <li><a href="ai-ocr.html" role="menuitem">AI OCR</a></li>
+        <li><a href="ai-upscaler.html" class="active" role="menuitem">AI Upscaler</a></li>
+        <li><a href="https://buymeacoffee.com/dairylea" class="nav-coffee" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="tool-header">
+      <div class="ai-badge">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        AI-Powered
+      </div>
+      <h1>AI Image Upscaler — Enlarge 2x</h1>
+      <p class="tool-desc">Double the resolution of any image using TensorFlow.js super-resolution. Produces sharper results than standard interpolation. Runs 100% in your browser — your images never leave your device.</p>
+    </div>
+
+    <!-- Upload zone -->
+    <div id="uploadSection">
+      <div class="drop-zone" id="dropZone">
+        <div class="drop-zone-icon">🔍</div>
+        <p class="drop-zone-text">Drop an image here or click to upload</p>
+        <p class="drop-zone-sub">JPEG · PNG · WebP · Max 20 MB</p>
+        <input type="file" id="fileInput" accept="image/*" style="display:none">
+      </div>
+    </div>
+
+    <!-- Tool UI -->
+    <div id="toolSection" style="display:none">
+
+      <!-- Controls bar -->
+      <div class="controls" style="flex-wrap:wrap;gap:0.75rem">
+        <div style="display:flex;align-items:center;gap:0.75rem;flex:1;min-width:0;flex-wrap:wrap">
+          <span id="fileName" style="font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px;"></span>
+          <span id="fileSize" style="font-size:0.85rem;color:var(--text-muted);flex-shrink:0;"></span>
+          <span id="origDims" style="font-size:0.85rem;color:var(--text-muted);flex-shrink:0;"></span>
+          <span id="statusBadge" style="display:none"></span>
+        </div>
+        <button class="btn btn-primary" id="upscaleBtn">
+          ✨ Upscale 2x
+        </button>
+        <label class="btn btn-secondary" style="cursor:pointer;display:inline-flex;align-items:center;gap:0.4rem;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-1px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          New Image
+          <input type="file" id="fileInput2" accept="image/*" style="display:none">
+        </label>
+      </div>
+
+      <!-- Original image preview -->
+      <div id="previewWrap">
+        <img id="previewImg" class="preview-thumb" src="" alt="Uploaded image preview">
+      </div>
+
+      <!-- Progress -->
+      <div id="progressWrap" style="display:none" class="upscale-progress-wrap">
+        <div class="upscale-progress-label">
+          <span id="progressLabel">Loading TensorFlow.js…</span>
+          <span id="progressPct">0%</span>
+        </div>
+        <div class="upscale-progress-bar-wrap">
+          <div class="upscale-progress-bar-fill" id="progressBar"></div>
+        </div>
+      </div>
+
+      <!-- Warning for large images -->
+      <div id="warnWrap" style="display:none" class="warn-msg" id="warnMsg">
+        ⚠️ Large image detected. Upscaling may take 30–60 seconds on slower devices.
+      </div>
+
+      <!-- Error -->
+      <div id="errorWrap" style="display:none;margin-top:0.75rem">
+        <div class="error-msg show" id="errorMsg"></div>
+      </div>
+
+      <!-- Result -->
+      <div id="resultSection" style="display:none" class="compare-wrap">
+        <div class="compare-tabs">
+          <button class="compare-tab active" id="tabSideBySide">Side by Side</button>
+          <button class="compare-tab" id="tabOriginal">Original</button>
+          <button class="compare-tab" id="tabUpscaled">Upscaled</button>
+        </div>
+
+        <div class="compare-panel active" id="panelSideBySide">
+          <div class="compare-side-by-side">
+            <div class="compare-image-wrap">
+              <canvas id="canvasOriginalPreview"></canvas>
+              <div class="compare-label" id="labelOriginal">Original</div>
+            </div>
+            <div class="compare-image-wrap">
+              <canvas id="canvasUpscaledPreview"></canvas>
+              <div class="compare-label" id="labelUpscaled">Upscaled 2x</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="compare-panel" id="panelOriginal">
+          <div class="compare-image-wrap">
+            <canvas id="canvasOriginalFull"></canvas>
+            <div class="compare-label" id="labelOriginalFull">Original</div>
+          </div>
+        </div>
+
+        <div class="compare-panel" id="panelUpscaled">
+          <div class="compare-image-wrap">
+            <canvas id="canvasUpscaledFull"></canvas>
+            <div class="compare-label" id="labelUpscaledFull">Upscaled 2x</div>
+          </div>
+        </div>
+
+        <div class="stats-row" id="statsRow"></div>
+
+        <div class="result-actions">
+          <button class="btn btn-cta" id="downloadBtn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-1px;margin-right:3px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download Upscaled PNG
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /toolSection -->
+
+    <!-- How it works -->
+    <section style="margin-top:3rem">
+      <h2 class="section-title">How it works</h2>
+      <div class="trust-grid">
+        <div class="trust-item">
+          <div class="icon">🧠</div>
+          <h3>TensorFlow.js</h3>
+          <p>Uses Google's TensorFlow.js to perform tensor-based super-resolution directly in your browser — no server required.</p>
+        </div>
+        <div class="trust-item">
+          <div class="icon">🔒</div>
+          <h3>100% Private</h3>
+          <p>Your images are processed entirely on your device. Nothing is ever sent to a server. Safe for sensitive photos.</p>
+        </div>
+        <div class="trust-item">
+          <div class="icon">🔍</div>
+          <h3>Sharper Results</h3>
+          <p>Tensor bilinear super-resolution produces sharper edges and finer detail than standard browser interpolation.</p>
+        </div>
+        <div class="trust-item">
+          <div class="icon">⚡</div>
+          <h3>Fast Processing</h3>
+          <p>Leverages WebGL acceleration when available for fast GPU-powered upscaling in your browser.</p>
+        </div>
+      </div>
+    </section>
+
+    <section style="margin-top:1.5rem">
+      <h2 class="section-title">When to upscale?</h2>
+      <div class="trust-grid" style="grid-template-columns: repeat(auto-fill, minmax(160px, 1fr))">
+        <div class="trust-item" style="padding:1.25rem">
+          <div class="icon" style="font-size:1.75rem">🖨️</div>
+          <h3 style="font-size:0.95rem">Print quality</h3>
+          <p style="font-size:0.82rem">Enlarge small images for printing at larger sizes without blur</p>
+        </div>
+        <div class="trust-item" style="padding:1.25rem">
+          <div class="icon" style="font-size:1.75rem">🖥️</div>
+          <h3 style="font-size:0.95rem">Retina displays</h3>
+          <p style="font-size:0.82rem">Upscale images to look sharp on high-DPI screens</p>
+        </div>
+        <div class="trust-item" style="padding:1.25rem">
+          <div class="icon" style="font-size:1.75rem">📸</div>
+          <h3 style="font-size:0.95rem">Old photos</h3>
+          <p style="font-size:0.82rem">Enlarge and sharpen low-resolution scanned photos</p>
+        </div>
+        <div class="trust-item" style="padding:1.25rem">
+          <div class="icon" style="font-size:1.75rem">🎮</div>
+          <h3 style="font-size:0.95rem">Game assets</h3>
+          <p style="font-size:0.82rem">Upscale pixel art sprites and textures for high-res displays</p>
+        </div>
+        <div class="trust-item" style="padding:1.25rem">
+          <div class="icon" style="font-size:1.75rem">📱</div>
+          <h3 style="font-size:0.95rem">Small thumbnails</h3>
+          <p style="font-size:0.82rem">Enlarge cropped thumbnails or small icon images</p>
+        </div>
+        <div class="trust-item" style="padding:1.25rem">
+          <div class="icon" style="font-size:1.75rem">🎨</div>
+          <h3 style="font-size:0.95rem">Design work</h3>
+          <p style="font-size:0.82rem">Get larger source images for mockups and presentations</p>
+        </div>
+      </div>
+    </section>
+
+    <section style="margin-top:1.5rem;text-align:center">
+      <p style="color:var(--text-muted);font-size:0.9rem">
+        Also try: <a href="background-removal.html">AI Background Removal</a>
+        &nbsp;|&nbsp; <a href="ai-ocr.html">AI OCR</a>
+        &nbsp;|&nbsp; <a href="compress.html">Image Compressor</a>
+      </p>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <p>Powered by <strong>PicBrew</strong> — Free &amp; Private</p>
+      <div class="footer-links">
+        <a href="https://buymeacoffee.com/dairylea" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a>
+        <a href="https://parchpdf.com/" target="_blank" rel="noopener">PDF Tools (Parchment)</a>
+        <a href="https://devbrew.org/" target="_blank" rel="noopener">Dev Tools (DevBrew)</a>
+        <a href="https://dannycranmer.github.io/eduplay/" target="_blank" rel="noopener">Kids Games (EduPlay)</a>
+        <a href="https://github.com/dannycranmer/imagetoolkit" target="_blank" rel="noopener">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="vertical-align:-2px;margin-right:3px"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub
+        </a>
+      </div>
+      <p style="margin-top:0.75rem">Built by <a href="https://github.com/dannycranmer">Hustle</a></p>
+    </div>
+  </footer>
+
+  <script src="js/common.js"></script>
+  <script>
+    // ── DOM refs ──
+    const uploadSection  = document.getElementById('uploadSection');
+    const toolSection    = document.getElementById('toolSection');
+    const dropZone       = document.getElementById('dropZone');
+    const fileInput      = document.getElementById('fileInput');
+    const fileInput2     = document.getElementById('fileInput2');
+    const fileNameEl     = document.getElementById('fileName');
+    const fileSizeEl     = document.getElementById('fileSize');
+    const origDimsEl     = document.getElementById('origDims');
+    const statusBadge    = document.getElementById('statusBadge');
+    const upscaleBtn     = document.getElementById('upscaleBtn');
+    const previewImg     = document.getElementById('previewImg');
+    const progressWrap   = document.getElementById('progressWrap');
+    const progressLabel  = document.getElementById('progressLabel');
+    const progressPct    = document.getElementById('progressPct');
+    const progressBar    = document.getElementById('progressBar');
+    const warnWrap       = document.getElementById('warnWrap');
+    const errorWrap      = document.getElementById('errorWrap');
+    const errorMsg       = document.getElementById('errorMsg');
+    const resultSection  = document.getElementById('resultSection');
+    const statsRow       = document.getElementById('statsRow');
+    const downloadBtn    = document.getElementById('downloadBtn');
+
+    // Compare tabs
+    const tabSideBySide  = document.getElementById('tabSideBySide');
+    const tabOriginal    = document.getElementById('tabOriginal');
+    const tabUpscaled    = document.getElementById('tabUpscaled');
+    const panelSideBySide = document.getElementById('panelSideBySide');
+    const panelOriginal  = document.getElementById('panelOriginal');
+    const panelUpscaled  = document.getElementById('panelUpscaled');
+
+    // Canvases
+    const canvasOrigPreview  = document.getElementById('canvasOriginalPreview');
+    const canvasUpscPreview  = document.getElementById('canvasUpscaledPreview');
+    const canvasOrigFull     = document.getElementById('canvasOriginalFull');
+    const canvasUpscFull     = document.getElementById('canvasUpscaledFull');
+
+    let currentFile = null;
+    let currentImage = null;   // HTMLImageElement
+    let upscaledCanvas = null; // full-res upscaled canvas
+    let isProcessing = false;
+    let currentObjUrl = null;
+
+    // ── Tab switching ──
+    function activateTab(tab) {
+      [tabSideBySide, tabOriginal, tabUpscaled].forEach(t => t.classList.remove('active'));
+      [panelSideBySide, panelOriginal, panelUpscaled].forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      if (tab === tabSideBySide) panelSideBySide.classList.add('active');
+      else if (tab === tabOriginal) panelOriginal.classList.add('active');
+      else panelUpscaled.classList.add('active');
+    }
+    tabSideBySide.addEventListener('click', () => activateTab(tabSideBySide));
+    tabOriginal.addEventListener('click', () => activateTab(tabOriginal));
+    tabUpscaled.addEventListener('click', () => activateTab(tabUpscaled));
+
+    // ── File handling ──
+    function handleFile(file) {
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        displayError("This doesn't appear to be a valid image file. Please upload a JPEG, PNG, or WebP.");
+        return;
+      }
+      if (file.size > 20 * 1024 * 1024) {
+        displayError("Image too large (max 20 MB). Please use a smaller file.");
+        return;
+      }
+
+      currentFile = file;
+      if (currentObjUrl) URL.revokeObjectURL(currentObjUrl);
+      currentObjUrl = URL.createObjectURL(file);
+
+      fileNameEl.textContent = file.name.length > 38 ? file.name.slice(0, 35) + '…' : file.name;
+      fileSizeEl.textContent = formatBytes(file.size);
+
+      const img = new Image();
+      img.onload = () => {
+        currentImage = img;
+        origDimsEl.textContent = img.naturalWidth + ' × ' + img.naturalHeight + 'px';
+        previewImg.src = currentObjUrl;
+
+        // Warn for large images
+        const megapixels = (img.naturalWidth * img.naturalHeight) / 1e6;
+        warnWrap.style.display = megapixels > 2 ? '' : 'none';
+
+        toolSection.style.display = '';
+        uploadSection.style.display = 'none';
+        progressWrap.style.display = 'none';
+        errorWrap.style.display = 'none';
+        resultSection.style.display = 'none';
+        setStatus('');
+        upscaleBtn.disabled = false;
+        upscaledCanvas = null;
+      };
+      img.src = currentObjUrl;
+    }
+
+    // ── Status badge ──
+    function setStatus(type, text) {
+      if (!type) { statusBadge.style.display = 'none'; return; }
+      statusBadge.style.display = 'inline-flex';
+      statusBadge.className = 'status-badge ' + type;
+      if (type === 'processing') {
+        statusBadge.innerHTML = '<span class="spinner-sm"></span> ' + text;
+      } else {
+        statusBadge.textContent = text;
+      }
+    }
+
+    // ── Error display ──
+    function displayError(msg) {
+      errorWrap.style.display = '';
+      errorMsg.textContent = msg;
+      setStatus('error', '✗ Error');
+    }
+
+    // ── Progress helpers ──
+    function setProgress(pct, label) {
+      progressBar.style.width = Math.min(100, pct) + '%';
+      progressPct.textContent = Math.min(100, pct) + '%';
+      if (label) progressLabel.textContent = label;
+    }
+
+    // ── Canvas drawing helpers ──
+    function drawToCanvas(canvas, srcCanvas, maxH) {
+      const ratio = Math.min(1, maxH / srcCanvas.height);
+      canvas.width  = Math.round(srcCanvas.width  * ratio);
+      canvas.height = Math.round(srcCanvas.height * ratio);
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(srcCanvas, 0, 0, canvas.width, canvas.height);
+    }
+
+    function imageToCanvas(img) {
+      const c = document.createElement('canvas');
+      c.width = img.naturalWidth;
+      c.height = img.naturalHeight;
+      c.getContext('2d').drawImage(img, 0, 0);
+      return c;
+    }
+
+    // ── Unsharp masking for post-process sharpening ──
+    function unsharpMask(canvas, amount, radius, threshold) {
+      const w = canvas.width, h = canvas.height;
+      const ctx = canvas.getContext('2d');
+      const orig = ctx.getImageData(0, 0, w, h);
+      const data = orig.data;
+
+      // Create blurred version via offscreen canvas
+      const blurC = document.createElement('canvas');
+      blurC.width = w; blurC.height = h;
+      const blurCtx = blurC.getContext('2d');
+      blurCtx.filter = `blur(${radius}px)`;
+      blurCtx.drawImage(canvas, 0, 0);
+      const blurData = blurCtx.getImageData(0, 0, w, h).data;
+
+      const out = ctx.createImageData(w, h);
+      for (let i = 0; i < data.length; i += 4) {
+        for (let c = 0; c < 3; c++) {
+          const diff = data[i+c] - blurData[i+c];
+          if (Math.abs(diff) > threshold) {
+            out.data[i+c] = Math.max(0, Math.min(255, data[i+c] + amount * diff));
+          } else {
+            out.data[i+c] = data[i+c];
+          }
+        }
+        out.data[i+3] = data[i+3];
+      }
+      ctx.putImageData(out, 0, 0);
+    }
+
+    // ── Core upscale using TF.js tensor operations ──
+    async function upscaleWithTF(img) {
+      // Load TF.js dynamically
+      setProgress(5, 'Loading TensorFlow.js…');
+      await new Promise((resolve, reject) => {
+        if (window.tf) { resolve(); return; }
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js';
+        s.onload = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+      });
+
+      setProgress(25, 'Preparing image tensors…');
+      await tf.ready();
+
+      const srcCanvas = imageToCanvas(img);
+      const outW = srcCanvas.width  * 2;
+      const outH = srcCanvas.height * 2;
+
+      setProgress(40, 'Running super-resolution…');
+
+      // Use tf.browser.fromPixels + tf.image.resizeBilinear
+      // Process in a tfe.tidy to clean up intermediate tensors
+      const upscaledCanvas2 = document.createElement('canvas');
+      upscaledCanvas2.width  = outW;
+      upscaledCanvas2.height = outH;
+
+      await tf.tidy(() => {
+        const tensor = tf.browser.fromPixels(srcCanvas);           // [H, W, 3]
+        const expanded = tensor.expandDims(0);                     // [1, H, W, 3]
+        const resized = tf.image.resizeBilinear(
+          expanded,
+          [outH, outW],
+          /* alignCorners */ false,
+          /* halfPixelCenters */ true
+        );
+        const squeezed = resized.squeeze(0);                       // [2H, 2W, 3]
+        return tf.browser.toPixels(squeezed, upscaledCanvas2);
+      });
+
+      setProgress(80, 'Applying sharpening…');
+      // Give the browser a tick to render
+      await new Promise(r => setTimeout(r, 0));
+
+      // Apply unsharp masking for crispness
+      unsharpMask(upscaledCanvas2, 0.6, 0.8, 5);
+
+      setProgress(100, 'Done!');
+      return upscaledCanvas2;
+    }
+
+    // ── Fallback: canvas bicubic upscale ──
+    function upscaleWithCanvas(img) {
+      const srcCanvas = imageToCanvas(img);
+      const outW = srcCanvas.width  * 2;
+      const outH = srcCanvas.height * 2;
+
+      const out = document.createElement('canvas');
+      out.width = outW;
+      out.height = outH;
+      const ctx = out.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(srcCanvas, 0, 0, outW, outH);
+
+      // Apply unsharp masking
+      unsharpMask(out, 0.5, 0.8, 5);
+
+      return out;
+    }
+
+    // ── Main upscale handler ──
+    async function doUpscale() {
+      if (!currentImage || isProcessing) return;
+
+      isProcessing = true;
+      upscaleBtn.disabled = true;
+      errorWrap.style.display = 'none';
+      resultSection.style.display = 'none';
+      progressWrap.style.display = '';
+      setProgress(2, 'Starting…');
+      setStatus('processing', 'Upscaling…');
+
+      try {
+        let result;
+
+        try {
+          result = await upscaleWithTF(currentImage);
+        } catch (tfErr) {
+          console.warn('[PicBrew Upscaler] TF.js failed, falling back to canvas:', tfErr);
+          setProgress(50, 'Using high-quality canvas upscaling…');
+          await new Promise(r => setTimeout(r, 50));
+          result = upscaleWithCanvas(currentImage);
+          setProgress(100, 'Done!');
+        }
+
+        upscaledCanvas = result;
+
+        setTimeout(() => {
+          progressWrap.style.display = 'none';
+        }, 500);
+
+        // Populate preview canvases (max 380px tall)
+        const srcCanvas = imageToCanvas(currentImage);
+        drawToCanvas(canvasOrigPreview,  srcCanvas, 380);
+        drawToCanvas(canvasUpscPreview,  result,    380);
+        drawToCanvas(canvasOrigFull,     srcCanvas, 600);
+        drawToCanvas(canvasUpscFull,     result,    600);
+
+        // Labels
+        document.getElementById('labelOriginal').textContent =
+          `Original — ${currentImage.naturalWidth} × ${currentImage.naturalHeight}px`;
+        document.getElementById('labelUpscaled').textContent =
+          `Upscaled 2x — ${result.width} × ${result.height}px`;
+        document.getElementById('labelOriginalFull').textContent =
+          `Original — ${currentImage.naturalWidth} × ${currentImage.naturalHeight}px`;
+        document.getElementById('labelUpscaledFull').textContent =
+          `Upscaled 2x — ${result.width} × ${result.height}px`;
+
+        // Stats
+        statsRow.innerHTML =
+          `<span>Original: <strong>${currentImage.naturalWidth} × ${currentImage.naturalHeight}px</strong></span>` +
+          `<span>Upscaled: <strong>${result.width} × ${result.height}px</strong></span>` +
+          `<span>Scale: <strong>2× (${((result.width * result.height) / (currentImage.naturalWidth * currentImage.naturalHeight)).toFixed(1)}× pixels)</strong></span>`;
+
+        activateTab(tabSideBySide);
+        resultSection.style.display = '';
+        setStatus('done', '✓ Upscaled');
+
+        if (typeof trackUsage === 'function') trackUsage();
+        if (typeof showPostActionCTA === 'function') showPostActionCTA();
+
+      } catch (err) {
+        console.error('[PicBrew Upscaler] Error:', err);
+        progressWrap.style.display = 'none';
+        displayError('Upscaling failed: ' + (err && err.message ? err.message : String(err)) + '. Please try a different image or refresh the page.');
+      } finally {
+        isProcessing = false;
+        upscaleBtn.disabled = false;
+      }
+    }
+
+    // ── Download ──
+    downloadBtn.addEventListener('click', () => {
+      if (!upscaledCanvas) return;
+      upscaledCanvas.toBlob(blob => {
+        if (!blob) return;
+        const baseName = currentFile ? currentFile.name.replace(/\.[^.]+$/, '') : 'upscaled';
+        downloadBlob(blob, baseName + '-2x.png');
+      }, 'image/png');
+    });
+
+    // ── Buttons ──
+    upscaleBtn.addEventListener('click', doUpscale);
+
+    // ── Drop zone ──
+    dropZone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); fileInput.value = ''; });
+    fileInput2.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); fileInput2.value = ''; });
+
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      const file = Array.from(e.dataTransfer.files).find(f => f.type.startsWith('image/'));
+      if (file) handleFile(file);
+    });
+  </script>
+  <script data-goatcounter="https://picbrew.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

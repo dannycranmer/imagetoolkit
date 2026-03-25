@@ -85,6 +85,7 @@ function initMobileNav() {
       { href: 'background-remover.html', icon: '🧹', label: 'BG Remover' },
       { href: 'background-removal.html', icon: '🪄', label: 'AI Erase BG' },
       { href: 'ai-ocr.html', icon: '🔍', label: 'AI OCR' },
+      { href: 'ai-upscaler.html', icon: '🔭', label: 'AI Upscaler' },
       { href: 'denoise.html', icon: '✨', label: 'Denoise' },
     ]},
     { title: '🛠️ Create', items: [
