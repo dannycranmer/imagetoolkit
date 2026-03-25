@@ -3,18 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI OCR — Extract Text from Images Free Online — PicBrew</title>
-  <meta name="description" content="Extract text from any image instantly with AI OCR. Supports 14+ languages including English, Spanish, French, Chinese, Japanese. Runs 100% in your browser — private, free, no signup.">
-  <link rel="canonical" href="https://picbrew.org/ai-ocr.html">
-  <meta property="og:title" content="AI OCR — Extract Text from Images Free Online — PicBrew">
-  <meta property="og:description" content="Extract text from any image with AI OCR. 14+ languages. Runs 100% in your browser — private, free, no signup required.">
+  <title>AI Alt Text Generator — Auto-Generate Image Descriptions Free — PicBrew</title>
+  <meta name="description" content="Generate descriptive alt text for any image instantly with AI. Runs 100% in your browser using Transformers.js — private, free, no signup, no uploads.">
+  <link rel="canonical" href="https://picbrew.org/ai-alt-text.html">
+  <meta property="og:title" content="AI Alt Text Generator — Auto-Generate Image Descriptions Free — PicBrew">
+  <meta property="og:description" content="Generate descriptive alt text for images with AI. Runs 100% in your browser — private, free, no signup required.">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://picbrew.org/ai-ocr.html">
+  <meta property="og:url" content="https://picbrew.org/ai-alt-text.html">
   <meta property="og:image" content="https://picbrew.org/og-image.png">
   <meta property="og:site_name" content="PicBrew">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="AI OCR — Extract Text from Images Free Online — PicBrew">
-  <meta name="twitter:description" content="Extract text from any image with AI OCR. 14+ languages. Runs 100% in your browser — private, free, no signup required.">
+  <meta name="twitter:title" content="AI Alt Text Generator — Auto-Generate Image Descriptions Free — PicBrew">
+  <meta name="twitter:description" content="Generate descriptive alt text for images with AI. Runs 100% in your browser — private, free, no signup required.">
   <meta name="twitter:image" content="https://picbrew.org/og-image.png">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="css/style.css">
@@ -33,52 +33,25 @@
       text-transform: uppercase;
       margin-bottom: 0.6rem;
     }
-    .lang-row {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-    }
-    .lang-row label {
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: var(--text);
-      white-space: nowrap;
-    }
-    .lang-select {
-      padding: 0.45rem 0.75rem;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      background: var(--bg-card);
-      color: var(--text);
-      font-size: 0.9rem;
-      font-family: inherit;
-      cursor: pointer;
-      min-width: 200px;
-    }
-    .lang-select:focus {
-      outline: 2px solid var(--accent);
-      outline-offset: 2px;
-    }
-    .ocr-progress-wrap {
+    .model-progress-wrap {
       margin-top: 0.75rem;
     }
-    .ocr-progress-label {
+    .model-progress-label {
       font-size: 0.85rem;
       color: var(--text-muted);
       margin-bottom: 0.4rem;
       display: flex;
       justify-content: space-between;
     }
-    .ocr-progress-bar-wrap {
+    .model-progress-bar-wrap {
       height: 8px;
       background: var(--border);
       border-radius: 4px;
       overflow: hidden;
     }
-    .ocr-progress-bar-fill {
+    .model-progress-bar-fill {
       height: 100%;
-      background: linear-gradient(90deg, var(--accent), #10B981);
+      background: linear-gradient(90deg, #667eea, #764ba2);
       border-radius: 4px;
       transition: width 0.3s ease;
       width: 0%;
@@ -105,29 +78,23 @@
       gap: 0.5rem;
       flex-wrap: wrap;
     }
-    .ocr-textarea {
+    .alt-textarea {
       width: 100%;
-      min-height: 280px;
+      min-height: 100px;
       padding: 1rem;
       border: 1px solid var(--border);
       border-radius: var(--radius);
       background: var(--bg-card);
       color: var(--text);
-      font-size: 0.92rem;
+      font-size: 1rem;
       font-family: 'Georgia', 'Times New Roman', serif;
       line-height: 1.65;
       resize: vertical;
       box-sizing: border-box;
     }
-    .ocr-textarea:focus {
+    .alt-textarea:focus {
       outline: 2px solid var(--accent);
       outline-offset: 2px;
-    }
-    .char-count {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      margin-top: 0.4rem;
-      text-align: right;
     }
     .copy-toast {
       position: fixed;
@@ -152,7 +119,7 @@
     }
     .preview-thumb {
       max-width: 100%;
-      max-height: 300px;
+      max-height: 320px;
       border-radius: var(--radius);
       border: 1px solid var(--border);
       display: block;
@@ -169,8 +136,8 @@
       border-radius: 12px;
     }
     .status-badge.processing {
-      background: #eff6ff;
-      color: var(--accent);
+      background: #f3f0ff;
+      color: #764ba2;
     }
     .status-badge.done {
       background: #ecfdf5;
@@ -183,32 +150,37 @@
     .spinner-sm {
       width: 12px;
       height: 12px;
-      border: 2px solid rgba(59,130,246,0.3);
-      border-top-color: var(--accent);
+      border: 2px solid rgba(118,75,162,0.3);
+      border-top-color: #764ba2;
       border-radius: 50%;
       animation: spin 0.7s linear infinite;
       display: inline-block;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .confidence-row {
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
-      font-size: 0.85rem;
+    .model-note {
+      font-size: 0.82rem;
       color: var(--text-muted);
-      margin-top: 0.5rem;
+      margin-top: 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
     }
-    .confidence-row span strong {
-      color: var(--text);
+    .model-note svg {
+      flex-shrink: 0;
+    }
+    .alt-hint {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 0.35rem;
     }
   </style>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    "name": "AI OCR Text Extractor — PicBrew",
-    "description": "Extract text from any image using AI OCR powered by Tesseract.js. Supports 14+ languages. Runs 100% in your browser — private, free, no signup required.",
-    "url": "https://picbrew.org/ai-ocr.html",
+    "name": "AI Alt Text Generator — PicBrew",
+    "description": "Generate descriptive alt text for images using AI image captioning powered by Transformers.js. Runs 100% in your browser — private, free, no signup required.",
+    "url": "https://picbrew.org/ai-alt-text.html",
     "applicationCategory": "MultimediaApplication",
     "operatingSystem": "Any",
     "browserRequirements": "Requires JavaScript and WebAssembly",
@@ -252,9 +224,9 @@
         <li><a href="overlay.html" role="menuitem">Overlay</a></li>
         <li><a href="text.html" role="menuitem">Text</a></li>
         <li><a href="background-removal.html" role="menuitem">AI Erase BG</a></li>
-        <li><a href="ai-ocr.html" class="active" role="menuitem">AI OCR</a></li>
+        <li><a href="ai-ocr.html" role="menuitem">AI OCR</a></li>
         <li><a href="ai-upscaler.html" role="menuitem">AI Upscaler</a></li>
-        <li><a href="ai-alt-text.html" role="menuitem">AI Alt Text</a></li>
+        <li><a href="ai-alt-text.html" class="active" role="menuitem">AI Alt Text</a></li>
         <li><a href="https://buymeacoffee.com/dairylea" class="nav-coffee" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a></li>
       </ul>
     </div>
@@ -266,16 +238,16 @@
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
         AI-Powered
       </div>
-      <h1>AI OCR — Extract Text from Images</h1>
-      <p class="tool-desc">Upload a photo, screenshot, or scanned document and instantly extract all the text. Powered by Tesseract.js — runs 100% in your browser. Your images never leave your device.</p>
+      <h1>AI Alt Text Generator</h1>
+      <p class="tool-desc">Upload any image and instantly generate descriptive alt text using AI image captioning. Perfect for accessibility, SEO, and social media. Powered by Transformers.js — runs 100% in your browser. Your images never leave your device.</p>
     </div>
 
     <!-- Upload zone -->
     <div id="uploadSection">
       <div class="drop-zone" id="dropZone">
-        <div class="drop-zone-icon">🔍</div>
+        <div class="drop-zone-icon">🏷️</div>
         <p class="drop-zone-text">Drop an image here or click to upload</p>
-        <p class="drop-zone-sub">Photos · Screenshots · Scanned documents · JPEG · PNG · WebP · GIF · BMP</p>
+        <p class="drop-zone-sub">JPEG · PNG · WebP · GIF · BMP — up to 20 MB</p>
         <input type="file" id="fileInput" accept="image/*" style="display:none">
       </div>
     </div>
@@ -290,29 +262,8 @@
           <span id="fileSize" style="font-size:0.85rem;color:var(--text-muted);flex-shrink:0;"></span>
           <span id="statusBadge" style="display:none"></span>
         </div>
-        <div class="lang-row">
-          <label for="langSelect">Language:</label>
-          <select id="langSelect" class="lang-select">
-            <option value="eng">English</option>
-            <option value="spa">Spanish</option>
-            <option value="fra">French</option>
-            <option value="deu">German</option>
-            <option value="ita">Italian</option>
-            <option value="por">Portuguese</option>
-            <option value="nld">Dutch</option>
-            <option value="pol">Polish</option>
-            <option value="tur">Turkish</option>
-            <option value="rus">Russian</option>
-            <option value="ara">Arabic</option>
-            <option value="hin">Hindi</option>
-            <option value="chi_sim">Chinese (Simplified)</option>
-            <option value="chi_tra">Chinese (Traditional)</option>
-            <option value="jpn">Japanese</option>
-            <option value="kor">Korean</option>
-          </select>
-        </div>
-        <button class="btn btn-primary" id="extractBtn">
-          🔍 Extract Text
+        <button class="btn btn-primary" id="generateBtn" style="background:linear-gradient(135deg,#667eea,#764ba2);border-color:transparent">
+          ✨ Generate Alt Text
         </button>
         <label class="btn btn-secondary" style="cursor:pointer;display:inline-flex;align-items:center;gap:0.4rem;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-1px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -327,14 +278,18 @@
       </div>
 
       <!-- Progress -->
-      <div id="progressWrap" style="display:none" class="ocr-progress-wrap">
-        <div class="ocr-progress-label">
-          <span id="progressLabel">Loading OCR engine…</span>
+      <div id="progressWrap" style="display:none" class="model-progress-wrap">
+        <div class="model-progress-label">
+          <span id="progressLabel">Loading AI model…</span>
           <span id="progressPct">0%</span>
         </div>
-        <div class="ocr-progress-bar-wrap">
-          <div class="ocr-progress-bar-fill" id="progressBar"></div>
+        <div class="model-progress-bar-wrap">
+          <div class="model-progress-bar-fill" id="progressBar"></div>
         </div>
+        <p class="model-note">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span id="progressNote">First run downloads the AI model (~85 MB). Cached for all future uses.</span>
+        </p>
       </div>
 
       <!-- Error -->
@@ -345,23 +300,18 @@
       <!-- Results -->
       <div id="resultSection" class="result-section" style="display:none">
         <div class="result-header">
-          <h3>Extracted Text</h3>
+          <h3>Generated Alt Text</h3>
           <div class="result-actions">
             <button class="btn btn-secondary" id="copyBtn">
-              📋 Copy Text
+              📋 Copy
             </button>
-            <button class="btn btn-cta" id="downloadBtn">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-1px;margin-right:3px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Download .txt
+            <button class="btn btn-primary" id="regenerateBtn" style="background:linear-gradient(135deg,#667eea,#764ba2);border-color:transparent">
+              🔄 Regenerate
             </button>
           </div>
         </div>
-        <textarea id="ocrResult" class="ocr-textarea" spellcheck="false" placeholder="Extracted text will appear here…" readonly></textarea>
-        <div class="confidence-row">
-          <span id="charCountInfo"></span>
-          <span id="confidenceInfo"></span>
-          <span id="wordCountInfo"></span>
-        </div>
+        <textarea id="altResult" class="alt-textarea" spellcheck="true" placeholder="Generated alt text will appear here…"></textarea>
+        <p class="alt-hint">You can edit the generated text above before copying it.</p>
       </div>
 
     </div><!-- /toolSection -->
@@ -371,69 +321,69 @@
       <h2 class="section-title">How it works</h2>
       <div class="trust-grid">
         <div class="trust-item">
-          <div class="icon">🔍</div>
-          <h3>Tesseract OCR Engine</h3>
-          <p>Powered by Tesseract.js — the world's most popular open-source OCR engine, compiled to WebAssembly so it runs entirely in your browser.</p>
+          <div class="icon">🧠</div>
+          <h3>Vision-Language AI</h3>
+          <p>Uses a ViT-GPT2 image captioning model that understands image content and generates natural language descriptions.</p>
         </div>
         <div class="trust-item">
           <div class="icon">🔒</div>
           <h3>100% Private</h3>
-          <p>Your images are processed locally on your device. Nothing is ever uploaded to any server. Perfect for sensitive documents.</p>
+          <p>The AI model runs entirely in your browser via WebAssembly. Your images are never uploaded anywhere.</p>
         </div>
         <div class="trust-item">
-          <div class="icon">🌍</div>
-          <h3>14+ Languages</h3>
-          <p>Supports English, Spanish, French, German, Italian, Portuguese, Russian, Arabic, Chinese, Japanese, Korean, Hindi, and more.</p>
+          <div class="icon">♿</div>
+          <h3>Accessibility Ready</h3>
+          <p>Good alt text makes your content accessible to screen readers and helps people with visual impairments understand images.</p>
         </div>
         <div class="trust-item">
-          <div class="icon">📋</div>
-          <h3>Copy or Download</h3>
-          <p>Copy the extracted text to your clipboard with one click, or download it as a .txt file for later use.</p>
+          <div class="icon">📈</div>
+          <h3>SEO Benefit</h3>
+          <p>Descriptive alt text helps search engines index your images, improving your site's visibility in image search results.</p>
         </div>
       </div>
     </section>
 
     <section style="margin-top:1.5rem">
-      <h2 class="section-title">What can I extract text from?</h2>
+      <h2 class="section-title">When to use alt text</h2>
       <div class="trust-grid" style="grid-template-columns: repeat(auto-fill, minmax(160px, 1fr))">
         <div class="trust-item" style="padding:1.25rem">
-          <div class="icon" style="font-size:1.75rem">📸</div>
-          <h3 style="font-size:0.95rem">Photos of signs</h3>
-          <p style="font-size:0.82rem">Street signs, restaurant menus, product labels</p>
+          <div class="icon" style="font-size:1.75rem">🌐</div>
+          <h3 style="font-size:0.95rem">Websites &amp; blogs</h3>
+          <p style="font-size:0.82rem">Make every image on your site accessible and SEO-friendly</p>
         </div>
         <div class="trust-item" style="padding:1.25rem">
-          <div class="icon" style="font-size:1.75rem">🖥️</div>
-          <h3 style="font-size:0.95rem">Screenshots</h3>
-          <p style="font-size:0.82rem">Code, error messages, chat logs, articles</p>
+          <div class="icon" style="font-size:1.75rem">📱</div>
+          <h3 style="font-size:0.95rem">Social media</h3>
+          <p style="font-size:0.82rem">Twitter, Instagram, LinkedIn all support image alt text</p>
+        </div>
+        <div class="trust-item" style="padding:1.25rem">
+          <div class="icon" style="font-size:1.75rem">📧</div>
+          <h3 style="font-size:0.95rem">Email campaigns</h3>
+          <p style="font-size:0.82rem">Alt text shows when images are blocked in email clients</p>
+        </div>
+        <div class="trust-item" style="padding:1.25rem">
+          <div class="icon" style="font-size:1.75rem">🛒</div>
+          <h3 style="font-size:0.95rem">E-commerce</h3>
+          <p style="font-size:0.82rem">Product image descriptions improve search rankings and accessibility</p>
         </div>
         <div class="trust-item" style="padding:1.25rem">
           <div class="icon" style="font-size:1.75rem">📄</div>
-          <h3 style="font-size:0.95rem">Scanned docs</h3>
-          <p style="font-size:0.82rem">Contracts, receipts, invoices, letters</p>
+          <h3 style="font-size:0.95rem">Documents</h3>
+          <p style="font-size:0.82rem">PDFs, presentations, and Word docs all benefit from image descriptions</p>
         </div>
         <div class="trust-item" style="padding:1.25rem">
-          <div class="icon" style="font-size:1.75rem">📚</div>
-          <h3 style="font-size:0.95rem">Book pages</h3>
-          <p style="font-size:0.82rem">Photographed pages from books and magazines</p>
-        </div>
-        <div class="trust-item" style="padding:1.25rem">
-          <div class="icon" style="font-size:1.75rem">🪧</div>
-          <h3 style="font-size:0.95rem">Whiteboards</h3>
-          <p style="font-size:0.82rem">Meeting notes, diagrams with text labels</p>
-        </div>
-        <div class="trust-item" style="padding:1.25rem">
-          <div class="icon" style="font-size:1.75rem">🧾</div>
-          <h3 style="font-size:0.95rem">Receipts</h3>
-          <p style="font-size:0.82rem">Expense receipts, tickets, utility bills</p>
+          <div class="icon" style="font-size:1.75rem">🎨</div>
+          <h3 style="font-size:0.95rem">Portfolios</h3>
+          <p style="font-size:0.82rem">Make your creative work discoverable by search engines</p>
         </div>
       </div>
     </section>
 
     <section style="margin-top:1.5rem;text-align:center">
       <p style="color:var(--text-muted);font-size:0.9rem">
-        Also try: <a href="background-removal.html">AI Background Removal</a>
-        &nbsp;|&nbsp; <a href="compress.html">Image Compressor</a>
-        &nbsp;|&nbsp; <a href="convert.html">Image Converter</a>
+        Also try: <a href="ai-ocr.html">AI OCR — Extract Text</a>
+        &nbsp;|&nbsp; <a href="background-removal.html">AI Background Removal</a>
+        &nbsp;|&nbsp; <a href="ai-upscaler.html">AI Image Upscaler</a>
       </p>
     </section>
 
@@ -459,8 +409,7 @@
   <div class="copy-toast" id="copyToast">✓ Copied to clipboard!</div>
 
   <script src="js/common.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <script>
+  <script type="module">
     // ── DOM refs ──
     const uploadSection  = document.getElementById('uploadSection');
     const toolSection    = document.getElementById('toolSection');
@@ -470,28 +419,26 @@
     const fileNameEl     = document.getElementById('fileName');
     const fileSizeEl     = document.getElementById('fileSize');
     const statusBadge    = document.getElementById('statusBadge');
-    const langSelect     = document.getElementById('langSelect');
-    const extractBtn     = document.getElementById('extractBtn');
+    const generateBtn    = document.getElementById('generateBtn');
+    const regenerateBtn  = document.getElementById('regenerateBtn');
     const previewImg     = document.getElementById('previewImg');
     const progressWrap   = document.getElementById('progressWrap');
     const progressLabel  = document.getElementById('progressLabel');
     const progressPct    = document.getElementById('progressPct');
     const progressBar    = document.getElementById('progressBar');
+    const progressNote   = document.getElementById('progressNote');
     const errorWrap      = document.getElementById('errorWrap');
     const errorMsg       = document.getElementById('errorMsg');
     const resultSection  = document.getElementById('resultSection');
-    const ocrResult      = document.getElementById('ocrResult');
+    const altResult      = document.getElementById('altResult');
     const copyBtn        = document.getElementById('copyBtn');
-    const downloadBtn    = document.getElementById('downloadBtn');
     const copyToast      = document.getElementById('copyToast');
-    const charCountInfo  = document.getElementById('charCountInfo');
-    const confidenceInfo = document.getElementById('confidenceInfo');
-    const wordCountInfo  = document.getElementById('wordCountInfo');
 
-    let currentFile = null;
-    let currentWorker = null;
-    let isProcessing = false;
-    let currentObjUrl = null;
+    let currentFile      = null;
+    let isProcessing     = false;
+    let currentObjUrl    = null;
+    let captionerFn      = null;   // cached pipeline after first load
+    let modelLoaded      = false;
 
     // ── File handling ──
     function handleFile(file) {
@@ -500,14 +447,13 @@
         displayError("This doesn't appear to be a valid image file. Please upload a JPEG, PNG, WebP, GIF, or BMP.");
         return;
       }
-      if (file.size > 50 * 1024 * 1024) {
-        displayError("Image too large (max 50 MB). Please use a smaller file.");
+      if (file.size > 20 * 1024 * 1024) {
+        displayError("Image too large (max 20 MB). Please use a smaller file.");
         return;
       }
 
       currentFile = file;
 
-      // Reset UI
       if (currentObjUrl) URL.revokeObjectURL(currentObjUrl);
       currentObjUrl = URL.createObjectURL(file);
 
@@ -521,9 +467,9 @@
       errorWrap.style.display = 'none';
       resultSection.style.display = 'none';
       setStatus('');
-      ocrResult.value = '';
+      altResult.value = '';
       progressBar.style.width = '0%';
-      extractBtn.disabled = false;
+      generateBtn.disabled = false;
     }
 
     // ── Status badge ──
@@ -545,144 +491,193 @@
       setStatus('error', '✗ Error');
     }
 
-    // ── OCR extraction ──
-    async function doExtract() {
+    // ── Generate alt text ──
+    async function doGenerate() {
       if (!currentFile || isProcessing) return;
-      if (typeof Tesseract === 'undefined') {
-        displayError('Tesseract.js failed to load. Please check your internet connection and refresh the page.');
-        return;
-      }
 
       isProcessing = true;
-      extractBtn.disabled = true;
+      generateBtn.disabled = true;
+      if (regenerateBtn) regenerateBtn.disabled = true;
       errorWrap.style.display = 'none';
       resultSection.style.display = 'none';
       progressWrap.style.display = '';
       progressBar.style.width = '5%';
-      progressLabel.textContent = 'Loading OCR engine…';
+      progressLabel.textContent = 'Initializing AI…';
       progressPct.textContent = '5%';
       setStatus('processing', 'Processing…');
 
-      // Terminate previous worker if any
-      if (currentWorker) {
-        try { await currentWorker.terminate(); } catch (e) {}
-        currentWorker = null;
-      }
-
-      const lang = langSelect.value;
-
       try {
-        currentWorker = await Tesseract.createWorker(lang, 1, {
-          logger: m => {
-            let pct = 0;
-            if (m.status === 'loading tesseract core') {
-              pct = Math.round(5 + m.progress * 15);
-              progressLabel.textContent = 'Loading OCR core…';
-            } else if (m.status === 'initializing tesseract') {
-              pct = Math.round(20 + m.progress * 10);
-              progressLabel.textContent = 'Initializing OCR engine…';
-            } else if (m.status === 'loading language traineddata') {
-              pct = Math.round(30 + m.progress * 40);
-              progressLabel.textContent = 'Loading ' + getLangName(lang) + ' language data…';
-            } else if (m.status === 'initializing api') {
-              pct = Math.round(70 + m.progress * 10);
-              progressLabel.textContent = 'Initializing…';
-            } else if (m.status === 'recognizing text') {
-              pct = Math.round(80 + m.progress * 18);
-              progressLabel.textContent = 'Recognizing text…';
-            }
-            if (pct > 0) {
-              progressBar.style.width = Math.min(98, pct) + '%';
-              progressPct.textContent = Math.min(98, pct) + '%';
+        // Load Transformers.js lazily — dynamic import so event listeners always register
+        if (!captionerFn) {
+          progressLabel.textContent = 'Loading Transformers.js…';
+          progressNote.textContent = modelLoaded
+            ? 'Running AI inference…'
+            : 'First run downloads the AI model (~85 MB). Cached for all future uses.';
+
+          let pipelineFn, envObj;
+          try {
+            // Try @xenova/transformers first
+            const mod = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
+            pipelineFn = mod.pipeline;
+            envObj = mod.env;
+          } catch (importErr) {
+            // Fallback to a different version
+            try {
+              const mod = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.6.2');
+              pipelineFn = mod.pipeline;
+              envObj = mod.env;
+            } catch (e2) {
+              throw new Error('Could not load Transformers.js from CDN. Please check your internet connection.');
             }
           }
-        });
 
-        const { data } = await currentWorker.recognize(currentFile);
-        await currentWorker.terminate();
-        currentWorker = null;
+          if (envObj) {
+            envObj.allowLocalModels = false;
+            envObj.useBrowserCache = true;
+          }
 
-        const text = data.text.trim();
-        const confidence = Math.round(data.confidence);
+          progressLabel.textContent = 'Loading AI model (first run: ~85 MB)…';
+          progressBar.style.width = '10%';
+          progressPct.textContent = '10%';
+
+          let lastProgressPct = 10;
+
+          // Try primary model, fall back to blip if vit-gpt2 fails
+          const modelsToTry = [
+            'Xenova/vit-gpt2-image-captioning',
+            'Xenova/blip-image-captioning-base'
+          ];
+
+          let loaded = false;
+          let lastErr = null;
+
+          for (const modelId of modelsToTry) {
+            try {
+              progressLabel.textContent = `Loading ${modelId.split('/')[1]}…`;
+              captionerFn = await pipelineFn('image-to-text', modelId, {
+                progress_callback: (info) => {
+                  if (info.status === 'progress' && info.total > 0) {
+                    const filePct = info.progress || 0;
+                    // Map overall progress from 10% → 90%
+                    const overall = Math.round(10 + filePct * 0.8);
+                    if (overall > lastProgressPct) {
+                      lastProgressPct = overall;
+                      progressBar.style.width = Math.min(90, overall) + '%';
+                      progressPct.textContent = Math.min(90, overall) + '%';
+                    }
+                    const loadedMB = ((info.loaded || 0) / 1048576).toFixed(1);
+                    const totalMB  = ((info.total  || 0) / 1048576).toFixed(1);
+                    progressNote.textContent = `Downloading model: ${loadedMB} MB / ${totalMB} MB`;
+                  } else if (info.status === 'done') {
+                    progressNote.textContent = 'Model loaded — cached for next visit';
+                  } else if (info.status === 'ready') {
+                    progressNote.textContent = 'AI model ready';
+                  }
+                }
+              });
+              modelLoaded = true;
+              loaded = true;
+              break;
+            } catch (modelErr) {
+              lastErr = modelErr;
+              captionerFn = null;
+              console.warn('[PicBrew AltText] Model', modelId, 'failed:', modelErr);
+            }
+          }
+
+          if (!loaded) {
+            throw lastErr || new Error('All image captioning models failed to load.');
+          }
+        }
+
+        // Run inference
+        progressBar.style.width = '92%';
+        progressPct.textContent = '92%';
+        progressLabel.textContent = 'Generating description…';
+        progressNote.textContent = 'Running AI inference on your image…';
+
+        // Pass a blob URL to the captioner
+        const imgUrl = URL.createObjectURL(currentFile);
+        let output;
+        try {
+          output = await captionerFn(imgUrl, { max_new_tokens: 60 });
+        } finally {
+          URL.revokeObjectURL(imgUrl);
+        }
 
         progressBar.style.width = '100%';
         progressPct.textContent = '100%';
         progressLabel.textContent = 'Done!';
-
         setTimeout(() => { progressWrap.style.display = 'none'; }, 600);
 
-        ocrResult.value = text;
-        ocrResult.removeAttribute('readonly');
+        // Extract caption text
+        let caption = '';
+        if (Array.isArray(output) && output.length > 0) {
+          caption = (output[0].generated_text || '').trim();
+        } else if (output && output.generated_text) {
+          caption = output.generated_text.trim();
+        }
 
-        const charCount = text.length;
-        const wordCount = text ? text.trim().split(/\s+/).filter(w => w.length > 0).length : 0;
+        if (!caption) {
+          displayError('The model returned an empty description. Please try a different image.');
+          isProcessing = false;
+          generateBtn.disabled = false;
+          if (regenerateBtn) regenerateBtn.disabled = false;
+          return;
+        }
 
-        charCountInfo.innerHTML = '<strong>' + charCount.toLocaleString() + '</strong> characters';
-        wordCountInfo.innerHTML = '<strong>' + wordCount.toLocaleString() + '</strong> words';
-        confidenceInfo.innerHTML = 'Confidence: <strong>' + confidence + '%</strong>';
+        // Capitalise first letter
+        caption = caption.charAt(0).toUpperCase() + caption.slice(1);
+        // Ensure it ends with a period
+        if (!/[.!?]$/.test(caption)) caption += '.';
 
+        altResult.value = caption;
         resultSection.style.display = '';
-        setStatus('done', '✓ Text extracted');
+        setStatus('done', '✓ Alt text generated');
 
         if (typeof trackUsage === 'function') trackUsage();
         if (typeof showPostActionCTA === 'function') showPostActionCTA();
 
       } catch (err) {
-        console.error('[PicBrew OCR] Error:', err);
+        console.error('[PicBrew AltText] Error:', err);
         progressWrap.style.display = 'none';
         const msg = (err && err.message) ? err.message : String(err);
         if (msg.includes('WebAssembly') || msg.includes('wasm')) {
-          displayError('Your browser does not support WebAssembly, which is required for OCR. Please use Chrome, Firefox, or Edge.');
-        } else if (msg.includes('fetch') || msg.includes('network') || msg.includes('Failed to load')) {
-          displayError('Could not load the OCR language data. Check your internet connection and try again.');
+          displayError('Your browser does not support WebAssembly, which is required for AI captioning. Please use Chrome, Firefox, or Edge.');
+        } else if (msg.includes('fetch') || msg.includes('network') || msg.includes('Failed to fetch') || msg.includes('Load failed')) {
+          displayError('Could not download the AI model. Please check your internet connection and try again.');
+        } else if (msg.includes('CDN') || msg.includes('Transformers')) {
+          displayError(msg);
         } else {
-          displayError('OCR failed: ' + msg + '. Please try a different image or refresh the page.');
+          displayError('Alt text generation failed. Please try a different image or refresh the page.');
         }
+        // Reset captioner so it retries on next click
+        captionerFn = null;
       } finally {
         isProcessing = false;
-        extractBtn.disabled = false;
+        generateBtn.disabled = false;
+        if (regenerateBtn) regenerateBtn.disabled = false;
       }
-    }
-
-    // ── Language name lookup ──
-    function getLangName(code) {
-      const names = {
-        eng: 'English', spa: 'Spanish', fra: 'French', deu: 'German',
-        ita: 'Italian', por: 'Portuguese', nld: 'Dutch', pol: 'Polish',
-        tur: 'Turkish', rus: 'Russian', ara: 'Arabic', hin: 'Hindi',
-        chi_sim: 'Chinese (Simplified)', chi_tra: 'Chinese (Traditional)',
-        jpn: 'Japanese', kor: 'Korean'
-      };
-      return names[code] || code;
     }
 
     // ── Copy to clipboard ──
     copyBtn.addEventListener('click', () => {
-      const text = ocrResult.value;
+      const text = altResult.value;
       if (!text) return;
       navigator.clipboard.writeText(text).then(() => {
         copyToast.classList.add('show');
         setTimeout(() => copyToast.classList.remove('show'), 2200);
       }).catch(() => {
-        // Fallback for older browsers
-        ocrResult.select();
+        altResult.select();
         document.execCommand('copy');
         copyToast.classList.add('show');
         setTimeout(() => copyToast.classList.remove('show'), 2200);
       });
     });
 
-    // ── Download as .txt ──
-    downloadBtn.addEventListener('click', () => {
-      const text = ocrResult.value;
-      if (!text) return;
-      const baseName = currentFile ? currentFile.name.replace(/\.[^.]+$/, '') : 'extracted-text';
-      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-      downloadBlob(blob, baseName + '.txt');
-    });
-
-    // ── Extract button ──
-    extractBtn.addEventListener('click', doExtract);
+    // ── Generate & Regenerate buttons ──
+    generateBtn.addEventListener('click', doGenerate);
+    regenerateBtn.addEventListener('click', doGenerate);
 
     // ── Drop zone ──
     dropZone.addEventListener('click', () => fileInput.click());
