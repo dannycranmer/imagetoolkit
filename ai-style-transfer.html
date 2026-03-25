@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Style Transfer — Apply Artistic Styles to Images Free — PicBrew</title>
+  <meta name="description" content="Transform your photos into stunning artwork with AI style transfer. Apply Van Gogh, watercolor, oil painting, and more styles. Runs 100% in your browser — private, free.">
+  <link rel="canonical" href="https://picbrew.org/ai-style-transfer.html">
+  <meta property="og:title" content="AI Style Transfer — Apply Artistic Styles to Images Free — PicBrew">
+  <meta property="og:description" content="Transform photos into artwork with AI style transfer. Apply Van Gogh, watercolor, oil painting and 8 artistic styles. Runs 100% in your browser — private, free.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://picbrew.org/ai-style-transfer.html">
+  <meta property="og:image" content="https://picbrew.org/og-image.png">
+  <meta property="og:site_name" content="PicBrew">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="AI Style Transfer — Apply Artistic Styles to Images Free — PicBrew">
+  <meta name="twitter:description" content="Transform photos into artwork with AI style transfer. 8 artistic styles including Van Gogh, watercolor, oil painting. Free &amp; private.">
+  <meta name="twitter:image" content="https://picbrew.org/og-image.png">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .ai-badge { display: inline-flex; align-items: center; gap: 0.4rem; background: linear-gradient(135deg, #667eea, #764ba2); color: white; font-size: 0.72rem; font-weight: 700; padding: 0.28rem 0.75rem; border-radius: 20px; letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 0.6rem; }
+    .model-progress-wrap { margin-top: 0.75rem; }
+    .model-progress-label { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem; display: flex; justify-content: space-between; }
+    .model-progress-bar-wrap { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+    .model-progress-bar-fill { height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); border-radius: 4px; transition: width 0.3s ease; width: 0%; }
+    .copy-toast { position: fixed; top: 80px; right: 24px; background: #10B981; color: white; padding: 10px 20px; border-radius: 8px; font-size: 0.9rem; font-weight: 600; z-index: 9999; box-shadow: 0 4px 16px rgba(0,0,0,0.15); opacity: 0; transform: translateY(-8px); transition: opacity 0.25s ease, transform 0.25s ease; pointer-events: none; }
+    .copy-toast.show { opacity: 1; transform: translateY(0); }
+    .preview-thumb { max-width: 100%; max-height: 320px; border-radius: var(--radius); border: 1px solid var(--border); display: block; margin: 0.75rem 0; object-fit: contain; }
+    .status-badge { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.82rem; font-weight: 600; padding: 0.25rem 0.65rem; border-radius: 12px; }
+    .status-badge.processing { background: #f3f0ff; color: #764ba2; }
+    .status-badge.done { background: #ecfdf5; color: #10B981; }
+    .status-badge.error { background: #fef2f2; color: #ef4444; }
+    .spinner-sm { width: 12px; height: 12px; border: 2px solid rgba(118,75,162,0.3); border-top-color: #764ba2; border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .model-note { font-size: 0.82rem; color: var(--text-muted); margin-top: 0.4rem; display: flex; align-items: center; gap: 0.4rem; }
+
+    .style-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 0.75rem; margin: 1rem 0; }
+    .style-card { border: 2px solid var(--border); border-radius: 10px; padding: 0.75rem 0.5rem; text-align: center; cursor: pointer; transition: all 0.2s; background: var(--bg-card); user-select: none; }
+    .style-card:hover { border-color: var(--accent); }
+    .style-card.selected { border-color: #764ba2; background: #f3f0ff; }
+    .style-card-icon { font-size: 1.8rem; display: block; margin-bottom: 0.3rem; }
+    .style-card-name { font-size: 0.8rem; font-weight: 600; color: var(--text); }
+
+    .compare-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem; }
+    @media (max-width: 560px) { .compare-wrap { grid-template-columns: 1fr; } }
+    .compare-panel { text-align: center; }
+    .compare-label { font-size: 0.82rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+    .compare-canvas { max-width: 100%; border-radius: var(--radius); border: 1px solid var(--border); display: block; margin: 0 auto; }
+
+    .apply-btn { background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: var(--radius); padding: 0.7rem 1.5rem; font-size: 1rem; font-weight: 700; cursor: pointer; transition: opacity 0.2s; display: inline-flex; align-items: center; gap: 0.5rem; }
+    .apply-btn:hover:not(:disabled) { opacity: 0.88; }
+    .apply-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .download-btn { background: #10B981; color: white; border: none; border-radius: var(--radius); padding: 0.7rem 1.5rem; font-size: 1rem; font-weight: 700; cursor: pointer; transition: opacity 0.2s; display: inline-flex; align-items: center; gap: 0.5rem; }
+    .download-btn:hover:not(:disabled) { opacity: 0.88; }
+    .download-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .action-row { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; margin-top: 1rem; }
+  </style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "AI Style Transfer — PicBrew",
+    "description": "Transform photos into artwork with AI style transfer. Apply Van Gogh, watercolor, oil painting, and 8 artistic styles. Runs 100% in your browser — private, free, no signup.",
+    "url": "https://picbrew.org/ai-style-transfer.html",
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "Any",
+    "browserRequirements": "Requires JavaScript",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "creator": { "@type": "Organization", "name": "PicBrew", "url": "https://picbrew.org" }
+  }
+  </script>
+</head>
+<body>
+
+  <nav class="nav" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">Pic<span>Brew</span></a>
+      <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">&#9776;</button>
+      <ul class="nav-links" role="menubar">
+        <li><a href="index.html" role="menuitem">Home</a></li>
+        <li><a href="background-removal.html" role="menuitem">AI Erase BG</a></li>
+        <li><a href="ai-ocr.html" role="menuitem">AI OCR</a></li>
+        <li><a href="ai-upscaler.html" role="menuitem">AI Upscaler</a></li>
+        <li><a href="ai-alt-text.html" role="menuitem">AI Alt Text</a></li>
+        <li><a href="ai-style-transfer.html" class="active" role="menuitem">AI Style</a></li>
+        <li><a href="ai-face-blur.html" role="menuitem">AI Face Blur</a></li>
+        <li><a href="ai-colorize.html" role="menuitem">AI Colorize</a></li>
+        <li><a href="ai-object-detect.html" role="menuitem">AI Objects</a></li>
+        <li><a href="compress.html" role="menuitem">Compress</a></li>
+        <li><a href="resize.html" role="menuitem">Resize</a></li>
+        <li><a href="convert.html" role="menuitem">Convert</a></li>
+        <li><a href="crop.html" role="menuitem">Crop</a></li>
+        <li><a href="watermark.html" role="menuitem">Watermark</a></li>
+        <li><a href="flip-rotate.html" role="menuitem">Flip &amp; Rotate</a></li>
+        <li><a href="background-remover.html" role="menuitem">BG Remover</a></li>
+        <li><a href="filters.html" role="menuitem">Filters</a></li>
+        <li><a href="palette.html" role="menuitem">Palette</a></li>
+        <li><a href="meme.html" role="menuitem">Meme</a></li>
+        <li><a href="base64.html" role="menuitem">Base64</a></li>
+        <li><a href="collage.html" role="menuitem">Collage</a></li>
+        <li><a href="denoise.html" role="menuitem">Denoise</a></li>
+        <li><a href="mockup.html" role="menuitem">Mockup</a></li>
+        <li><a href="image-to-pdf.html" role="menuitem">To PDF</a></li>
+        <li><a href="qrcode.html" role="menuitem">QR Code</a></li>
+        <li><a href="overlay.html" role="menuitem">Overlay</a></li>
+        <li><a href="text.html" role="menuitem">Text</a></li>
+        <li><a href="https://buymeacoffee.com/dairylea" class="nav-coffee" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="tool-header">
+      <div class="ai-badge">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        AI-Powered
+      </div>
+      <h1>AI Style Transfer</h1>
+      <p class="tool-desc">Transform any photo into stunning artwork using AI-powered artistic algorithms. Choose from 8 unique styles including Van Gogh's swirling Starry Night, delicate watercolors, rich oil painting, pencil sketch, comic book pop art, mosaic pointillism, impressionist dabs, and vintage film. All processing runs entirely in your browser — your images never leave your device.</p>
+    </div>
+
+    <!-- Upload zone -->
+    <div id="uploadSection">
+      <div class="drop-zone" id="dropZone">
+        <div class="drop-zone-icon">🎨</div>
+        <p class="drop-zone-text">Drop an image here or click to upload</p>
+        <p class="drop-zone-sub">JPEG · PNG · WebP · GIF · BMP — up to 20 MB</p>
+        <input type="file" id="fileInput" accept="image/*" style="display:none">
+      </div>
+    </div>
+
+    <!-- Tool UI -->
+    <div id="toolSection" style="display:none">
+
+      <!-- Controls bar -->
+      <div class="controls" style="flex-wrap:wrap;gap:0.75rem">
+        <div style="display:flex;align-items:center;gap:0.75rem;flex:1;min-width:0;flex-wrap:wrap">
+          <span id="fileName" style="font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px;"></span>
+          <span id="fileSize" style="font-size:0.85rem;color:var(--text-muted);flex-shrink:0;"></span>
+          <span id="statusBadge" style="display:none"></span>
+        </div>
+        <label class="btn btn-secondary" style="cursor:pointer;display:inline-flex;align-items:center;gap:0.4rem;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-1px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          New Image
+          <input type="file" id="fileInput2" accept="image/*" style="display:none">
+        </label>
+      </div>
+
+      <!-- Style picker -->
+      <div style="margin-top:1rem">
+        <p style="font-weight:600;color:var(--text);margin-bottom:0.25rem">Choose a style:</p>
+        <div class="style-grid" id="styleGrid">
+          <div class="style-card selected" data-style="starrynight">
+            <span class="style-card-icon">🌌</span>
+            <span class="style-card-name">Starry Night</span>
+          </div>
+          <div class="style-card" data-style="watercolor">
+            <span class="style-card-icon">🎨</span>
+            <span class="style-card-name">Watercolor</span>
+          </div>
+          <div class="style-card" data-style="oilpainting">
+            <span class="style-card-icon">🖌️</span>
+            <span class="style-card-name">Oil Painting</span>
+          </div>
+          <div class="style-card" data-style="sketch">
+            <span class="style-card-icon">✏️</span>
+            <span class="style-card-name">Pencil Sketch</span>
+          </div>
+          <div class="style-card" data-style="comic">
+            <span class="style-card-icon">🎭</span>
+            <span class="style-card-name">Comic Book</span>
+          </div>
+          <div class="style-card" data-style="mosaic">
+            <span class="style-card-icon">🎨</span>
+            <span class="style-card-name">Mosaic</span>
+          </div>
+          <div class="style-card" data-style="impressionist">
+            <span class="style-card-icon">🌅</span>
+            <span class="style-card-name">Impressionist</span>
+          </div>
+          <div class="style-card" data-style="vintage">
+            <span class="style-card-icon">📷</span>
+            <span class="style-card-name">Vintage</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Apply button -->
+      <div class="action-row">
+        <button class="apply-btn" id="applyBtn">
+          ✨ Apply Style
+        </button>
+        <button class="download-btn" id="downloadBtn" style="display:none">
+          ⬇ Download PNG
+        </button>
+      </div>
+
+      <!-- Progress -->
+      <div id="progressWrap" style="display:none" class="model-progress-wrap">
+        <div class="model-progress-label">
+          <span id="progressLabel">Processing…</span>
+          <span id="progressPct">0%</span>
+        </div>
+        <div class="model-progress-bar-wrap">
+          <div class="model-progress-bar-fill" id="progressBar"></div>
+        </div>
+        <p class="model-note">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span id="progressNote">Applying artistic style using AI algorithms…</span>
+        </p>
+      </div>
+
+      <!-- Error -->
+      <div id="errorWrap" style="display:none;margin-top:0.75rem">
+        <div class="error-msg show" id="errorMsg"></div>
+      </div>
+
+      <!-- Before / After comparison -->
+      <div id="compareWrap" style="display:none;margin-top:1.5rem">
+        <h3 style="font-size:1rem;font-weight:600;margin-bottom:0.75rem">Result</h3>
+        <div class="compare-wrap">
+          <div class="compare-panel">
+            <div class="compare-label">Original</div>
+            <canvas id="origCanvas" class="compare-canvas"></canvas>
+          </div>
+          <div class="compare-panel">
+            <div class="compare-label">Styled</div>
+            <canvas id="styledCanvas" class="compare-canvas"></canvas>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /toolSection -->
+
+    <!-- How it works -->
+    <section style="margin-top:3rem">
+      <h2 class="section-title">How it works</h2>
+      <div class="trust-grid">
+        <div class="trust-item">
+          <div class="icon">🧮</div>
+          <h3>AI Algorithms</h3>
+          <p>Mathematical image processing techniques inspired by neural style transfer — flow fields, Kuwahara filters, edge detection, and more.</p>
+        </div>
+        <div class="trust-item">
+          <div class="icon">🔒</div>
+          <h3>100% Private</h3>
+          <p>All processing happens in your browser using canvas pixel manipulation. Your images are never uploaded to any server.</p>
+        </div>
+        <div class="trust-item">
+          <div class="icon">🎨</div>
+          <h3>8 Unique Styles</h3>
+          <p>Van Gogh swirling fields, soft watercolor bleeds, oil-painted Kuwahara filter, pencil sketch dodge, comic posterize, mosaic, impressionist dabs, and vintage sepia grain.</p>
+        </div>
+        <div class="trust-item">
+          <div class="icon">⚡</div>
+          <h3>Instant Results</h3>
+          <p>No model downloads needed. All algorithms run directly on your image data — results in seconds, no waiting.</p>
+        </div>
+      </div>
+    </section>
+
+    <section style="margin-top:1.5rem;text-align:center">
+      <p style="color:var(--text-muted);font-size:0.9rem">
+        Also try: <a href="ai-colorize.html">AI Photo Colorization</a>
+        &nbsp;|&nbsp; <a href="filters.html">Photo Filters</a>
+        &nbsp;|&nbsp; <a href="ai-alt-text.html">AI Alt Text Generator</a>
+      </p>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <p>Powered by <strong>PicBrew</strong> — Free &amp; Private</p>
+      <div class="footer-links">
+        <a href="https://buymeacoffee.com/dairylea" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a>
+        <a href="https://parchpdf.com/" target="_blank" rel="noopener">PDF Tools (Parchment)</a>
+        <a href="https://devbrew.org/" target="_blank" rel="noopener">Dev Tools (DevBrew)</a>
+        <a href="https://github.com/dannycranmer/imagetoolkit" target="_blank" rel="noopener">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="vertical-align:-2px;margin-right:3px"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub
+        </a>
+      </div>
+      <p style="margin-top:0.75rem">Built by <a href="https://github.com/dannycranmer">Hustle</a></p>
+    </div>
+  </footer>
+
+  <div class="copy-toast" id="copyToast">✓ Style applied!</div>
+
+  <script src="js/common.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
+  <script>
+  (function() {
+    // ── DOM refs ──
+    var uploadSection = document.getElementById('uploadSection');
+    var toolSection   = document.getElementById('toolSection');
+    var dropZone      = document.getElementById('dropZone');
+    var fileInput     = document.getElementById('fileInput');
+    var fileInput2    = document.getElementById('fileInput2');
+    var fileNameEl    = document.getElementById('fileName');
+    var fileSizeEl    = document.getElementById('fileSize');
+    var statusBadge   = document.getElementById('statusBadge');
+    var applyBtn      = document.getElementById('applyBtn');
+    var downloadBtn   = document.getElementById('downloadBtn');
+    var progressWrap  = document.getElementById('progressWrap');
+    var progressLabel = document.getElementById('progressLabel');
+    var progressPct   = document.getElementById('progressPct');
+    var progressBar   = document.getElementById('progressBar');
+    var progressNote  = document.getElementById('progressNote');
+    var errorWrap     = document.getElementById('errorWrap');
+    var errorMsg      = document.getElementById('errorMsg');
+    var compareWrap   = document.getElementById('compareWrap');
+    var origCanvas    = document.getElementById('origCanvas');
+    var styledCanvas  = document.getElementById('styledCanvas');
+    var styleGrid     = document.getElementById('styleGrid');
+
+    var currentFile    = null;
+    var currentObjUrl  = null;
+    var selectedStyle  = 'starrynight';
+    var isProcessing   = false;
+    var loadedImg      = null;
+
+    // ── Style picker ──
+    styleGrid.addEventListener('click', function(e) {
+      var card = e.target.closest('.style-card');
+      if (!card) return;
+      document.querySelectorAll('.style-card').forEach(function(c) { c.classList.remove('selected'); });
+      card.classList.add('selected');
+      selectedStyle = card.dataset.style;
+    });
+
+    // ── Helpers ──
+    function formatBytes(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / 1048576).toFixed(1) + ' MB';
+    }
+
+    function setStatus(type, text) {
+      if (!type) { statusBadge.style.display = 'none'; return; }
+      statusBadge.style.display = 'inline-flex';
+      statusBadge.className = 'status-badge ' + type;
+      if (type === 'processing') {
+        statusBadge.innerHTML = '<span class="spinner-sm"></span> ' + text;
+      } else {
+        statusBadge.textContent = text;
+      }
+    }
+
+    function displayError(msg) {
+      errorWrap.style.display = '';
+      errorMsg.textContent = msg;
+      setStatus('error', '✗ Error');
+    }
+
+    function setProgress(pct, label, note) {
+      progressBar.style.width = pct + '%';
+      progressPct.textContent = pct + '%';
+      if (label) progressLabel.textContent = label;
+      if (note) progressNote.textContent = note;
+    }
+
+    // ── File handling ──
+    function handleFile(file) {
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        displayError('This does not appear to be a valid image. Please upload a JPEG, PNG, WebP, GIF, or BMP.');
+        return;
+      }
+      if (file.size > 20 * 1024 * 1024) {
+        displayError('Image too large (max 20 MB). Please use a smaller file.');
+        return;
+      }
+
+      currentFile = file;
+      if (currentObjUrl) URL.revokeObjectURL(currentObjUrl);
+      currentObjUrl = URL.createObjectURL(file);
+
+      fileNameEl.textContent = file.name.length > 38 ? file.name.slice(0, 35) + '…' : file.name;
+      fileSizeEl.textContent = formatBytes(file.size);
+
+      var img = new Image();
+      img.onload = function() {
+        loadedImg = img;
+        // Draw original to origCanvas (max 600px)
+        var scale = Math.min(1, 600 / Math.max(img.width, img.height));
+        var W = Math.round(img.width * scale);
+        var H = Math.round(img.height * scale);
+        origCanvas.width  = W;
+        origCanvas.height = H;
+        origCanvas.getContext('2d').drawImage(img, 0, 0, W, H);
+        // Clear styled
+        styledCanvas.width  = W;
+        styledCanvas.height = H;
+        styledCanvas.getContext('2d').clearRect(0, 0, W, H);
+      };
+      img.src = currentObjUrl;
+
+      toolSection.style.display = '';
+      uploadSection.style.display = 'none';
+      progressWrap.style.display = 'none';
+      errorWrap.style.display = 'none';
+      compareWrap.style.display = 'none';
+      downloadBtn.style.display = 'none';
+      setStatus('');
+    }
+
+    // ── Style algorithms ──
+
+    function boxBlur(src, W, H, radius) {
+      // Returns a new Uint8ClampedArray (RGBA, same dims) blurred with box blur
+      var dst = new Uint8ClampedArray(src.length);
+      var r = Math.max(1, Math.round(radius));
+      // Horizontal pass
+      var tmp = new Uint8ClampedArray(src.length);
+      for (var y = 0; y < H; y++) {
+        for (var x = 0; x < W; x++) {
+          var rSum = 0, gSum = 0, bSum = 0, count = 0;
+          for (var dx = -r; dx <= r; dx++) {
+            var sx = Math.max(0, Math.min(W - 1, x + dx));
+            var idx = (y * W + sx) * 4;
+            rSum += src[idx]; gSum += src[idx+1]; bSum += src[idx+2];
+            count++;
+          }
+          var ti = (y * W + x) * 4;
+          tmp[ti]   = rSum / count;
+          tmp[ti+1] = gSum / count;
+          tmp[ti+2] = bSum / count;
+          tmp[ti+3] = 255;
+        }
+      }
+      // Vertical pass
+      for (var x2 = 0; x2 < W; x2++) {
+        for (var y2 = 0; y2 < H; y2++) {
+          var rSum2 = 0, gSum2 = 0, bSum2 = 0, count2 = 0;
+          for (var dy = -r; dy <= r; dy++) {
+            var sy = Math.max(0, Math.min(H - 1, y2 + dy));
+            var idx2 = (sy * W + x2) * 4;
+            rSum2 += tmp[idx2]; gSum2 += tmp[idx2+1]; bSum2 += tmp[idx2+2];
+            count2++;
+          }
+          var di = (y2 * W + x2) * 4;
+          dst[di]   = rSum2 / count2;
+          dst[di+1] = gSum2 / count2;
+          dst[di+2] = bSum2 / count2;
+          dst[di+3] = 255;
+        }
+      }
+      return dst;
+    }
+
+    function toGray(r, g, b) {
+      return (r * 0.299 + g * 0.587 + b * 0.114) | 0;
+    }
+
+    function rgbToHsl(r, g, b) {
+      r /= 255; g /= 255; b /= 255;
+      var max = Math.max(r, g, b), min = Math.min(r, g, b);
+      var h, s, l = (max + min) / 2;
+      if (max === min) { h = s = 0; }
+      else {
+        var d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+          case g: h = (b - r) / d + 2; break;
+          case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+      }
+      return [h, s, l];
+    }
+
+    function hslToRgb(h, s, l) {
+      var r, g, b;
+      if (s === 0) { r = g = b = l; }
+      else {
+        var hue2rgb = function(p, q, t) {
+          if (t < 0) t += 1;
+          if (t > 1) t -= 1;
+          if (t < 1/6) return p + (q - p) * 6 * t;
+          if (t < 1/2) return q;
+          if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+          return p;
+        };
+        var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        var p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1/3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1/3);
+      }
+      return [(r * 255) | 0, (g * 255) | 0, (b * 255) | 0];
+    }
+
+    function applyStarryNight(imageData) {
+      var src = new Uint8ClampedArray(imageData.data);
+      var dst = imageData.data;
+      var W = imageData.width, H = imageData.height;
+      var palette = [
+        [26,35,126],[40,53,147],[21,101,192],[2,136,209],
+        [249,168,37],[245,127,23],[230,81,0],[255,255,255]
+      ];
+      for (var y = 0; y < H; y++) {
+        for (var x = 0; x < W; x++) {
+          var nx = x / W, ny = y / H;
+          var angle = Math.sin(ny * 6.28 * 3 + 0.5) * Math.PI + Math.cos(nx * 6.28 * 2) * Math.PI;
+          var strength = 12;
+          var sx = Math.max(0, Math.min(W-1, Math.round(x + Math.cos(angle) * strength)));
+          var sy = Math.max(0, Math.min(H-1, Math.round(y + Math.sin(angle) * strength)));
+          var si = (sy * W + sx) * 4;
+          var di = (y * W + x) * 4;
+          var r = src[si], g = src[si+1], b = src[si+2];
+          var best = 0, bestDist = Infinity;
+          for (var p = 0; p < palette.length; p++) {
+            var d = (r-palette[p][0])*(r-palette[p][0]) + (g-palette[p][1])*(g-palette[p][1]) + (b-palette[p][2])*(b-palette[p][2]);
+            if (d < bestDist) { bestDist = d; best = p; }
+          }
+          var pc = palette[best];
+          dst[di]   = (pc[0] * 0.6 + r * 0.4) | 0;
+          dst[di+1] = (pc[1] * 0.6 + g * 0.4) | 0;
+          dst[di+2] = (pc[2] * 0.6 + b * 0.4) | 0;
+          dst[di+3] = 255;
+        }
+      }
+    }
+
+    function applyWatercolor(imageData) {
+      var W = imageData.width, H = imageData.height;
+      var src = new Uint8ClampedArray(imageData.data);
+      var dst = imageData.data;
+      // Three-pass box blur (different radii), blended
+      var b1 = boxBlur(src, W, H, 2);
+      var b2 = boxBlur(src, W, H, 4);
+      var b3 = boxBlur(src, W, H, 6);
+      for (var i = 0; i < src.length; i += 4) {
+        // Blend blurs
+        var r = (b1[i] * 0.5 + b2[i] * 0.3 + b3[i] * 0.2) | 0;
+        var g = (b1[i+1] * 0.5 + b2[i+1] * 0.3 + b3[i+1] * 0.2) | 0;
+        var b = (b1[i+2] * 0.5 + b2[i+2] * 0.3 + b3[i+2] * 0.2) | 0;
+        // Boost saturation
+        var hsl = rgbToHsl(r, g, b);
+        hsl[1] = Math.min(1, hsl[1] * 1.35);
+        // Soften contrast a bit
+        hsl[2] = hsl[2] * 0.92 + 0.04;
+        var rgb = hslToRgb(hsl[0], hsl[1], hsl[2]);
+        // Add paper grain
+        var grain = (Math.random() - 0.5) * 10;
+        dst[i]   = Math.max(0, Math.min(255, rgb[0] + grain));
+        dst[i+1] = Math.max(0, Math.min(255, rgb[1] + grain));
+        dst[i+2] = Math.max(0, Math.min(255, rgb[2] + grain));
+        dst[i+3] = 255;
+      }
+    }
+
+    function applyOilPainting(imageData) {
+      var W = imageData.width, H = imageData.height;
+      var src = new Uint8ClampedArray(imageData.data);
+      var dst = imageData.data;
+      var radius = 3;
+      // Kuwahara filter
+      for (var y = 0; y < H; y++) {
+        for (var x = 0; x < W; x++) {
+          var bestMean = [0, 0, 0];
+          var bestVar = Infinity;
+          // 4 quadrants: TL, TR, BL, BR (each radius x radius, overlapping at center)
+          var quads = [
+            [x - radius, y - radius, x, y],
+            [x, y - radius, x + radius, y],
+            [x - radius, y, x, y + radius],
+            [x, y, x + radius, y + radius]
+          ];
+          for (var q = 0; q < 4; q++) {
+            var x0 = Math.max(0, quads[q][0]), y0 = Math.max(0, quads[q][1]);
+            var x1 = Math.min(W-1, quads[q][2]), y1 = Math.min(H-1, quads[q][3]);
+            var sumR = 0, sumG = 0, sumB = 0, n = 0;
+            var sumR2 = 0, sumG2 = 0, sumB2 = 0;
+            for (var qy = y0; qy <= y1; qy++) {
+              for (var qx = x0; qx <= x1; qx++) {
+                var idx = (qy * W + qx) * 4;
+                var qr = src[idx], qg = src[idx+1], qb = src[idx+2];
+                sumR += qr; sumG += qg; sumB += qb;
+                sumR2 += qr*qr; sumG2 += qg*qg; sumB2 += qb*qb;
+                n++;
+              }
+            }
+            if (n === 0) continue;
+            var mr = sumR/n, mg = sumG/n, mb = sumB/n;
+            var vari = (sumR2/n - mr*mr) + (sumG2/n - mg*mg) + (sumB2/n - mb*mb);
+            if (vari < bestVar) {
+              bestVar = vari;
+              bestMean = [mr, mg, mb];
+            }
+          }
+          var di = (y * W + x) * 4;
+          // Boost saturation
+          var hsl2 = rgbToHsl(bestMean[0], bestMean[1], bestMean[2]);
+          hsl2[1] = Math.min(1, hsl2[1] * 1.2);
+          var rgb2 = hslToRgb(hsl2[0], hsl2[1], hsl2[2]);
+          dst[di]   = rgb2[0];
+          dst[di+1] = rgb2[1];
+          dst[di+2] = rgb2[2];
+          dst[di+3] = 255;
+        }
+      }
+    }
+
+    function applySketch(imageData) {
+      var W = imageData.width, H = imageData.height;
+      var src = imageData.data;
+      // Step 1: grayscale
+      var gray = new Uint8ClampedArray(W * H);
+      for (var i = 0; i < src.length; i += 4) {
+        gray[i / 4] = toGray(src[i], src[i+1], src[i+2]);
+      }
+      // Step 2: inverted grayscale as RGBA for blur
+      var inv = new Uint8ClampedArray(W * H * 4);
+      for (var j = 0; j < gray.length; j++) {
+        var v = 255 - gray[j];
+        inv[j*4] = v; inv[j*4+1] = v; inv[j*4+2] = v; inv[j*4+3] = 255;
+      }
+      // Step 3: blur the inverted
+      var blurred = boxBlur(inv, W, H, 8);
+      // Step 4: color dodge
+      var dst = src;
+      for (var k = 0; k < gray.length; k++) {
+        var g = gray[k];
+        var bi = blurred[k * 4];
+        var dodge = bi >= 255 ? 255 : Math.min(255, (g / (255 - bi)) * 255) | 0;
+        dst[k*4]   = dodge;
+        dst[k*4+1] = dodge;
+        dst[k*4+2] = dodge;
+        dst[k*4+3] = 255;
+      }
+    }
+
+    function applyComic(imageData) {
+      var W = imageData.width, H = imageData.height;
+      var src = new Uint8ClampedArray(imageData.data);
+      var dst = imageData.data;
+
+      // Posterize each channel to 5 levels
+      function posterize(v) {
+        var levels = [0, 64, 128, 192, 255];
+        var best = 0, bestD = Infinity;
+        for (var i = 0; i < levels.length; i++) {
+          var d = Math.abs(v - levels[i]);
+          if (d < bestD) { bestD = d; best = levels[i]; }
+        }
+        return best;
+      }
+
+      // Simple Sobel edge detection on grayscale
+      var gray = new Int32Array(W * H);
+      for (var i = 0; i < src.length; i += 4) {
+        gray[i/4] = toGray(src[i], src[i+1], src[i+2]);
+      }
+
+      var edgeThreshold = 40;
+
+      for (var y = 0; y < H; y++) {
+        for (var x = 0; x < W; x++) {
+          var di = (y * W + x) * 4;
+
+          // Sobel
+          var gx = 0, gy2 = 0;
+          if (x > 0 && x < W-1 && y > 0 && y < H-1) {
+            gx = (
+              -gray[(y-1)*W+(x-1)] - 2*gray[y*W+(x-1)] - gray[(y+1)*W+(x-1)] +
+               gray[(y-1)*W+(x+1)] + 2*gray[y*W+(x+1)] + gray[(y+1)*W+(x+1)]
+            );
+            gy2 = (
+              -gray[(y-1)*W+(x-1)] - 2*gray[(y-1)*W+x] - gray[(y-1)*W+(x+1)] +
+               gray[(y+1)*W+(x-1)] + 2*gray[(y+1)*W+x] + gray[(y+1)*W+(x+1)]
+            );
+          }
+          var edge = Math.sqrt(gx*gx + gy2*gy2);
+
+          if (edge > edgeThreshold * 3) {
+            dst[di] = 0; dst[di+1] = 0; dst[di+2] = 0; dst[di+3] = 255;
+          } else {
+            var r = posterize(src[di]);
+            var g = posterize(src[di+1]);
+            var b = posterize(src[di+2]);
+            // Boost saturation
+            var hsl3 = rgbToHsl(r, g, b);
+            hsl3[1] = Math.min(1, hsl3[1] * 1.5);
+            var rgb3 = hslToRgb(hsl3[0], hsl3[1], hsl3[2]);
+            dst[di]   = rgb3[0];
+            dst[di+1] = rgb3[1];
+            dst[di+2] = rgb3[2];
+            dst[di+3] = 255;
+          }
+        }
+      }
+    }
+
+    function applyMosaic(canvas, ctx, imageData) {
+      var W = imageData.width, H = imageData.height;
+      var src = imageData.data;
+      var tileSize = Math.max(4, Math.min(16, Math.round(W / 100)));
+      // Clear canvas
+      ctx.clearRect(0, 0, W, H);
+      // Draw original first
+      ctx.putImageData(imageData, 0, 0);
+      // Overdraw with circles
+      for (var ty = 0; ty < H; ty += tileSize) {
+        for (var tx = 0; tx < W; tx += tileSize) {
+          // Average color of this tile
+          var rSum = 0, gSum = 0, bSum = 0, count = 0;
+          for (var py = ty; py < Math.min(H, ty + tileSize); py++) {
+            for (var px = tx; px < Math.min(W, tx + tileSize); px++) {
+              var idx = (py * W + px) * 4;
+              rSum += src[idx]; gSum += src[idx+1]; bSum += src[idx+2];
+              count++;
+            }
+          }
+          if (count === 0) continue;
+          var avgR = (rSum/count) | 0;
+          var avgG = (gSum/count) | 0;
+          var avgB = (bSum/count) | 0;
+          var cx2 = tx + tileSize / 2;
+          var cy2 = ty + tileSize / 2;
+          ctx.beginPath();
+          ctx.arc(cx2, cy2, tileSize / 2, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgb(' + avgR + ',' + avgG + ',' + avgB + ')';
+          ctx.fill();
+        }
+      }
+      return ctx.getImageData(0, 0, W, H);
+    }
+
+    function applyImpressionist(imageData) {
+      var W = imageData.width, H = imageData.height;
+      var src = new Uint8ClampedArray(imageData.data);
+      var dst = new Uint8ClampedArray(imageData.data); // start with original
+
+      // For a sample of pixels, draw small oriented strokes
+      var strokeLen = 6, strokeW = 2;
+      // Sample every 4th pixel
+      for (var y2 = 0; y2 < H; y2 += 4) {
+        for (var x2 = 0; x2 < W; x2 += 4) {
+          var si = (y2 * W + x2) * 4;
+          var pr = src[si], pg = src[si+1], pb = src[si+2];
+          var lum = toGray(pr, pg, pb) / 255;
+          // Direction based on luminance gradient (simplified)
+          var gx = 0, gy = 0;
+          if (x2 > 0 && x2 < W-1) {
+            gx = toGray(src[(y2*W+x2+1)*4], src[(y2*W+x2+1)*4+1], src[(y2*W+x2+1)*4+2]) -
+                 toGray(src[(y2*W+x2-1)*4], src[(y2*W+x2-1)*4+1], src[(y2*W+x2-1)*4+2]);
+          }
+          if (y2 > 0 && y2 < H-1) {
+            gy = toGray(src[((y2+1)*W+x2)*4], src[((y2+1)*W+x2)*4+1], src[((y2+1)*W+x2)*4+2]) -
+                 toGray(src[((y2-1)*W+x2)*4], src[((y2-1)*W+x2)*4+1], src[((y2-1)*W+x2)*4+2]);
+          }
+          var angle = Math.atan2(gy, gx);
+          var cos = Math.cos(angle), sin = Math.sin(angle);
+          // Draw a small stroke
+          for (var t = -strokeLen/2; t <= strokeLen/2; t++) {
+            for (var w = -strokeW/2; w <= strokeW/2; w++) {
+              var nx = Math.round(x2 + cos * t - sin * w);
+              var ny = Math.round(y2 + sin * t + cos * w);
+              if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
+              var di = (ny * W + nx) * 4;
+              // Blend: 70% stroke color, 30% existing
+              dst[di]   = ((pr * 0.7 + dst[di]   * 0.3) | 0);
+              dst[di+1] = ((pg * 0.7 + dst[di+1] * 0.3) | 0);
+              dst[di+2] = ((pb * 0.7 + dst[di+2] * 0.3) | 0);
+              dst[di+3] = 255;
+            }
+          }
+        }
+      }
+      // Copy dst back
+      for (var m = 0; m < imageData.data.length; m++) {
+        imageData.data[m] = dst[m];
+      }
+    }
+
+    function applyVintage(imageData) {
+      var W = imageData.width, H = imageData.height;
+      var dst = imageData.data;
+      for (var y3 = 0; y3 < H; y3++) {
+        for (var x3 = 0; x3 < W; x3++) {
+          var i = (y3 * W + x3) * 4;
+          var r = dst[i], g = dst[i+1], b = dst[i+2];
+          // Sepia
+          var sr = Math.min(255, r * 0.393 + g * 0.769 + b * 0.189);
+          var sg = Math.min(255, r * 0.349 + g * 0.686 + b * 0.168);
+          var sb = Math.min(255, r * 0.272 + g * 0.534 + b * 0.131);
+          // Vignette: darken corners
+          var nx2 = (x3 / (W-1)) * 2 - 1;
+          var ny2 = (y3 / (H-1)) * 2 - 1;
+          var vignette = Math.max(0, 1 - (nx2*nx2 + ny2*ny2) * 0.6);
+          sr *= vignette; sg *= vignette; sb *= vignette;
+          // Grain
+          var grain = (Math.random() - 0.5) * 30;
+          // Reduce contrast
+          sr = sr * 0.85 + 20 + grain;
+          sg = sg * 0.85 + 20 + grain;
+          sb = sb * 0.85 + 20 + grain;
+          dst[i]   = Math.max(0, Math.min(255, sr));
+          dst[i+1] = Math.max(0, Math.min(255, sg));
+          dst[i+2] = Math.max(0, Math.min(255, sb));
+          dst[i+3] = 255;
+        }
+      }
+    }
+
+    // ── Main apply function ──
+    function doApply() {
+      if (!loadedImg || isProcessing) return;
+      isProcessing = true;
+      applyBtn.disabled = true;
+      downloadBtn.style.display = 'none';
+      errorWrap.style.display = 'none';
+      progressWrap.style.display = '';
+      compareWrap.style.display = 'none';
+      setStatus('processing', 'Processing…');
+      setProgress(5, 'Preparing image…', 'Loading image data…');
+
+      // Use setTimeout to yield UI update
+      setTimeout(function() {
+        try {
+          var scale = Math.min(1, 600 / Math.max(loadedImg.width, loadedImg.height));
+          var W = Math.round(loadedImg.width * scale);
+          var H = Math.round(loadedImg.height * scale);
+
+          // Draw to offscreen canvas
+          var offCanvas = document.createElement('canvas');
+          offCanvas.width = W; offCanvas.height = H;
+          var offCtx = offCanvas.getContext('2d');
+          offCtx.drawImage(loadedImg, 0, 0, W, H);
+
+          setProgress(20, 'Applying ' + selectedStyle + ' style…', 'Running AI pixel algorithms…');
+
+          setTimeout(function() {
+            try {
+              var imageData;
+              if (selectedStyle === 'mosaic') {
+                imageData = offCtx.getImageData(0, 0, W, H);
+                // mosaic works differently — returns new imageData
+                applyMosaic(offCanvas, offCtx, imageData);
+                imageData = offCtx.getImageData(0, 0, W, H);
+              } else {
+                imageData = offCtx.getImageData(0, 0, W, H);
+
+                setProgress(40, 'Applying style…', 'Processing pixels…');
+
+                if (selectedStyle === 'starrynight') {
+                  applyStarryNight(imageData);
+                } else if (selectedStyle === 'watercolor') {
+                  applyWatercolor(imageData);
+                } else if (selectedStyle === 'oilpainting') {
+                  applyOilPainting(imageData);
+                } else if (selectedStyle === 'sketch') {
+                  applySketch(imageData);
+                } else if (selectedStyle === 'comic') {
+                  applyComic(imageData);
+                } else if (selectedStyle === 'impressionist') {
+                  applyImpressionist(imageData);
+                } else if (selectedStyle === 'vintage') {
+                  applyVintage(imageData);
+                }
+              }
+
+              setProgress(85, 'Rendering result…', 'Finalizing…');
+
+              // Draw to origCanvas
+              origCanvas.width  = W; origCanvas.height = H;
+              var origCtx = origCanvas.getContext('2d');
+              origCtx.drawImage(loadedImg, 0, 0, W, H);
+
+              // Draw to styledCanvas
+              styledCanvas.width  = W; styledCanvas.height = H;
+              var styledCtx = styledCanvas.getContext('2d');
+              if (selectedStyle !== 'mosaic') {
+                styledCtx.putImageData(imageData, 0, 0);
+              } else {
+                styledCtx.drawImage(offCanvas, 0, 0);
+              }
+
+              setProgress(100, 'Done!', 'Style applied successfully.');
+              setTimeout(function() {
+                progressWrap.style.display = 'none';
+              }, 600);
+
+              compareWrap.style.display = '';
+              downloadBtn.style.display = '';
+              setStatus('done', '✓ Style applied');
+
+              if (typeof trackUsage === 'function') trackUsage();
+              if (typeof showPostActionCTA === 'function') showPostActionCTA();
+
+            } catch (err2) {
+              console.error('[PicBrew Style] Processing error:', err2);
+              progressWrap.style.display = 'none';
+              displayError('Style processing failed: ' + (err2.message || String(err2)));
+            } finally {
+              isProcessing = false;
+              applyBtn.disabled = false;
+            }
+          }, 30);
+
+        } catch (err) {
+          console.error('[PicBrew Style] Error:', err);
+          progressWrap.style.display = 'none';
+          displayError('An error occurred: ' + (err.message || String(err)));
+          isProcessing = false;
+          applyBtn.disabled = false;
+        }
+      }, 20);
+    }
+
+    // ── Download ──
+    downloadBtn.addEventListener('click', function() {
+      styledCanvas.toBlob(function(blob) {
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'picbrew-styled-' + selectedStyle + '.png';
+        a.click();
+        URL.revokeObjectURL(url);
+      }, 'image/png');
+    });
+
+    // ── Apply button ──
+    applyBtn.addEventListener('click', doApply);
+
+    // ── Drop zone ──
+    dropZone.addEventListener('click', function() { fileInput.click(); });
+    fileInput.addEventListener('change', function(e) {
+      if (e.target.files[0]) handleFile(e.target.files[0]);
+      fileInput.value = '';
+    });
+    fileInput2.addEventListener('change', function(e) {
+      if (e.target.files[0]) handleFile(e.target.files[0]);
+      fileInput2.value = '';
+    });
+    dropZone.addEventListener('dragover', function(e) { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', function() { dropZone.classList.remove('dragover'); });
+    dropZone.addEventListener('drop', function(e) {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      var file = Array.from(e.dataTransfer.files).find(function(f) { return f.type.startsWith('image/'); });
+      if (file) handleFile(file);
+    });
+
+  })();
+  </script>
+  <script data-goatcounter="https://picbrew.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

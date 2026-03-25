@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Face Blur — Auto-Detect &amp; Blur Faces in Photos Free — PicBrew</title>
+  <meta name="description" content="Automatically detect and blur faces in photos using AI. Protect privacy in images instantly. Runs 100% in your browser using TensorFlow.js — no uploads, free, no signup.">
+  <link rel="canonical" href="https://picbrew.org/ai-face-blur.html">
+  <meta property="og:title" content="AI Face Blur — Auto-Detect &amp; Blur Faces in Photos Free — PicBrew">
+  <meta property="og:description" content="Automatically detect and blur faces in photos using AI. Protect privacy in images. Runs 100% in your browser — no uploads, free, no signup required.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://picbrew.org/ai-face-blur.html">
+  <meta property="og:image" content="https://picbrew.org/og-image.png">
+  <meta property="og:site_name" content="PicBrew">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="AI Face Blur — Auto-Detect &amp; Blur Faces in Photos Free — PicBrew">
+  <meta name="twitter:description" content="Automatically detect and blur faces in photos using AI. Protect privacy. Runs 100% in your browser — no uploads, free, no signup required.">
+  <meta name="twitter:image" content="https://picbrew.org/og-image.png">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .ai-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.28rem 0.75rem;
+      border-radius: 20px;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      margin-bottom: 0.6rem;
+    }
+    .model-progress-wrap { margin-top: 0.75rem; }
+    .model-progress-label { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem; display: flex; justify-content: space-between; }
+    .model-progress-bar-wrap { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+    .model-progress-bar-fill { height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); border-radius: 4px; transition: width 0.3s ease; width: 0%; }
+    .copy-toast { position: fixed; top: 80px; right: 24px; background: #10B981; color: white; padding: 10px 20px; border-radius: 8px; font-size: 0.9rem; font-weight: 600; z-index: 9999; box-shadow: 0 4px 16px rgba(0,0,0,0.15); opacity: 0; transform: translateY(-8px); transition: opacity 0.25s ease, transform 0.25s ease; pointer-events: none; }
+    .copy-toast.show { opacity: 1; transform: translateY(0); }
+    .preview-thumb { max-width: 100%; max-height: 320px; border-radius: var(--radius); border: 1px solid var(--border); display: block; margin: 0.75rem 0; object-fit: contain; }
+    .status-badge { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.82rem; font-weight: 600; padding: 0.25rem 0.65rem; border-radius: 12px; }
+    .status-badge.processing { background: #f3f0ff; color: #764ba2; }
+    .status-badge.done { background: #ecfdf5; color: #10B981; }
+    .status-badge.error { background: #fef2f2; color: #ef4444; }
+    .spinner-sm { width: 12px; height: 12px; border: 2px solid rgba(118,75,162,0.3); border-top-color: #764ba2; border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .model-note { font-size: 0.82rem; color: var(--text-muted); margin-top: 0.4rem; display: flex; align-items: center; gap: 0.4rem; }
+
+    /* Effect options panel */
+    .options-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      margin-top: 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.25rem;
+    }
+    .option-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      min-width: 160px;
+    }
+    .option-label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .effect-tabs {
+      display: flex;
+      gap: 0.35rem;
+    }
+    .effect-tab {
+      padding: 0.35rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--text);
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+    .effect-tab.active {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-color: transparent;
+      color: white;
+      font-weight: 600;
+    }
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .slider-row input[type=range] {
+      flex: 1;
+      accent-color: #764ba2;
+    }
+    .slider-val {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text);
+      min-width: 2.5rem;
+      text-align: right;
+    }
+
+    /* Result canvas */
+    #resultCanvas {
+      max-width: 100%;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      display: block;
+      margin: 0.75rem 0;
+    }
+
+    .result-section { margin-top: 1.5rem; }
+    .result-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 0.6rem;
+      flex-wrap: wrap;
+    }
+    .result-header h3 { font-size: 1rem; font-weight: 600; color: var(--text); margin: 0; }
+    .result-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+    .face-count-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: #ecfdf5;
+      color: #059669;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 0.35rem 0.85rem;
+      border-radius: 12px;
+      margin-bottom: 0.75rem;
+    }
+    .face-count-badge.none {
+      background: #fef9c3;
+      color: #92400e;
+    }
+  </style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "AI Face Blur — PicBrew",
+    "description": "Automatically detect and blur faces in photos using AI. Protect privacy in images. Powered by TensorFlow.js BlazeFace — runs 100% in your browser, no uploads.",
+    "url": "https://picbrew.org/ai-face-blur.html",
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "Any",
+    "browserRequirements": "Requires JavaScript and WebAssembly",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "creator": { "@type": "Organization", "name": "PicBrew", "url": "https://picbrew.org" }
+  }
+  </script>
+</head>
+<body>
+
+  <nav class="nav" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">Pic<span>Brew</span></a>
+      <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">&#9776;</button>
+      <ul class="nav-links" role="menubar">
+        <li><a href="index.html" role="menuitem">Home</a></li>
+        <li><a href="background-removal.html" role="menuitem">AI Erase BG</a></li>
+        <li><a href="ai-ocr.html" role="menuitem">AI OCR</a></li>
+        <li><a href="ai-upscaler.html" role="menuitem">AI Upscaler</a></li>
+        <li><a href="ai-alt-text.html" role="menuitem">AI Alt Text</a></li>
+        <li><a href="ai-style-transfer.html" role="menuitem">AI Style</a></li>
+        <li><a href="ai-face-blur.html" class="active" role="menuitem">AI Face Blur</a></li>
+        <li><a href="ai-colorize.html" role="menuitem">AI Colorize</a></li>
+        <li><a href="ai-object-detect.html" role="menuitem">AI Objects</a></li>
+        <li><a href="compress.html" role="menuitem">Compress</a></li>
+        <li><a href="resize.html" role="menuitem">Resize</a></li>
+        <li><a href="convert.html" role="menuitem">Convert</a></li>
+        <li><a href="crop.html" role="menuitem">Crop</a></li>
+        <li><a href="watermark.html" role="menuitem">Watermark</a></li>
+        <li><a href="flip-rotate.html" role="menuitem">Flip &amp; Rotate</a></li>
+        <li><a href="background-remover.html" role="menuitem">BG Remover</a></li>
+        <li><a href="filters.html" role="menuitem">Filters</a></li>
+        <li><a href="palette.html" role="menuitem">Palette</a></li>
+        <li><a href="meme.html" role="menuitem">Meme</a></li>
+        <li><a href="base64.html" role="menuitem">Base64</a></li>
+        <li><a href="collage.html" role="menuitem">Collage</a></li>
+        <li><a href="denoise.html" role="menuitem">Denoise</a></li>
+        <li><a href="mockup.html" role="menuitem">Mockup</a></li>
+        <li><a href="image-to-pdf.html" role="menuitem">To PDF</a></li>
+        <li><a href="qrcode.html" role="menuitem">QR Code</a></li>
+        <li><a href="overlay.html" role="menuitem">Overlay</a></li>
+        <li><a href="text.html" role="menuitem">Text</a></li>
+        <li><a href="https://buymeacoffee.com/dairylea" class="nav-coffee" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="tool-header">
+      <div class="ai-badge">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        AI-Powered
+      </div>
+      <h1>AI Face Blur</h1>
+      <p class="tool-desc">Automatically detect and blur faces in photos using AI. Protect privacy before sharing images publicly, in documents, or on social media. Powered by TensorFlow.js BlazeFace — runs 100% in your browser. Your photos are never uploaded anywhere.</p>
+    </div>
+
+    <!-- Upload zone -->
+    <div id="uploadSection">
+      <div class="drop-zone" id="dropZone">
+        <div class="drop-zone-icon">👁️</div>
+        <p class="drop-zone-text">Drop a photo here or click to upload</p>
+        <p class="drop-zone-sub">JPEG · PNG · WebP — up to 20 MB</p>
+        <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" style="display:none">
+      </div>
+    </div>
+
+    <!-- Tool UI -->
+    <div id="toolSection" style="display:none">
+
+      <!-- Controls bar -->
+      <div class="controls" style="flex-wrap:wrap;gap:0.75rem">
+        <div style="display:flex;align-items:center;gap:0.75rem;flex:1;min-width:0;flex-wrap:wrap">
+          <span id="fileName" style="font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px;"></span>
+          <span id="fileSize" style="font-size:0.85rem;color:var(--text-muted);flex-shrink:0;"></span>
+          <span id="statusBadge" style="display:none"></span>
+        </div>
+        <button class="btn btn-primary" id="blurBtn" style="background:linear-gradient(135deg,#667eea,#764ba2);border-color:transparent;font-weight:700">
+          🔒 Detect &amp; Blur Faces
+        </button>
+        <label class="btn btn-secondary" style="cursor:pointer;display:inline-flex;align-items:center;gap:0.4rem;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-1px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          New Image
+          <input type="file" id="fileInput2" accept="image/jpeg,image/png,image/webp" style="display:none">
+        </label>
+      </div>
+
+      <!-- Options panel -->
+      <div class="options-panel" id="optionsPanel">
+        <div class="option-group">
+          <span class="option-label">Effect Type</span>
+          <div class="effect-tabs">
+            <button class="effect-tab active" data-effect="blur" id="tabBlur">Blur</button>
+            <button class="effect-tab" data-effect="pixelate" id="tabPixelate">Pixelate</button>
+            <button class="effect-tab" data-effect="blackbox" id="tabBlackbox">Black Box</button>
+          </div>
+        </div>
+
+        <div class="option-group" id="intensityGroup">
+          <span class="option-label">Blur Intensity</span>
+          <div class="slider-row">
+            <input type="range" id="blurAmount" min="1" max="30" value="15" step="1">
+            <span class="slider-val" id="blurAmountVal">15</span>
+          </div>
+        </div>
+
+        <div class="option-group">
+          <span class="option-label">Box Expansion</span>
+          <div class="slider-row">
+            <input type="range" id="expandPct" min="-10" max="50" value="10" step="5">
+            <span class="slider-val" id="expandPctVal">+10%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Progress -->
+      <div id="progressWrap" style="display:none" class="model-progress-wrap">
+        <div class="model-progress-label">
+          <span id="progressLabel">Loading AI model…</span>
+          <span id="progressPct">0%</span>
+        </div>
+        <div class="model-progress-bar-wrap">
+          <div class="model-progress-bar-fill" id="progressBar"></div>
+        </div>
+        <p class="model-note">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span id="progressNote">Model is ~1 MB — loads quickly. Detection takes under a second.</span>
+        </p>
+      </div>
+
+      <!-- Error -->
+      <div id="errorWrap" style="display:none;margin-top:0.75rem">
+        <div class="error-msg show" id="errorMsg"></div>
+      </div>
+
+      <!-- Result -->
+      <div id="resultSection" class="result-section" style="display:none">
+        <div id="faceCountWrap" style="margin-bottom:0.5rem"></div>
+        <div class="result-header">
+          <h3 id="resultHeading">Privacy-Protected Image</h3>
+          <div class="result-actions">
+            <button class="btn btn-primary" id="reapplyBtn" style="background:linear-gradient(135deg,#667eea,#764ba2);border-color:transparent">
+              🔄 Re-apply
+            </button>
+            <button class="btn btn-primary" id="downloadBtn" style="background:linear-gradient(135deg,#10B981,#059669);border-color:transparent">
+              ⬇️ Download Protected Image
+            </button>
+          </div>
+        </div>
+        <canvas id="resultCanvas"></canvas>
+      </div>
+
+    </div><!-- /toolSection -->
+
+    <!-- How it works -->
+    <section style="margin-top:3rem">
+      <h2 class="section-title">How it works</h2>
+      <div class="trust-grid">
+        <div class="trust-item">
+          <div class="icon">🧠</div>
+          <h3>BlazeFace AI</h3>
+          <p>Google's BlazeFace model detects faces in milliseconds with high accuracy, even at multiple scales and angles.</p>
+        </div>
+        <div class="trust-item">
+          <div class="icon">🔒</div>
+          <h3>100% Private</h3>
+          <p>Processing happens in your browser via WebAssembly and WebGL. Your images are never uploaded to any server.</p>
+        </div>
+        <div class="trust-item">
+          <div class="icon">👁️</div>
+          <h3>Privacy Protection</h3>
+          <p>Blur or pixelate faces before sharing photos publicly, in reports, on social media, or in any document.</p>
+        </div>
+        <div class="trust-item">
+          <div class="icon">⚡</div>
+          <h3>Instant Results</h3>
+          <p>The ~1 MB BlazeFace model loads fast and is cached for future uses. Detection and blurring takes under a second.</p>
+        </div>
+      </div>
+    </section>
+
+    <section style="margin-top:1.5rem;text-align:center">
+      <p style="color:var(--text-muted);font-size:0.9rem">
+        Also try:
+        <a href="ai-object-detect.html">AI Object Detection</a>
+        &nbsp;|&nbsp;
+        <a href="background-removal.html">AI Background Removal</a>
+        &nbsp;|&nbsp;
+        <a href="ai-ocr.html">AI OCR — Extract Text</a>
+      </p>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <p>Powered by <strong>PicBrew</strong> — Free &amp; Private</p>
+      <div class="footer-links">
+        <a href="https://buymeacoffee.com/dairylea" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a>
+        <a href="https://parchpdf.com/" target="_blank" rel="noopener">PDF Tools (Parchment)</a>
+        <a href="https://devbrew.org/" target="_blank" rel="noopener">Dev Tools (DevBrew)</a>
+        <a href="https://github.com/dannycranmer/imagetoolkit" target="_blank" rel="noopener">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="vertical-align:-2px;margin-right:3px"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub
+        </a>
+      </div>
+      <p style="margin-top:0.75rem">Built by <a href="https://github.com/dannycranmer">Hustle</a></p>
+    </div>
+  </footer>
+
+  <script src="js/common.js"></script>
+
+  <!-- TF.js then BlazeFace as regular scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.0.7/dist/blazeface.min.js"></script>
+
+  <script>
+    function formatBytes(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / 1048576).toFixed(1) + ' MB';
+    }
+
+    // ── DOM refs ──
+    var uploadSection  = document.getElementById('uploadSection');
+    var toolSection    = document.getElementById('toolSection');
+    var dropZone       = document.getElementById('dropZone');
+    var fileInput      = document.getElementById('fileInput');
+    var fileInput2     = document.getElementById('fileInput2');
+    var fileNameEl     = document.getElementById('fileName');
+    var fileSizeEl     = document.getElementById('fileSize');
+    var statusBadge    = document.getElementById('statusBadge');
+    var blurBtn        = document.getElementById('blurBtn');
+    var reapplyBtn     = document.getElementById('reapplyBtn');
+    var downloadBtn    = document.getElementById('downloadBtn');
+    var progressWrap   = document.getElementById('progressWrap');
+    var progressLabel  = document.getElementById('progressLabel');
+    var progressPct    = document.getElementById('progressPct');
+    var progressBar    = document.getElementById('progressBar');
+    var progressNote   = document.getElementById('progressNote');
+    var errorWrap      = document.getElementById('errorWrap');
+    var errorMsg       = document.getElementById('errorMsg');
+    var resultSection  = document.getElementById('resultSection');
+    var resultCanvas   = document.getElementById('resultCanvas');
+    var resultHeading  = document.getElementById('resultHeading');
+    var faceCountWrap  = document.getElementById('faceCountWrap');
+    var blurAmountSlider = document.getElementById('blurAmount');
+    var blurAmountVal    = document.getElementById('blurAmountVal');
+    var expandPctSlider  = document.getElementById('expandPct');
+    var expandPctVal     = document.getElementById('expandPctVal');
+    var intensityGroup   = document.getElementById('intensityGroup');
+
+    var currentFile    = null;
+    var isProcessing   = false;
+    var currentObjUrl  = null;
+    var blazeModel     = null;
+    var loadedImg      = null;
+    var lastPredictions = null;
+    var currentEffect  = 'blur';
+    var progressAnimId = null;
+
+    // ── Slider listeners ──
+    blurAmountSlider.addEventListener('input', function() {
+      blurAmountVal.textContent = blurAmountSlider.value;
+    });
+    expandPctSlider.addEventListener('input', function() {
+      var v = parseInt(expandPctSlider.value, 10);
+      expandPctVal.textContent = (v >= 0 ? '+' : '') + v + '%';
+    });
+
+    // ── Effect tabs ──
+    document.querySelectorAll('.effect-tab').forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('.effect-tab').forEach(function(t) { t.classList.remove('active'); });
+        tab.classList.add('active');
+        currentEffect = tab.getAttribute('data-effect');
+        intensityGroup.style.display = (currentEffect === 'blur') ? '' : 'none';
+      });
+    });
+
+    // ── Progress animation ──
+    function animateProgressTo(target, durationMs) {
+      if (progressAnimId) clearInterval(progressAnimId);
+      var current = parseFloat(progressBar.style.width) || 0;
+      var steps   = 40;
+      var stepVal = (target - current) / steps;
+      var stepMs  = durationMs / steps;
+      progressAnimId = setInterval(function() {
+        current += stepVal;
+        if ((stepVal > 0 && current >= target) || (stepVal <= 0 && current <= target)) {
+          current = target;
+          clearInterval(progressAnimId);
+          progressAnimId = null;
+        }
+        progressBar.style.width = current.toFixed(1) + '%';
+        progressPct.textContent = Math.round(current) + '%';
+      }, stepMs);
+    }
+
+    // ── Status badge ──
+    function setStatus(type, text) {
+      if (!type) { statusBadge.style.display = 'none'; return; }
+      statusBadge.style.display = 'inline-flex';
+      statusBadge.className = 'status-badge ' + type;
+      if (type === 'processing') {
+        statusBadge.innerHTML = '<span class="spinner-sm"></span> ' + text;
+      } else {
+        statusBadge.textContent = text;
+      }
+    }
+
+    // ── Error display ──
+    function displayError(msg) {
+      errorWrap.style.display = '';
+      errorMsg.textContent = msg;
+      setStatus('error', '✗ Error');
+    }
+
+    // ── File handling ──
+    function handleFile(file) {
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        displayError("This doesn't appear to be a valid image file. Please upload a JPEG, PNG, or WebP.");
+        return;
+      }
+      if (file.size > 20 * 1024 * 1024) {
+        displayError("Image too large (max 20 MB). Please use a smaller file.");
+        return;
+      }
+
+      currentFile = file;
+      lastPredictions = null;
+      if (currentObjUrl) URL.revokeObjectURL(currentObjUrl);
+      currentObjUrl = URL.createObjectURL(file);
+
+      fileNameEl.textContent = file.name.length > 38 ? file.name.slice(0, 35) + '…' : file.name;
+      fileSizeEl.textContent = formatBytes(file.size);
+
+      toolSection.style.display = '';
+      uploadSection.style.display = 'none';
+      progressWrap.style.display = 'none';
+      errorWrap.style.display = 'none';
+      resultSection.style.display = 'none';
+      setStatus('');
+      progressBar.style.width = '0%';
+      blurBtn.disabled = false;
+
+      var img = new Image();
+      img.onload = function() { loadedImg = img; };
+      img.src = currentObjUrl;
+    }
+
+    // ── Blur a region on an existing canvas ──
+    function blurRegion(ctx, canvas, x, y, w, h, amount) {
+      ctx.save();
+      ctx.filter = 'blur(' + amount + 'px)';
+      // Draw the region multiple times for stronger effect
+      ctx.drawImage(canvas, x, y, w, h, x, y, w, h);
+      ctx.drawImage(canvas, x, y, w, h, x, y, w, h);
+      ctx.filter = 'none';
+      ctx.restore();
+    }
+
+    // ── Pixelate a region ──
+    function pixelateRegion(ctx, srcCanvas, x, y, w, h, blockSize) {
+      if (w < 1 || h < 1) return;
+      var tmp = document.createElement('canvas');
+      tmp.width  = Math.max(1, Math.floor(w / blockSize));
+      tmp.height = Math.max(1, Math.floor(h / blockSize));
+      var tc = tmp.getContext('2d');
+      tc.drawImage(srcCanvas, x, y, w, h, 0, 0, tmp.width, tmp.height);
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(tmp, 0, 0, tmp.width, tmp.height, x, y, w, h);
+      ctx.imageSmoothingEnabled = true;
+    }
+
+    // ── Apply effect to face regions from stored predictions ──
+    function applyEffectToPredictions(predictions) {
+      var canvas = resultCanvas;
+      canvas.width  = loadedImg.naturalWidth;
+      canvas.height = loadedImg.naturalHeight;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(loadedImg, 0, 0);
+
+      var expandFactor = parseInt(expandPctSlider.value, 10) / 100;
+      var blurAmt      = parseInt(blurAmountSlider.value, 10);
+
+      predictions.forEach(function(pred) {
+        var x1 = pred.topLeft[0];
+        var y1 = pred.topLeft[1];
+        var x2 = pred.bottomRight[0];
+        var y2 = pred.bottomRight[1];
+        var fw = x2 - x1;
+        var fh = y2 - y1;
+
+        // Expand box
+        var ex = fw * expandFactor;
+        var ey = fh * expandFactor;
+        var rx = Math.max(0, Math.round(x1 - ex));
+        var ry = Math.max(0, Math.round(y1 - ey));
+        var rw = Math.min(canvas.width  - rx, Math.round(fw + ex * 2));
+        var rh = Math.min(canvas.height - ry, Math.round(fh + ey * 2));
+
+        if (rw < 1 || rh < 1) return;
+
+        if (currentEffect === 'blur') {
+          blurRegion(ctx, canvas, rx, ry, rw, rh, blurAmt);
+        } else if (currentEffect === 'pixelate') {
+          var blockSize = Math.max(4, Math.round(Math.min(rw, rh) / 10));
+          pixelateRegion(ctx, canvas, rx, ry, rw, rh, blockSize);
+        } else {
+          // Black box
+          ctx.fillStyle = '#000000';
+          ctx.fillRect(rx, ry, rw, rh);
+        }
+      });
+    }
+
+    // ── Show face count badge ──
+    function showFaceCount(count) {
+      if (count === 0) {
+        faceCountWrap.innerHTML = '<div class="face-count-badge none">⚠️ No faces detected — try a different image or a clearer photo.</div>';
+        resultHeading.textContent = 'No faces detected';
+      } else if (count === 1) {
+        faceCountWrap.innerHTML = '<div class="face-count-badge">🔒 Found 1 face — anonymized</div>';
+        resultHeading.textContent = 'Privacy-Protected Image';
+      } else {
+        faceCountWrap.innerHTML = '<div class="face-count-badge">🔒 Found ' + count + ' faces — all anonymized</div>';
+        resultHeading.textContent = 'Privacy-Protected Image';
+      }
+    }
+
+    // ── Main blur flow ──
+    function doBlur() {
+      if (!currentFile || isProcessing) return;
+
+      isProcessing = true;
+      blurBtn.disabled = true;
+      reapplyBtn.disabled = true;
+      errorWrap.style.display = 'none';
+      resultSection.style.display = 'none';
+      progressWrap.style.display = '';
+      progressBar.style.width = '0%';
+      progressPct.textContent = '0%';
+      setStatus('processing', 'Processing…');
+
+      Promise.resolve()
+        .then(function() {
+          if (blazeModel) return blazeModel;
+
+          progressLabel.textContent = 'Loading AI model…';
+          progressNote.textContent  = 'Model is ~1 MB — loads quickly. Detection takes under a second.';
+          animateProgressTo(70, 1500);
+
+          return blazeface.load().then(function(model) {
+            blazeModel = model;
+            return model;
+          });
+        })
+        .then(function(model) {
+          progressLabel.textContent = 'Detecting faces…';
+          animateProgressTo(85, 400);
+
+          var imgEl = loadedImg;
+          if (!imgEl || !imgEl.complete || !imgEl.naturalWidth) {
+            imgEl = new Image();
+            imgEl.src = currentObjUrl;
+            return new Promise(function(resolve, reject) {
+              imgEl.onload  = function() { loadedImg = imgEl; resolve(model.estimateFaces(imgEl, false)); };
+              imgEl.onerror = function() { reject(new Error('Could not load image for detection.')); };
+            });
+          }
+          return model.estimateFaces(imgEl, false);
+        })
+        .then(function(predictions) {
+          progressLabel.textContent = 'Applying effect…';
+          animateProgressTo(95, 200);
+
+          lastPredictions = predictions || [];
+          applyEffectToPredictions(lastPredictions);
+
+          if (progressAnimId) clearInterval(progressAnimId);
+          progressBar.style.width = '100%';
+          progressPct.textContent = '100%';
+          progressLabel.textContent = 'Done!';
+          setTimeout(function() { progressWrap.style.display = 'none'; }, 500);
+
+          showFaceCount(lastPredictions.length);
+          resultSection.style.display = '';
+
+          var count = lastPredictions.length;
+          setStatus('done', '✓ ' + (count === 0 ? 'No faces found' : count + (count === 1 ? ' face' : ' faces') + ' blurred'));
+
+          isProcessing = false;
+          blurBtn.disabled = false;
+          reapplyBtn.disabled = false;
+        })
+        .catch(function(err) {
+          console.error('[PicBrew FaceBlur]', err);
+          if (progressAnimId) clearInterval(progressAnimId);
+          progressWrap.style.display = 'none';
+          var msg = (err && err.message) ? err.message : String(err);
+          if (msg.toLowerCase().includes('network') || msg.toLowerCase().includes('fetch') || msg.toLowerCase().includes('failed to fetch')) {
+            displayError('Could not load AI model — check your internet connection and try again.');
+          } else if (msg.toLowerCase().includes('webgl') || msg.toLowerCase().includes('backend')) {
+            displayError('WebGL is not available in your browser. Face detection requires a WebGL-capable browser such as Chrome or Firefox.');
+          } else {
+            displayError('Could not process the image. Please try again or use a different photo. (' + msg + ')');
+          }
+          blazeModel = null;
+          isProcessing = false;
+          blurBtn.disabled = false;
+          reapplyBtn.disabled = false;
+        });
+    }
+
+    // ── Re-apply (uses cached predictions, new settings) ──
+    function doReapply() {
+      if (!lastPredictions || !loadedImg) return;
+      applyEffectToPredictions(lastPredictions);
+      showFaceCount(lastPredictions.length);
+      resultSection.style.display = '';
+    }
+
+    // ── Download ──
+    downloadBtn.addEventListener('click', function() {
+      var link = document.createElement('a');
+      link.download = 'picbrew-face-blur-' + Date.now() + '.png';
+      link.href = resultCanvas.toDataURL('image/png');
+      link.click();
+    });
+
+    blurBtn.addEventListener('click', doBlur);
+    reapplyBtn.addEventListener('click', doReapply);
+
+    // ── Drop zone ──
+    dropZone.addEventListener('click', function() { fileInput.click(); });
+    fileInput.addEventListener('change', function(e) {
+      if (e.target.files[0]) handleFile(e.target.files[0]);
+      fileInput.value = '';
+    });
+    fileInput2.addEventListener('change', function(e) {
+      if (e.target.files[0]) handleFile(e.target.files[0]);
+      fileInput2.value = '';
+    });
+
+    dropZone.addEventListener('dragover', function(e) { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', function() { dropZone.classList.remove('dragover'); });
+    dropZone.addEventListener('drop', function(e) {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      var files = Array.from(e.dataTransfer.files);
+      var img   = files.find(function(f) { return f.type.startsWith('image/'); });
+      if (img) handleFile(img);
+    });
+  </script>
+
+  <script data-goatcounter="https://picbrew.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

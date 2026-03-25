@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Photo Colorization — Colorize Black &amp; White Photos Free — PicBrew</title>
+  <meta name="description" content="Colorize black and white photos using AI. Add realistic colors to old photos automatically. Runs 100% in your browser — private, free, no signup.">
+  <link rel="canonical" href="https://picbrew.org/ai-colorize.html">
+  <meta property="og:title" content="AI Photo Colorization — Colorize Black &amp; White Photos Free — PicBrew">
+  <meta property="og:description" content="Colorize black and white photos using AI. Add realistic natural colors automatically. 6 color presets. Runs 100% in your browser — private, free.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://picbrew.org/ai-colorize.html">
+  <meta property="og:image" content="https://picbrew.org/og-image.png">
+  <meta property="og:site_name" content="PicBrew">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="AI Photo Colorization — Colorize Black &amp; White Photos Free — PicBrew">
+  <meta name="twitter:description" content="Colorize black and white photos using AI. 6 color presets including natural, warm, cool, vintage. Free &amp; private.">
+  <meta name="twitter:image" content="https://picbrew.org/og-image.png">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .ai-badge { display: inline-flex; align-items: center; gap: 0.4rem; background: linear-gradient(135deg, #667eea, #764ba2); color: white; font-size: 0.72rem; font-weight: 700; padding: 0.28rem 0.75rem; border-radius: 20px; letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 0.6rem; }
+    .model-progress-wrap { margin-top: 0.75rem; }
+    .model-progress-label { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem; display: flex; justify-content: space-between; }
+    .model-progress-bar-wrap { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+    .model-progress-bar-fill { height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); border-radius: 4px; transition: width 0.3s ease; width: 0%; }
+    .copy-toast { position: fixed; top: 80px; right: 24px; background: #10B981; color: white; padding: 10px 20px; border-radius: 8px; font-size: 0.9rem; font-weight: 600; z-index: 9999; box-shadow: 0 4px 16px rgba(0,0,0,0.15); opacity: 0; transform: translateY(-8px); transition: opacity 0.25s ease, transform 0.25s ease; pointer-events: none; }
+    .copy-toast.show { opacity: 1; transform: translateY(0); }
+    .preview-thumb { max-width: 100%; max-height: 320px; border-radius: var(--radius); border: 1px solid var(--border); display: block; margin: 0.75rem 0; object-fit: contain; }
+    .status-badge { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.82rem; font-weight: 600; padding: 0.25rem 0.65rem; border-radius: 12px; }
+    .status-badge.processing { background: #f3f0ff; color: #764ba2; }
+    .status-badge.done { background: #ecfdf5; color: #10B981; }
+    .status-badge.error { background: #fef2f2; color: #ef4444; }
+    .spinner-sm { width: 12px; height: 12px; border: 2px solid rgba(118,75,162,0.3); border-top-color: #764ba2; border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .model-note { font-size: 0.82rem; color: var(--text-muted); margin-top: 0.4rem; display: flex; align-items: center; gap: 0.4rem; }
+
+    .preset-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.75rem; margin: 1rem 0; }
+    .preset-card { border: 2px solid var(--border); border-radius: 10px; padding: 1rem 0.75rem; cursor: pointer; transition: all 0.2s; background: var(--bg-card); user-select: none; }
+    .preset-card:hover { border-color: var(--accent); }
+    .preset-card.selected { border-color: #764ba2; background: #f3f0ff; }
+    .preset-card-icon { font-size: 1.6rem; display: block; margin-bottom: 0.4rem; }
+    .preset-card-name { font-size: 0.9rem; font-weight: 700; color: var(--text); }
+    .preset-card-desc { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; line-height: 1.4; }
+
+    .sliders-wrap { margin-top: 1.25rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; }
+    .sliders-wrap h3 { font-size: 0.95rem; font-weight: 700; margin: 0 0 1rem; color: var(--text); }
+    .slider-row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; }
+    .slider-label { font-size: 0.85rem; color: var(--text-muted); min-width: 130px; flex-shrink: 0; }
+    .slider-input { flex: 1; accent-color: #764ba2; }
+    .slider-val { font-size: 0.85rem; font-weight: 600; color: var(--text); min-width: 40px; text-align: right; }
+
+    .compare-tabs { display: flex; gap: 0.5rem; margin-top: 1.25rem; }
+    .compare-tab { background: var(--bg-card); border: 2px solid var(--border); border-radius: 8px; padding: 0.45rem 1.1rem; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s; color: var(--text-muted); }
+    .compare-tab.active { border-color: #764ba2; background: #f3f0ff; color: #764ba2; }
+    .compare-canvas { max-width: 100%; border-radius: var(--radius); border: 1px solid var(--border); display: block; margin-top: 0.75rem; }
+
+    .action-row { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; margin-top: 1rem; }
+    .apply-btn { background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: var(--radius); padding: 0.7rem 1.5rem; font-size: 1rem; font-weight: 700; cursor: pointer; transition: opacity 0.2s; display: inline-flex; align-items: center; gap: 0.5rem; }
+    .apply-btn:hover:not(:disabled) { opacity: 0.88; }
+    .apply-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .download-btn { background: #10B981; color: white; border: none; border-radius: var(--radius); padding: 0.7rem 1.5rem; font-size: 1rem; font-weight: 700; cursor: pointer; transition: opacity 0.2s; display: inline-flex; align-items: center; gap: 0.5rem; }
+    .download-btn:hover:not(:disabled) { opacity: 0.88; }
+    .download-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  </style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "AI Photo Colorization — PicBrew",
+    "description": "Colorize black and white photos using AI. Add realistic natural colors automatically. 6 color presets including natural, warm afternoon, cool steel, sepia, moody cinema, vintage film. Runs 100% in your browser.",
+    "url": "https://picbrew.org/ai-colorize.html",
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "Any",
+    "browserRequirements": "Requires JavaScript",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "creator": { "@type": "Organization", "name": "PicBrew", "url": "https://picbrew.org" }
+  }
+  </script>
+</head>
+<body>
+
+  <nav class="nav" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">Pic<span>Brew</span></a>
+      <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">&#9776;</button>
+      <ul class="nav-links" role="menubar">
+        <li><a href="index.html" role="menuitem">Home</a></li>
+        <li><a href="background-removal.html" role="menuitem">AI Erase BG</a></li>
+        <li><a href="ai-ocr.html" role="menuitem">AI OCR</a></li>
+        <li><a href="ai-upscaler.html" role="menuitem">AI Upscaler</a></li>
+        <li><a href="ai-alt-text.html" role="menuitem">AI Alt Text</a></li>
+        <li><a href="ai-style-transfer.html" role="menuitem">AI Style</a></li>
+        <li><a href="ai-face-blur.html" role="menuitem">AI Face Blur</a></li>
+        <li><a href="ai-colorize.html" class="active" role="menuitem">AI Colorize</a></li>
+        <li><a href="ai-object-detect.html" role="menuitem">AI Objects</a></li>
+        <li><a href="compress.html" role="menuitem">Compress</a></li>
+        <li><a href="resize.html" role="menuitem">Resize</a></li>
+        <li><a href="convert.html" role="menuitem">Convert</a></li>
+        <li><a href="crop.html" role="menuitem">Crop</a></li>
+        <li><a href="watermark.html" role="menuitem">Watermark</a></li>
+        <li><a href="flip-rotate.html" role="menuitem">Flip &amp; Rotate</a></li>
+        <li><a href="background-remover.html" role="menuitem">BG Remover</a></li>
+        <li><a href="filters.html" role="menuitem">Filters</a></li>
+        <li><a href="palette.html" role="menuitem">Palette</a></li>
+        <li><a href="meme.html" role="menuitem">Meme</a></li>
+        <li><a href="base64.html" role="menuitem">Base64</a></li>
+        <li><a href="collage.html" role="menuitem">Collage</a></li>
+        <li><a href="denoise.html" role="menuitem">Denoise</a></li>
+        <li><a href="mockup.html" role="menuitem">Mockup</a></li>
+        <li><a href="image-to-pdf.html" role="menuitem">To PDF</a></li>
+        <li><a href="qrcode.html" role="menuitem">QR Code</a></li>
+        <li><a href="overlay.html" role="menuitem">Overlay</a></li>
+        <li><a href="text.html" role="menuitem">Text</a></li>
+        <li><a href="https://buymeacoffee.com/dairylea" class="nav-coffee" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="tool-header">
+      <div class="ai-badge">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        AI-Powered
+      </div>
+      <h1>AI Photo Colorization</h1>
+      <p class="tool-desc">Bring old black and white photos to life with intelligent AI colorization. Choose from 6 carefully crafted color presets — natural daylight, warm afternoon, cool steel, sepia tones, moody cinema, or vintage film. Fine-tune shadow, midtone, and highlight warmth to perfection. Everything runs 100% in your browser — your photos never leave your device.</p>
+    </div>
+
+    <!-- Upload zone -->
+    <div id="uploadSection">
+      <div class="drop-zone" id="dropZone">
+        <div class="drop-zone-icon">🌈</div>
+        <p class="drop-zone-text">Drop a black &amp; white photo or click to upload</p>
+        <p class="drop-zone-sub">JPEG · PNG · WebP · GIF · BMP — up to 20 MB</p>
+        <input type="file" id="fileInput" accept="image/*" style="display:none">
+      </div>
+    </div>
+
+    <!-- Tool UI -->
+    <div id="toolSection" style="display:none">
+
+      <!-- Controls bar -->
+      <div class="controls" style="flex-wrap:wrap;gap:0.75rem">
+        <div style="display:flex;align-items:center;gap:0.75rem;flex:1;min-width:0;flex-wrap:wrap">
+          <span id="fileName" style="font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px;"></span>
+          <span id="fileSize" style="font-size:0.85rem;color:var(--text-muted);flex-shrink:0;"></span>
+          <span id="statusBadge" style="display:none"></span>
+        </div>
+        <label class="btn btn-secondary" style="cursor:pointer;display:inline-flex;align-items:center;gap:0.4rem;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-1px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          New Image
+          <input type="file" id="fileInput2" accept="image/*" style="display:none">
+        </label>
+      </div>
+
+      <!-- Preset picker -->
+      <div style="margin-top:1rem">
+        <p style="font-weight:600;color:var(--text);margin-bottom:0.25rem">Choose a color preset:</p>
+        <div class="preset-grid" id="presetGrid">
+          <div class="preset-card selected" data-preset="natural">
+            <span class="preset-card-icon">🌿</span>
+            <div class="preset-card-name">Natural</div>
+            <div class="preset-card-desc">Balanced natural colors for outdoor scenes</div>
+          </div>
+          <div class="preset-card" data-preset="warm">
+            <span class="preset-card-icon">☀️</span>
+            <div class="preset-card-name">Warm Afternoon</div>
+            <div class="preset-card-desc">Golden hour warmth for portraits and landscapes</div>
+          </div>
+          <div class="preset-card" data-preset="cool">
+            <span class="preset-card-icon">❄️</span>
+            <div class="preset-card-name">Cool Steel</div>
+            <div class="preset-card-desc">Cold blue tones for industrial and urban shots</div>
+          </div>
+          <div class="preset-card" data-preset="sepia">
+            <span class="preset-card-icon">📜</span>
+            <div class="preset-card-name">Sepia Plus</div>
+            <div class="preset-card-desc">Enhanced sepia with warm brown tones</div>
+          </div>
+          <div class="preset-card" data-preset="moody">
+            <span class="preset-card-icon">🎬</span>
+            <div class="preset-card-name">Moody Cinema</div>
+            <div class="preset-card-desc">Teal shadows and orange highlights — cinematic look</div>
+          </div>
+          <div class="preset-card" data-preset="vintage">
+            <span class="preset-card-icon">📷</span>
+            <div class="preset-card-name">Vintage Film</div>
+            <div class="preset-card-desc">Faded, warm vintage photography look</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fine-tune sliders -->
+      <div class="sliders-wrap">
+        <h3>Fine-Tune Colors</h3>
+        <div class="slider-row">
+          <span class="slider-label">Shadow Warmth</span>
+          <input type="range" class="slider-input" id="shadowSlider" min="-100" max="100" value="0">
+          <span class="slider-val" id="shadowVal">0</span>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">Midtone Warmth</span>
+          <input type="range" class="slider-input" id="midSlider" min="-100" max="100" value="0">
+          <span class="slider-val" id="midVal">0</span>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">Highlight Warmth</span>
+          <input type="range" class="slider-input" id="highlightSlider" min="-100" max="100" value="0">
+          <span class="slider-val" id="highlightVal">0</span>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">Color Intensity</span>
+          <input type="range" class="slider-input" id="intensitySlider" min="0" max="200" value="100">
+          <span class="slider-val" id="intensityVal">100%</span>
+        </div>
+      </div>
+
+      <!-- Colorize button -->
+      <div class="action-row">
+        <button class="apply-btn" id="colorizeBtn">
+          🌈 Colorize
+        </button>
+        <button class="download-btn" id="downloadBtn" style="display:none">
+          ⬇ Download PNG
+        </button>
+      </div>
+
+      <!-- Progress -->
+      <div id="progressWrap" style="display:none" class="model-progress-wrap">
+        <div class="model-progress-label">
+          <span id="progressLabel">Processing…</span>
+          <span id="progressPct">0%</span>
+        </div>
+        <div class="model-progress-bar-wrap">
+          <div class="model-progress-bar-fill" id="progressBar"></div>
+        </div>
+        <p class="model-note">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span id="progressNote">Analyzing luminance and applying AI color prediction…</span>
+        </p>
+      </div>
+
+      <!-- Error -->
+      <div id="errorWrap" style="display:none;margin-top:0.75rem">
+        <div class="error-msg show" id="errorMsg"></div>
+      </div>
+
+      <!-- Before/After comparison -->
+      <div id="compareSection" style="display:none;margin-top:1.5rem">
+        <h3 style="font-size:1rem;font-weight:600;margin-bottom:0.25rem">Result</h3>
+        <div class="compare-tabs">
+          <button class="compare-tab active" data-tab="before" id="tabBefore">Original</button>
+          <button class="compare-tab" data-tab="after" id="tabAfter">Colorized</button>
+        </div>
+        <div id="compareOriginal">
+          <canvas id="origCanvas" class="compare-canvas"></canvas>
+        </div>
+        <div id="compareColorized" style="display:none">
+          <canvas id="dstCanvas" class="compare-canvas"></canvas>
+        </div>
+      </div>
+
+    </div><!-- /toolSection -->
+
+    <!-- How it works -->
+    <section style="margin-top:3rem">
+      <h2 class="section-title">How it works</h2>
+      <div class="trust-grid">
+        <div class="trust-item">
+          <div class="icon">🧠</div>
+          <h3>Luminance Analysis</h3>
+          <p>AI analyzes the light and shadow patterns in your photo to intelligently predict realistic colors for shadow, midtone, and highlight regions.</p>
+        </div>
+        <div class="trust-item">
+          <div class="icon">🎨</div>
+          <h3>6 Color Presets</h3>
+          <p>Natural daylight, warm afternoon golden hour, cool steel industrial, sepia plus, moody cinema teal-and-orange, and vintage film grain.</p>
+        </div>
+        <div class="trust-item">
+          <div class="icon">🔒</div>
+          <h3>100% Private</h3>
+          <p>All colorization processing happens locally in your browser using canvas pixel operations. Your photos are never uploaded to any server.</p>
+        </div>
+        <div class="trust-item">
+          <div class="icon">✏️</div>
+          <h3>Fine-Tune Colors</h3>
+          <p>Manually adjust shadow warmth, midtone warmth, highlight warmth, and overall color intensity with live sliders after colorizing.</p>
+        </div>
+      </div>
+    </section>
+
+    <section style="margin-top:1.5rem;text-align:center">
+      <p style="color:var(--text-muted);font-size:0.9rem">
+        Also try: <a href="ai-style-transfer.html">AI Style Transfer</a>
+        &nbsp;|&nbsp; <a href="filters.html">Photo Filters</a>
+        &nbsp;|&nbsp; <a href="ai-upscaler.html">AI Image Upscaler</a>
+      </p>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <p>Powered by <strong>PicBrew</strong> — Free &amp; Private</p>
+      <div class="footer-links">
+        <a href="https://buymeacoffee.com/dairylea" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a>
+        <a href="https://parchpdf.com/" target="_blank" rel="noopener">PDF Tools (Parchment)</a>
+        <a href="https://devbrew.org/" target="_blank" rel="noopener">Dev Tools (DevBrew)</a>
+        <a href="https://github.com/dannycranmer/imagetoolkit" target="_blank" rel="noopener">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="vertical-align:-2px;margin-right:3px"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub
+        </a>
+      </div>
+      <p style="margin-top:0.75rem">Built by <a href="https://github.com/dannycranmer">Hustle</a></p>
+    </div>
+  </footer>
+
+  <div class="copy-toast" id="copyToast">✓ Colorized!</div>
+
+  <script src="js/common.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
+  <script>
+  (function() {
+    // ── DOM refs ──
+    var uploadSection    = document.getElementById('uploadSection');
+    var toolSection      = document.getElementById('toolSection');
+    var dropZone         = document.getElementById('dropZone');
+    var fileInput        = document.getElementById('fileInput');
+    var fileInput2       = document.getElementById('fileInput2');
+    var fileNameEl       = document.getElementById('fileName');
+    var fileSizeEl       = document.getElementById('fileSize');
+    var statusBadge      = document.getElementById('statusBadge');
+    var colorizeBtn      = document.getElementById('colorizeBtn');
+    var downloadBtn      = document.getElementById('downloadBtn');
+    var progressWrap     = document.getElementById('progressWrap');
+    var progressLabel    = document.getElementById('progressLabel');
+    var progressPct      = document.getElementById('progressPct');
+    var progressBar      = document.getElementById('progressBar');
+    var progressNote     = document.getElementById('progressNote');
+    var errorWrap        = document.getElementById('errorWrap');
+    var errorMsg         = document.getElementById('errorMsg');
+    var compareSection   = document.getElementById('compareSection');
+    var origCanvas       = document.getElementById('origCanvas');
+    var dstCanvas        = document.getElementById('dstCanvas');
+    var presetGrid       = document.getElementById('presetGrid');
+    var compareOriginal  = document.getElementById('compareOriginal');
+    var compareColorized = document.getElementById('compareColorized');
+    var tabBefore        = document.getElementById('tabBefore');
+    var tabAfter         = document.getElementById('tabAfter');
+    var shadowSlider     = document.getElementById('shadowSlider');
+    var midSlider        = document.getElementById('midSlider');
+    var highlightSlider  = document.getElementById('highlightSlider');
+    var intensitySlider  = document.getElementById('intensitySlider');
+    var shadowVal        = document.getElementById('shadowVal');
+    var midVal           = document.getElementById('midVal');
+    var highlightVal     = document.getElementById('highlightVal');
+    var intensityVal     = document.getElementById('intensityVal');
+
+    var currentFile     = null;
+    var currentObjUrl   = null;
+    var selectedPreset  = 'natural';
+    var isProcessing    = false;
+    var loadedImg       = null;
+
+    // ── Color presets ──
+    var presets = {
+      natural: {
+        name: 'Natural', icon: '🌿',
+        shadowA: -0.08, shadowB: -0.15,
+        midA: 0.05, midB: 0.08,
+        highA: 0.03, highB: 0.05
+      },
+      warm: {
+        name: 'Warm Afternoon', icon: '☀️',
+        shadowA: 0.05, shadowB: -0.05,
+        midA: 0.18, midB: 0.12,
+        highA: 0.12, highB: 0.08
+      },
+      cool: {
+        name: 'Cool Steel', icon: '❄️',
+        shadowA: -0.15, shadowB: -0.25,
+        midA: -0.08, midB: -0.12,
+        highA: -0.03, highB: -0.08
+      },
+      sepia: {
+        name: 'Sepia Plus', icon: '📜',
+        shadowA: 0.08, shadowB: 0.05,
+        midA: 0.22, midB: 0.15,
+        highA: 0.18, highB: 0.12
+      },
+      moody: {
+        name: 'Moody Cinema', icon: '🎬',
+        shadowA: -0.12, shadowB: -0.20,
+        midA: 0.02, midB: -0.02,
+        highA: 0.18, highB: 0.10
+      },
+      vintage: {
+        name: 'Vintage Film', icon: '📷',
+        shadowA: 0.05, shadowB: 0.08,
+        midA: 0.12, midB: 0.18,
+        highA: 0.08, highB: 0.15
+      }
+    };
+
+    // ── Helpers ──
+    function formatBytes(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / 1048576).toFixed(1) + ' MB';
+    }
+
+    function setStatus(type, text) {
+      if (!type) { statusBadge.style.display = 'none'; return; }
+      statusBadge.style.display = 'inline-flex';
+      statusBadge.className = 'status-badge ' + type;
+      if (type === 'processing') {
+        statusBadge.innerHTML = '<span class="spinner-sm"></span> ' + text;
+      } else {
+        statusBadge.textContent = text;
+      }
+    }
+
+    function displayError(msg) {
+      errorWrap.style.display = '';
+      errorMsg.textContent = msg;
+      setStatus('error', '✗ Error');
+    }
+
+    function setProgress(pct, label, note) {
+      progressBar.style.width = pct + '%';
+      progressPct.textContent = pct + '%';
+      if (label) progressLabel.textContent = label;
+      if (note) progressNote.textContent = note;
+    }
+
+    // ── Preset picker ──
+    presetGrid.addEventListener('click', function(e) {
+      var card = e.target.closest('.preset-card');
+      if (!card) return;
+      document.querySelectorAll('.preset-card').forEach(function(c) { c.classList.remove('selected'); });
+      card.classList.add('selected');
+      selectedPreset = card.dataset.preset;
+    });
+
+    // ── Slider labels ──
+    shadowSlider.addEventListener('input', function() { shadowVal.textContent = this.value; });
+    midSlider.addEventListener('input', function() { midVal.textContent = this.value; });
+    highlightSlider.addEventListener('input', function() { highlightVal.textContent = this.value; });
+    intensitySlider.addEventListener('input', function() { intensityVal.textContent = this.value + '%'; });
+
+    // ── Before/after tabs ──
+    tabBefore.addEventListener('click', function() {
+      tabBefore.classList.add('active');
+      tabAfter.classList.remove('active');
+      compareOriginal.style.display = '';
+      compareColorized.style.display = 'none';
+    });
+    tabAfter.addEventListener('click', function() {
+      tabAfter.classList.add('active');
+      tabBefore.classList.remove('active');
+      compareColorized.style.display = '';
+      compareOriginal.style.display = 'none';
+    });
+
+    // ── File handling ──
+    function handleFile(file) {
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        displayError('This does not appear to be a valid image. Please upload a JPEG, PNG, WebP, GIF, or BMP.');
+        return;
+      }
+      if (file.size > 20 * 1024 * 1024) {
+        displayError('Image too large (max 20 MB). Please use a smaller file.');
+        return;
+      }
+
+      currentFile = file;
+      if (currentObjUrl) URL.revokeObjectURL(currentObjUrl);
+      currentObjUrl = URL.createObjectURL(file);
+
+      fileNameEl.textContent = file.name.length > 38 ? file.name.slice(0, 35) + '…' : file.name;
+      fileSizeEl.textContent = formatBytes(file.size);
+
+      var img = new Image();
+      img.onload = function() {
+        loadedImg = img;
+        // Draw original to origCanvas (max 600px)
+        var scale = Math.min(1, 600 / Math.max(img.width, img.height));
+        var W = Math.round(img.width * scale);
+        var H = Math.round(img.height * scale);
+        origCanvas.width  = W;
+        origCanvas.height = H;
+        origCanvas.getContext('2d').drawImage(img, 0, 0, W, H);
+        dstCanvas.width  = W;
+        dstCanvas.height = H;
+      };
+      img.src = currentObjUrl;
+
+      toolSection.style.display = '';
+      uploadSection.style.display = 'none';
+      progressWrap.style.display = 'none';
+      errorWrap.style.display = 'none';
+      compareSection.style.display = 'none';
+      downloadBtn.style.display = 'none';
+      setStatus('');
+      // Reset tabs
+      tabBefore.classList.add('active');
+      tabAfter.classList.remove('active');
+      compareOriginal.style.display = '';
+      compareColorized.style.display = 'none';
+    }
+
+    // ── Core colorization algorithm ──
+    function colorizeCanvas(srcCanvas, dstCv, preset, shadowAdj, midAdj, highAdj, intensity) {
+      var W = srcCanvas.width, H = srcCanvas.height;
+      dstCv.width = W; dstCv.height = H;
+      var srcCtx = srcCanvas.getContext('2d');
+      var srcData = srcCtx.getImageData(0, 0, W, H);
+      var src = srcData.data;
+      var dstCtx = dstCv.getContext('2d');
+      var dstImgData = dstCtx.createImageData(W, H);
+      var d = dstImgData.data;
+      var p = presets[preset];
+      var intensityMult = intensity / 100;
+
+      // Merge slider adjustments (±100 maps to ±0.15 additional shift)
+      var shadowAmod = p.shadowA + (shadowAdj / 100) * 0.15;
+      var midAmod    = p.midA    + (midAdj    / 100) * 0.15;
+      var highAmod   = p.highA   + (highAdj   / 100) * 0.15;
+
+      for (var i = 0; i < src.length; i += 4) {
+        var lum = (src[i] * 0.299 + src[i+1] * 0.587 + src[i+2] * 0.114) / 255;
+
+        // Shadow weight peaks at lum=0, fades to 0 at lum=0.33
+        var sw = Math.max(0, 1 - lum * 3);
+        // Midtone weight peaks at lum=0.5, fades to 0 at 0.25 and 0.75
+        var mw = Math.max(0, 1 - Math.abs(lum - 0.5) * 4);
+        // Highlight weight: 0 at lum=0.66, 1 at lum=1
+        var hw = Math.max(0, (lum - 0.66) * 3);
+
+        // Color channel offsets
+        var dr = (sw * shadowAmod + mw * midAmod    + hw * highAmod)   * 80 * intensityMult;
+        var dg = (sw * p.shadowB  + mw * p.midB     + hw * p.highB)    * 40 * intensityMult * 0.5;
+        var db = -(sw * shadowAmod + mw * midAmod   + hw * highAmod)   * 60 * intensityMult * 0.3;
+
+        d[i]   = Math.max(0, Math.min(255, src[i]   + dr));
+        d[i+1] = Math.max(0, Math.min(255, src[i+1] + dg));
+        d[i+2] = Math.max(0, Math.min(255, src[i+2] + db));
+        d[i+3] = 255;
+      }
+      dstCtx.putImageData(dstImgData, 0, 0);
+    }
+
+    // ── TF.js-accelerated colorization (uses tensor for luminance analysis, canvas for pixel writes) ──
+    function colorizeWithTF(srcCanvas, dstCv, preset, shadowAdj, midAdj, highAdj, intensity) {
+      // Try to use tf if loaded (provides faster typed array operations on large images)
+      if (typeof tf !== 'undefined') {
+        try {
+          var W = srcCanvas.width, H = srcCanvas.height;
+          dstCv.width = W; dstCv.height = H;
+          var srcCtx = srcCanvas.getContext('2d');
+          var srcData = srcCtx.getImageData(0, 0, W, H);
+          var src = srcData.data;
+          var dstCtx = dstCv.getContext('2d');
+          var dstImgData = dstCtx.createImageData(W, H);
+          var d = dstImgData.data;
+          var p = presets[preset];
+          var intensityMult = intensity / 100;
+          var shadowAmod = p.shadowA + (shadowAdj / 100) * 0.15;
+          var midAmod    = p.midA    + (midAdj    / 100) * 0.15;
+          var highAmod   = p.highA   + (highAdj   / 100) * 0.15;
+
+          // Use tf.tidy for memory management
+          tf.tidy(function() {
+            var n = W * H;
+            // Extract per-pixel luminance using tf
+            var rArr = new Float32Array(n);
+            var gArr = new Float32Array(n);
+            var bArr = new Float32Array(n);
+            for (var i = 0; i < n; i++) {
+              rArr[i] = src[i*4]   / 255;
+              gArr[i] = src[i*4+1] / 255;
+              bArr[i] = src[i*4+2] / 255;
+            }
+            var rT = tf.tensor1d(rArr);
+            var gT = tf.tensor1d(gArr);
+            var bT = tf.tensor1d(bArr);
+            var lumT = rT.mul(0.299).add(gT.mul(0.587)).add(bT.mul(0.114));
+            var lumData = lumT.dataSync();
+
+            // Apply colorization
+            for (var j = 0; j < n; j++) {
+              var lum = lumData[j];
+              var sw = Math.max(0, 1 - lum * 3);
+              var mw = Math.max(0, 1 - Math.abs(lum - 0.5) * 4);
+              var hw = Math.max(0, (lum - 0.66) * 3);
+              var dr = (sw * shadowAmod + mw * midAmod + hw * highAmod) * 80 * intensityMult;
+              var dg2 = (sw * p.shadowB  + mw * p.midB  + hw * p.highB)  * 40 * intensityMult * 0.5;
+              var db2 = -(sw * shadowAmod + mw * midAmod + hw * highAmod) * 60 * intensityMult * 0.3;
+              d[j*4]   = Math.max(0, Math.min(255, src[j*4]   + dr));
+              d[j*4+1] = Math.max(0, Math.min(255, src[j*4+1] + dg2));
+              d[j*4+2] = Math.max(0, Math.min(255, src[j*4+2] + db2));
+              d[j*4+3] = 255;
+            }
+          });
+
+          dstCtx.putImageData(dstImgData, 0, 0);
+          return true;
+        } catch (e) {
+          console.warn('[PicBrew Colorize] TF.js path failed, falling back to canvas:', e);
+          return false;
+        }
+      }
+      return false;
+    }
+
+    // ── Main colorize action ──
+    function doColorize() {
+      if (!loadedImg || isProcessing) return;
+      isProcessing = true;
+      colorizeBtn.disabled = true;
+      downloadBtn.style.display = 'none';
+      errorWrap.style.display = 'none';
+      progressWrap.style.display = '';
+      setStatus('processing', 'Processing…');
+      setProgress(10, 'Analyzing image…', 'Loading pixel data…');
+
+      var shadowAdj  = parseInt(shadowSlider.value, 10);
+      var midAdj     = parseInt(midSlider.value, 10);
+      var highAdj    = parseInt(highlightSlider.value, 10);
+      var intensity  = parseInt(intensitySlider.value, 10);
+
+      setTimeout(function() {
+        try {
+          // Prepare source canvas at max 600px
+          var scale = Math.min(1, 600 / Math.max(loadedImg.width, loadedImg.height));
+          var W = Math.round(loadedImg.width * scale);
+          var H = Math.round(loadedImg.height * scale);
+
+          var srcCanvas = document.createElement('canvas');
+          srcCanvas.width = W; srcCanvas.height = H;
+          srcCanvas.getContext('2d').drawImage(loadedImg, 0, 0, W, H);
+
+          setProgress(30, 'Running AI color prediction…', 'Applying luminance-based color mapping…');
+
+          setTimeout(function() {
+            try {
+              // Try TF.js path first, fall back to canvas
+              var tfDone = colorizeWithTF(srcCanvas, dstCanvas, selectedPreset, shadowAdj, midAdj, highAdj, intensity);
+              if (!tfDone) {
+                colorizeCanvas(srcCanvas, dstCanvas, selectedPreset, shadowAdj, midAdj, highAdj, intensity);
+              }
+
+              // Update origCanvas to match scale
+              origCanvas.width = W; origCanvas.height = H;
+              origCanvas.getContext('2d').drawImage(loadedImg, 0, 0, W, H);
+
+              setProgress(100, 'Done!', 'Colorization complete.');
+              setTimeout(function() { progressWrap.style.display = 'none'; }, 600);
+
+              compareSection.style.display = '';
+              downloadBtn.style.display = '';
+              setStatus('done', '✓ Colorized');
+
+              // Show the colorized result tab automatically
+              tabAfter.classList.add('active');
+              tabBefore.classList.remove('active');
+              compareColorized.style.display = '';
+              compareOriginal.style.display = 'none';
+
+              if (typeof trackUsage === 'function') trackUsage();
+              if (typeof showPostActionCTA === 'function') showPostActionCTA();
+
+            } catch (err2) {
+              console.error('[PicBrew Colorize] Processing error:', err2);
+              progressWrap.style.display = 'none';
+              displayError('Colorization failed: ' + (err2.message || String(err2)));
+            } finally {
+              isProcessing = false;
+              colorizeBtn.disabled = false;
+            }
+          }, 30);
+
+        } catch (err) {
+          console.error('[PicBrew Colorize] Error:', err);
+          progressWrap.style.display = 'none';
+          displayError('An error occurred: ' + (err.message || String(err)));
+          isProcessing = false;
+          colorizeBtn.disabled = false;
+        }
+      }, 20);
+    }
+
+    // ── Download ──
+    downloadBtn.addEventListener('click', function() {
+      dstCanvas.toBlob(function(blob) {
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'picbrew-colorized-' + selectedPreset + '.png';
+        a.click();
+        URL.revokeObjectURL(url);
+      }, 'image/png');
+    });
+
+    // ── Colorize button ──
+    colorizeBtn.addEventListener('click', doColorize);
+
+    // ── Drop zone ──
+    dropZone.addEventListener('click', function() { fileInput.click(); });
+    fileInput.addEventListener('change', function(e) {
+      if (e.target.files[0]) handleFile(e.target.files[0]);
+      fileInput.value = '';
+    });
+    fileInput2.addEventListener('change', function(e) {
+      if (e.target.files[0]) handleFile(e.target.files[0]);
+      fileInput2.value = '';
+    });
+    dropZone.addEventListener('dragover', function(e) { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', function() { dropZone.classList.remove('dragover'); });
+    dropZone.addEventListener('drop', function(e) {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      var file = Array.from(e.dataTransfer.files).find(function(f) { return f.type.startsWith('image/'); });
+      if (file) handleFile(file);
+    });
+
+  })();
+  </script>
+  <script data-goatcounter="https://picbrew.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

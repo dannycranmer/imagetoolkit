@@ -120,4 +120,24 @@
     <lastmod>2026-03-25</lastmod>
     <priority>0.9</priority>
   </url>
+  <url>
+    <loc>https://picbrew.org/ai-style-transfer.html</loc>
+    <lastmod>2026-03-25</lastmod>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://picbrew.org/ai-face-blur.html</loc>
+    <lastmod>2026-03-25</lastmod>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://picbrew.org/ai-colorize.html</loc>
+    <lastmod>2026-03-25</lastmod>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://picbrew.org/ai-object-detect.html</loc>
+    <lastmod>2026-03-25</lastmod>
+    <priority>0.9</priority>
+  </url>
 </urlset>

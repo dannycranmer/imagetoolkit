@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Object Detection — Detect &amp; Label Objects in Images Free — PicBrew</title>
+  <meta name="description" content="Detect objects in images using AI. Labels 80 object categories from COCO dataset. Runs 100% in your browser with TensorFlow.js — private, free, no signup.">
+  <link rel="canonical" href="https://picbrew.org/ai-object-detect.html">
+  <meta property="og:title" content="AI Object Detection — Detect &amp; Label Objects in Images Free — PicBrew">
+  <meta property="og:description" content="Detect and label objects in images using AI. Identifies 80 object categories from the COCO dataset. Runs 100% in your browser — private, free, no signup required.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://picbrew.org/ai-object-detect.html">
+  <meta property="og:image" content="https://picbrew.org/og-image.png">
+  <meta property="og:site_name" content="PicBrew">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="AI Object Detection — Detect &amp; Label Objects in Images Free — PicBrew">
+  <meta name="twitter:description" content="Detect and label objects in images using AI. Identifies 80 object categories. Runs 100% in your browser — private, free, no signup required.">
+  <meta name="twitter:image" content="https://picbrew.org/og-image.png">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .ai-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.28rem 0.75rem;
+      border-radius: 20px;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      margin-bottom: 0.6rem;
+    }
+    .model-progress-wrap { margin-top: 0.75rem; }
+    .model-progress-label { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem; display: flex; justify-content: space-between; }
+    .model-progress-bar-wrap { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+    .model-progress-bar-fill { height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); border-radius: 4px; transition: width 0.3s ease; width: 0%; }
+    .copy-toast { position: fixed; top: 80px; right: 24px; background: #10B981; color: white; padding: 10px 20px; border-radius: 8px; font-size: 0.9rem; font-weight: 600; z-index: 9999; box-shadow: 0 4px 16px rgba(0,0,0,0.15); opacity: 0; transform: translateY(-8px); transition: opacity 0.25s ease, transform 0.25s ease; pointer-events: none; }
+    .copy-toast.show { opacity: 1; transform: translateY(0); }
+    .preview-thumb { max-width: 100%; max-height: 320px; border-radius: var(--radius); border: 1px solid var(--border); display: block; margin: 0.75rem 0; object-fit: contain; }
+    .status-badge { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.82rem; font-weight: 600; padding: 0.25rem 0.65rem; border-radius: 12px; }
+    .status-badge.processing { background: #f3f0ff; color: #764ba2; }
+    .status-badge.done { background: #ecfdf5; color: #10B981; }
+    .status-badge.error { background: #fef2f2; color: #ef4444; }
+    .spinner-sm { width: 12px; height: 12px; border: 2px solid rgba(118,75,162,0.3); border-top-color: #764ba2; border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .model-note { font-size: 0.82rem; color: var(--text-muted); margin-top: 0.4rem; display: flex; align-items: center; gap: 0.4rem; }
+
+    /* Canvas result */
+    #resultCanvas {
+      max-width: 100%;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      display: block;
+      margin: 0.75rem 0;
+    }
+    /* Detection list */
+    .detection-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .detection-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.6rem 0.85rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+    .detection-emoji { font-size: 1.2rem; flex-shrink: 0; width: 1.75rem; text-align: center; }
+    .detection-label { font-weight: 600; font-size: 0.92rem; color: var(--text); flex: 0 0 140px; text-transform: capitalize; }
+    .detection-conf-wrap { flex: 1; }
+    .detection-conf-bar-bg { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+    .detection-conf-bar-fill { height: 100%; border-radius: 3px; }
+    .detection-pct { font-size: 0.82rem; font-weight: 700; color: var(--text-muted); flex-shrink: 0; width: 3.5rem; text-align: right; }
+    .detection-dot {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    }
+    .result-section { margin-top: 1.5rem; }
+    .result-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 0.6rem;
+      flex-wrap: wrap;
+    }
+    .result-header h3 { font-size: 1rem; font-weight: 600; color: var(--text); margin: 0; }
+    .result-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .no-detections {
+      padding: 1.5rem;
+      text-align: center;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+  </style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "AI Object Detection — PicBrew",
+    "description": "Detect and label objects in images using AI powered by TensorFlow.js COCO-SSD. Identifies 80 object categories. Runs 100% in your browser — private, free, no signup required.",
+    "url": "https://picbrew.org/ai-object-detect.html",
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "Any",
+    "browserRequirements": "Requires JavaScript and WebAssembly",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "creator": { "@type": "Organization", "name": "PicBrew", "url": "https://picbrew.org" }
+  }
+  </script>
+</head>
+<body>
+
+  <nav class="nav" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">Pic<span>Brew</span></a>
+      <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">&#9776;</button>
+      <ul class="nav-links" role="menubar">
+        <li><a href="index.html" role="menuitem">Home</a></li>
+        <li><a href="background-removal.html" role="menuitem">AI Erase BG</a></li>
+        <li><a href="ai-ocr.html" role="menuitem">AI OCR</a></li>
+        <li><a href="ai-upscaler.html" role="menuitem">AI Upscaler</a></li>
+        <li><a href="ai-alt-text.html" role="menuitem">AI Alt Text</a></li>
+        <li><a href="ai-style-transfer.html" role="menuitem">AI Style</a></li>
+        <li><a href="ai-face-blur.html" role="menuitem">AI Face Blur</a></li>
+        <li><a href="ai-colorize.html" role="menuitem">AI Colorize</a></li>
+        <li><a href="ai-object-detect.html" class="active" role="menuitem">AI Objects</a></li>
+        <li><a href="compress.html" role="menuitem">Compress</a></li>
+        <li><a href="resize.html" role="menuitem">Resize</a></li>
+        <li><a href="convert.html" role="menuitem">Convert</a></li>
+        <li><a href="crop.html" role="menuitem">Crop</a></li>
+        <li><a href="watermark.html" role="menuitem">Watermark</a></li>
+        <li><a href="flip-rotate.html" role="menuitem">Flip &amp; Rotate</a></li>
+        <li><a href="background-remover.html" role="menuitem">BG Remover</a></li>
+        <li><a href="filters.html" role="menuitem">Filters</a></li>
+        <li><a href="palette.html" role="menuitem">Palette</a></li>
+        <li><a href="meme.html" role="menuitem">Meme</a></li>
+        <li><a href="base64.html" role="menuitem">Base64</a></li>
+        <li><a href="collage.html" role="menuitem">Collage</a></li>
+        <li><a href="denoise.html" role="menuitem">Denoise</a></li>
+        <li><a href="mockup.html" role="menuitem">Mockup</a></li>
+        <li><a href="image-to-pdf.html" role="menuitem">To PDF</a></li>
+        <li><a href="qrcode.html" role="menuitem">QR Code</a></li>
+        <li><a href="overlay.html" role="menuitem">Overlay</a></li>
+        <li><a href="text.html" role="menuitem">Text</a></li>
+        <li><a href="https://buymeacoffee.com/dairylea" class="nav-coffee" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="tool-header">
+      <div class="ai-badge">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        AI-Powered
+      </div>
+      <h1>AI Object Detection</h1>
+      <p class="tool-desc">Upload any image and detect objects using AI. Identifies and labels 80 object categories from the COCO dataset — people, vehicles, animals, furniture, and more. Powered by TensorFlow.js COCO-SSD — runs 100% in your browser. Your images never leave your device.</p>
+    </div>
+
+    <!-- Upload zone -->
+    <div id="uploadSection">
+      <div class="drop-zone" id="dropZone">
+        <div class="drop-zone-icon">🔍</div>
+        <p class="drop-zone-text">Drop an image here or click to upload</p>
+        <p class="drop-zone-sub">JPEG · PNG · WebP — up to 20 MB</p>
+        <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" style="display:none">
+      </div>
+    </div>
+
+    <!-- Tool UI -->
+    <div id="toolSection" style="display:none">
+
+      <!-- Controls bar -->
+      <div class="controls" style="flex-wrap:wrap;gap:0.75rem">
+        <div style="display:flex;align-items:center;gap:0.75rem;flex:1;min-width:0;flex-wrap:wrap">
+          <span id="fileName" style="font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px;"></span>
+          <span id="fileSize" style="font-size:0.85rem;color:var(--text-muted);flex-shrink:0;"></span>
+          <span id="statusBadge" style="display:none"></span>
+        </div>
+        <button class="btn btn-primary" id="detectBtn" style="background:linear-gradient(135deg,#667eea,#764ba2);border-color:transparent">
+          🔍 Detect Objects
+        </button>
+        <label class="btn btn-secondary" style="cursor:pointer;display:inline-flex;align-items:center;gap:0.4rem;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-1px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          New Image
+          <input type="file" id="fileInput2" accept="image/jpeg,image/png,image/webp" style="display:none">
+        </label>
+      </div>
+
+      <!-- Progress -->
+      <div id="progressWrap" style="display:none" class="model-progress-wrap">
+        <div class="model-progress-label">
+          <span id="progressLabel">Loading AI model…</span>
+          <span id="progressPct">0%</span>
+        </div>
+        <div class="model-progress-bar-wrap">
+          <div class="model-progress-bar-fill" id="progressBar"></div>
+        </div>
+        <p class="model-note">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span id="progressNote">First run downloads ~27 MB model, cached after. Detection takes ~1–2s.</span>
+        </p>
+      </div>
+
+      <!-- Error -->
+      <div id="errorWrap" style="display:none;margin-top:0.75rem">
+        <div class="error-msg show" id="errorMsg"></div>
+      </div>
+
+      <!-- Result -->
+      <div id="resultSection" class="result-section" style="display:none">
+        <div class="result-header">
+          <h3 id="resultHeading">Detection Results</h3>
+          <div class="result-actions">
+            <button class="btn btn-primary" id="downloadBtn" style="background:linear-gradient(135deg,#10B981,#059669);border-color:transparent">
+              ⬇️ Download Annotated Image
+            </button>
+          </div>
+        </div>
+
+        <!-- Annotated canvas -->
+        <canvas id="resultCanvas"></canvas>
+
+        <!-- Detections list -->
+        <div id="detectionsWrap" style="margin-top:1rem"></div>
+      </div>
+
+    </div><!-- /toolSection -->
+
+    <!-- How it works -->
+    <section style="margin-top:3rem">
+      <h2 class="section-title">How it works</h2>
+      <div class="trust-grid">
+        <div class="trust-item">
+          <div class="icon">📦</div>
+          <h3>COCO Dataset</h3>
+          <p>Trained on the Common Objects in Context dataset — the industry standard benchmark with 80 everyday object categories.</p>
+        </div>
+        <div class="trust-item">
+          <div class="icon">🏷️</div>
+          <h3>80 Object Classes</h3>
+          <p>Detects people, cars, bikes, animals, furniture, food, electronics, sports equipment, and more in a single pass.</p>
+        </div>
+        <div class="trust-item">
+          <div class="icon">🔒</div>
+          <h3>100% Private</h3>
+          <p>The TensorFlow.js model runs entirely inside your browser. Your photos are never uploaded to any server.</p>
+        </div>
+        <div class="trust-item">
+          <div class="icon">⚡</div>
+          <h3>WebGL Accelerated</h3>
+          <p>Uses your GPU via WebGL for fast inference. The ~27 MB model is cached after first load for instant subsequent uses.</p>
+        </div>
+      </div>
+    </section>
+
+    <section style="margin-top:1.5rem;text-align:center">
+      <p style="color:var(--text-muted);font-size:0.9rem">
+        Also try:
+        <a href="ai-face-blur.html">AI Face Blur</a>
+        &nbsp;|&nbsp;
+        <a href="background-removal.html">AI Background Removal</a>
+        &nbsp;|&nbsp;
+        <a href="ai-alt-text.html">AI Alt Text Generator</a>
+        &nbsp;|&nbsp;
+        <a href="ai-ocr.html">AI OCR — Extract Text</a>
+      </p>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <p>Powered by <strong>PicBrew</strong> — Free &amp; Private</p>
+      <div class="footer-links">
+        <a href="https://buymeacoffee.com/dairylea" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a>
+        <a href="https://parchpdf.com/" target="_blank" rel="noopener">PDF Tools (Parchment)</a>
+        <a href="https://devbrew.org/" target="_blank" rel="noopener">Dev Tools (DevBrew)</a>
+        <a href="https://github.com/dannycranmer/imagetoolkit" target="_blank" rel="noopener">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="vertical-align:-2px;margin-right:3px"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub
+        </a>
+      </div>
+      <p style="margin-top:0.75rem">Built by <a href="https://github.com/dannycranmer">Hustle</a></p>
+    </div>
+  </footer>
+
+  <script src="js/common.js"></script>
+
+  <!-- TF.js and COCO-SSD as regular scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.2/dist/coco-ssd.min.js"></script>
+
+  <script>
+    // ── Category color map ──
+    var CLASS_COLORS = {
+      person:       '#EF4444',
+      // vehicles
+      bicycle:      '#3B82F6', car: '#3B82F6', motorcycle: '#3B82F6', airplane: '#3B82F6',
+      bus: '#3B82F6', train: '#3B82F6', truck: '#3B82F6', boat: '#3B82F6',
+      // animals
+      bird:         '#10B981', cat: '#10B981', dog: '#10B981', horse: '#10B981',
+      sheep: '#10B981', cow: '#10B981', elephant: '#10B981', bear: '#10B981',
+      zebra: '#10B981', giraffe: '#10B981',
+      // food
+      banana:       '#F59E0B', apple: '#F59E0B', sandwich: '#F59E0B', orange: '#F59E0B',
+      broccoli: '#F59E0B', carrot: '#F59E0B', 'hot dog': '#F59E0B', pizza: '#F59E0B',
+      donut: '#F59E0B', cake: '#F59E0B',
+      // electronics
+      'tv':         '#8B5CF6', laptop: '#8B5CF6', mouse: '#8B5CF6', remote: '#8B5CF6',
+      keyboard: '#8B5CF6', 'cell phone': '#8B5CF6', microwave: '#8B5CF6',
+      oven: '#8B5CF6', toaster: '#8B5CF6', refrigerator: '#8B5CF6'
+    };
+
+    var CLASS_EMOJIS = {
+      person: '🧑', bicycle: '🚲', car: '🚗', motorcycle: '🏍️', airplane: '✈️',
+      bus: '🚌', train: '🚆', truck: '🚛', boat: '⛵', 'traffic light': '🚦',
+      'fire hydrant': '🚒', 'stop sign': '🛑', 'parking meter': '🅿️', bench: '🪑',
+      bird: '🐦', cat: '🐱', dog: '🐶', horse: '🐴', sheep: '🐑', cow: '🐮',
+      elephant: '🐘', bear: '🐻', zebra: '🦓', giraffe: '🦒', backpack: '🎒',
+      umbrella: '☂️', handbag: '👜', tie: '👔', suitcase: '🧳', frisbee: '🥏',
+      skis: '⛷️', snowboard: '🏂', 'sports ball': '⚽', kite: '🪁',
+      'baseball bat': '⚾', 'baseball glove': '🥊', skateboard: '🛹',
+      surfboard: '🏄', 'tennis racket': '🎾', bottle: '🍾', 'wine glass': '🍷',
+      cup: '☕', fork: '🍴', knife: '🔪', spoon: '🥄', bowl: '🥣',
+      banana: '🍌', apple: '🍎', sandwich: '🥪', orange: '🍊', broccoli: '🥦',
+      carrot: '🥕', 'hot dog': '🌭', pizza: '🍕', donut: '🍩', cake: '🎂',
+      chair: '🪑', couch: '🛋️', 'potted plant': '🪴', bed: '🛏️',
+      'dining table': '🍽️', toilet: '🚽', tv: '📺', laptop: '💻',
+      mouse: '🖱️', remote: '📡', keyboard: '⌨️', 'cell phone': '📱',
+      microwave: '📟', oven: '🍳', toaster: '🍞', sink: '🚿',
+      refrigerator: '🧊', book: '📚', clock: '🕐', vase: '🏺',
+      scissors: '✂️', 'teddy bear': '🧸', 'hair drier': '💨', toothbrush: '🪥'
+    };
+
+    function getColor(cls) {
+      return CLASS_COLORS[cls] || '#6B7280';
+    }
+
+    function getEmoji(cls) {
+      return CLASS_EMOJIS[cls] || '📦';
+    }
+
+    function formatBytes(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / 1048576).toFixed(1) + ' MB';
+    }
+
+    // ── DOM refs ──
+    var uploadSection  = document.getElementById('uploadSection');
+    var toolSection    = document.getElementById('toolSection');
+    var dropZone       = document.getElementById('dropZone');
+    var fileInput      = document.getElementById('fileInput');
+    var fileInput2     = document.getElementById('fileInput2');
+    var fileNameEl     = document.getElementById('fileName');
+    var fileSizeEl     = document.getElementById('fileSize');
+    var statusBadge    = document.getElementById('statusBadge');
+    var detectBtn      = document.getElementById('detectBtn');
+    var downloadBtn    = document.getElementById('downloadBtn');
+    var progressWrap   = document.getElementById('progressWrap');
+    var progressLabel  = document.getElementById('progressLabel');
+    var progressPct    = document.getElementById('progressPct');
+    var progressBar    = document.getElementById('progressBar');
+    var progressNote   = document.getElementById('progressNote');
+    var errorWrap      = document.getElementById('errorWrap');
+    var errorMsg       = document.getElementById('errorMsg');
+    var resultSection  = document.getElementById('resultSection');
+    var resultHeading  = document.getElementById('resultHeading');
+    var resultCanvas   = document.getElementById('resultCanvas');
+    var detectionsWrap = document.getElementById('detectionsWrap');
+
+    var currentFile    = null;
+    var isProcessing   = false;
+    var currentObjUrl  = null;
+    var cocoModel      = null;   // cached after first load
+    var loadedImg      = null;   // HTMLImageElement of current upload
+
+    // ── Progress animation helpers ──
+    var progressAnimId = null;
+
+    function animateProgressTo(target, durationMs) {
+      if (progressAnimId) clearInterval(progressAnimId);
+      var current = parseFloat(progressBar.style.width) || 0;
+      var steps   = 40;
+      var stepVal = (target - current) / steps;
+      var stepMs  = durationMs / steps;
+      progressAnimId = setInterval(function() {
+        current += stepVal;
+        if ((stepVal > 0 && current >= target) || (stepVal < 0 && current <= target)) {
+          current = target;
+          clearInterval(progressAnimId);
+          progressAnimId = null;
+        }
+        progressBar.style.width = current.toFixed(1) + '%';
+        progressPct.textContent = Math.round(current) + '%';
+      }, stepMs);
+    }
+
+    // ── Status badge ──
+    function setStatus(type, text) {
+      if (!type) { statusBadge.style.display = 'none'; return; }
+      statusBadge.style.display = 'inline-flex';
+      statusBadge.className = 'status-badge ' + type;
+      if (type === 'processing') {
+        statusBadge.innerHTML = '<span class="spinner-sm"></span> ' + text;
+      } else {
+        statusBadge.textContent = text;
+      }
+    }
+
+    // ── Error display ──
+    function displayError(msg) {
+      errorWrap.style.display = '';
+      errorMsg.textContent = msg;
+      setStatus('error', '✗ Error');
+    }
+
+    // ── File handling ──
+    function handleFile(file) {
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        displayError("This doesn't appear to be a valid image file. Please upload a JPEG, PNG, or WebP.");
+        return;
+      }
+      if (file.size > 20 * 1024 * 1024) {
+        displayError("Image too large (max 20 MB). Please use a smaller file.");
+        return;
+      }
+
+      currentFile = file;
+      if (currentObjUrl) URL.revokeObjectURL(currentObjUrl);
+      currentObjUrl = URL.createObjectURL(file);
+
+      fileNameEl.textContent = file.name.length > 38 ? file.name.slice(0, 35) + '…' : file.name;
+      fileSizeEl.textContent = formatBytes(file.size);
+
+      toolSection.style.display = '';
+      uploadSection.style.display = 'none';
+      progressWrap.style.display = 'none';
+      errorWrap.style.display = 'none';
+      resultSection.style.display = 'none';
+      setStatus('');
+      progressBar.style.width = '0%';
+      detectBtn.disabled = false;
+
+      // Pre-load the image element so we have dimensions ready
+      var img = new Image();
+      img.onload = function() { loadedImg = img; };
+      img.src = currentObjUrl;
+    }
+
+    // ── Draw results on canvas ──
+    function drawDetections(img, predictions) {
+      var canvas = resultCanvas;
+      canvas.width  = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+
+      predictions.forEach(function(pred) {
+        var bbox  = pred.bbox;   // [x, y, w, h]
+        var cls   = pred.class;
+        var score = pred.score;
+        var color = getColor(cls);
+        var x = bbox[0], y = bbox[1], w = bbox[2], h = bbox[3];
+
+        // Semi-transparent fill
+        ctx.fillStyle = color + '22';
+        ctx.fillRect(x, y, w, h);
+
+        // Thick stroke
+        ctx.strokeStyle = color;
+        ctx.lineWidth   = Math.max(2, Math.round(canvas.width / 300));
+        ctx.strokeRect(x, y, w, h);
+
+        // Label background
+        var label    = cls + ' ' + Math.round(score * 100) + '%';
+        var fontSize = Math.max(11, Math.round(canvas.width / 60));
+        ctx.font     = 'bold ' + fontSize + 'px system-ui, sans-serif';
+        var textW    = ctx.measureText(label).width;
+        var padH     = fontSize * 0.35;
+        var padV     = fontSize * 0.25;
+        var boxH     = fontSize + padV * 2;
+        var labelY   = y > boxH + 2 ? y - 2 : y + boxH + 2;
+
+        ctx.fillStyle = color;
+        ctx.fillRect(x, labelY - boxH, textW + padH * 2, boxH);
+
+        // Label text
+        ctx.fillStyle = '#ffffff';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(label, x + padH, labelY);
+      });
+    }
+
+    // ── Build detections list UI ──
+    function buildDetectionList(predictions) {
+      if (!predictions || predictions.length === 0) {
+        detectionsWrap.innerHTML = '<div class="no-detections">No objects detected. Try an image with clearer subjects or better lighting.</div>';
+        return;
+      }
+
+      // Sort by confidence descending
+      var sorted = predictions.slice().sort(function(a, b) { return b.score - a.score; });
+
+      var html = '<ul class="detection-list">';
+      sorted.forEach(function(pred) {
+        var cls   = pred.class;
+        var score = Math.round(pred.score * 100);
+        var color = getColor(cls);
+        var emoji = getEmoji(cls);
+        html += '<li class="detection-item">';
+        html += '<span class="detection-emoji">' + emoji + '</span>';
+        html += '<span class="detection-dot" style="background:' + color + '"></span>';
+        html += '<span class="detection-label">' + cls + '</span>';
+        html += '<div class="detection-conf-wrap">';
+        html += '<div class="detection-conf-bar-bg">';
+        html += '<div class="detection-conf-bar-fill" style="width:' + score + '%;background:' + color + '"></div>';
+        html += '</div></div>';
+        html += '<span class="detection-pct">' + score + '%</span>';
+        html += '</li>';
+      });
+      html += '</ul>';
+      detectionsWrap.innerHTML = html;
+    }
+
+    // ── Main detection flow ──
+    function doDetect() {
+      if (!currentFile || isProcessing) return;
+
+      isProcessing = true;
+      detectBtn.disabled = true;
+      errorWrap.style.display = 'none';
+      resultSection.style.display = 'none';
+      progressWrap.style.display = '';
+      progressBar.style.width = '0%';
+      progressPct.textContent = '0%';
+      setStatus('processing', 'Processing…');
+
+      // We use a Promise chain so it works as a regular script (no async/await top-level)
+      Promise.resolve()
+        .then(function() {
+          if (cocoModel) {
+            // Model already loaded — skip straight to detection
+            return cocoModel;
+          }
+
+          progressLabel.textContent = 'Loading AI model…';
+          progressNote.textContent  = 'First run downloads ~27 MB model, cached after. Detection takes ~1–2s.';
+          animateProgressTo(75, 3000);
+
+          return cocoSsd.load().then(function(model) {
+            cocoModel = model;
+            return model;
+          });
+        })
+        .then(function(model) {
+          progressLabel.textContent = 'Detecting objects…';
+          animateProgressTo(90, 500);
+
+          // Ensure image is loaded
+          var imgEl = loadedImg;
+          if (!imgEl || !imgEl.complete) {
+            imgEl = new Image();
+            imgEl.src = currentObjUrl;
+            return new Promise(function(resolve, reject) {
+              imgEl.onload  = function() { loadedImg = imgEl; resolve(model.detect(imgEl)); };
+              imgEl.onerror = function() { reject(new Error('Could not load image for detection.')); };
+            });
+          }
+          return model.detect(imgEl);
+        })
+        .then(function(predictions) {
+          if (progressAnimId) clearInterval(progressAnimId);
+          progressBar.style.width = '100%';
+          progressPct.textContent = '100%';
+          progressLabel.textContent = 'Done!';
+          setTimeout(function() { progressWrap.style.display = 'none'; }, 500);
+
+          var count = predictions ? predictions.length : 0;
+          if (count === 0) {
+            resultHeading.textContent = 'No objects detected';
+          } else if (count === 1) {
+            resultHeading.textContent = '1 object detected';
+          } else {
+            resultHeading.textContent = count + ' objects detected';
+          }
+
+          drawDetections(loadedImg, predictions || []);
+          buildDetectionList(predictions || []);
+          resultSection.style.display = '';
+          setStatus('done', '✓ ' + count + (count === 1 ? ' object' : ' objects') + ' found');
+
+          isProcessing = false;
+          detectBtn.disabled = false;
+        })
+        .catch(function(err) {
+          console.error('[PicBrew ObjectDetect]', err);
+          if (progressAnimId) clearInterval(progressAnimId);
+          progressWrap.style.display = 'none';
+          var msg = (err && err.message) ? err.message : String(err);
+          if (msg.toLowerCase().includes('network') || msg.toLowerCase().includes('fetch') || msg.toLowerCase().includes('failed to fetch')) {
+            displayError('Could not load AI model — check your internet connection and try again.');
+          } else if (msg.toLowerCase().includes('webgl') || msg.toLowerCase().includes('backend')) {
+            displayError('WebGL is not available in your browser. Object detection requires a WebGL-capable browser such as Chrome or Firefox.');
+          } else {
+            displayError('Could not load AI model — check internet connection. (' + msg + ')');
+          }
+          cocoModel = null;  // reset so it retries
+          isProcessing = false;
+          detectBtn.disabled = false;
+        });
+    }
+
+    // ── Download ──
+    downloadBtn.addEventListener('click', function() {
+      var link = document.createElement('a');
+      link.download = 'picbrew-objects-' + Date.now() + '.png';
+      link.href = resultCanvas.toDataURL('image/png');
+      link.click();
+    });
+
+    // ── Detect button ──
+    detectBtn.addEventListener('click', doDetect);
+
+    // ── Drop zone ──
+    dropZone.addEventListener('click', function() { fileInput.click(); });
+    fileInput.addEventListener('change', function(e) {
+      if (e.target.files[0]) handleFile(e.target.files[0]);
+      fileInput.value = '';
+    });
+    fileInput2.addEventListener('change', function(e) {
+      if (e.target.files[0]) handleFile(e.target.files[0]);
+      fileInput2.value = '';
+    });
+
+    dropZone.addEventListener('dragover', function(e) { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', function() { dropZone.classList.remove('dragover'); });
+    dropZone.addEventListener('drop', function(e) {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      var files = Array.from(e.dataTransfer.files);
+      var img   = files.find(function(f) { return f.type.startsWith('image/'); });
+      if (img) handleFile(img);
+    });
+  </script>
+
+  <script data-goatcounter="https://picbrew.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

@@ -74,6 +74,10 @@ function initMobileNav() {
       { href: 'ai-ocr.html', icon: '🔍', label: 'AI OCR' },
       { href: 'ai-upscaler.html', icon: '🔭', label: 'AI Upscaler' },
       { href: 'ai-alt-text.html', icon: '🏷️', label: 'AI Alt Text' },
+      { href: 'ai-style-transfer.html', icon: '🎨', label: 'AI Style' },
+      { href: 'ai-face-blur.html', icon: '👤', label: 'AI Face Blur' },
+      { href: 'ai-colorize.html', icon: '🌈', label: 'AI Colorize' },
+      { href: 'ai-object-detect.html', icon: '🔎', label: 'AI Objects' },
     ]},
     { title: '✂️ Transform', items: [
       { href: 'resize.html', icon: '📐', label: 'Resize' },
