@@ -69,6 +69,12 @@ function initMobileNav() {
   const currentPage = location.pathname.split('/').pop() || 'index.html';
 
   const categories = [
+    { title: '🤖 AI Tools', items: [
+      { href: 'background-removal.html', icon: '🪄', label: 'AI Erase BG' },
+      { href: 'ai-ocr.html', icon: '🔍', label: 'AI OCR' },
+      { href: 'ai-upscaler.html', icon: '🔭', label: 'AI Upscaler' },
+      { href: 'ai-alt-text.html', icon: '🏷️', label: 'AI Alt Text' },
+    ]},
     { title: '✂️ Transform', items: [
       { href: 'resize.html', icon: '📐', label: 'Resize' },
       { href: 'crop.html', icon: '✂️', label: 'Crop' },
@@ -83,9 +89,6 @@ function initMobileNav() {
       { href: 'filters.html', icon: '🎛️', label: 'Filters' },
       { href: 'watermark.html', icon: '💧', label: 'Watermark' },
       { href: 'background-remover.html', icon: '🧹', label: 'BG Remover' },
-      { href: 'background-removal.html', icon: '🪄', label: 'AI Erase BG' },
-      { href: 'ai-ocr.html', icon: '🔍', label: 'AI OCR' },
-      { href: 'ai-upscaler.html', icon: '🔭', label: 'AI Upscaler' },
       { href: 'denoise.html', icon: '✨', label: 'Denoise' },
     ]},
     { title: '🛠️ Create', items: [

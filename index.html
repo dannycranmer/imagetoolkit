@@ -4,17 +4,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PicBrew — Free Private Image Tools Online</title>
-  <meta name="description" content="Compress, resize, convert, and crop images for free. 100% private — your images never leave your device. No uploads, no ads, no signup.">
+  <meta name="description" content="Free AI image tools — background removal, OCR, upscaling, alt text, and more. 100% private — your images never leave your device. No uploads, no servers, no signup.">
   <link rel="canonical" href="https://picbrew.org/">
-  <meta property="og:title" content="PicBrew — Free Private Image Tools Online">
-  <meta property="og:description" content="Compress, resize, convert, and crop images for free. 100% private — your images never leave your device. No uploads, no ads, no signup.">
+  <meta property="og:title" content="PicBrew — Free AI Image Tools Online">
+  <meta property="og:description" content="Free AI image tools — background removal, OCR, upscaling, alt text, and more. 100% private — your images never leave your device. No uploads, no servers, no signup.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://picbrew.org/">
   <meta property="og:image" content="https://picbrew.org/og-image.png">
   <meta property="og:site_name" content="PicBrew">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="PicBrew — Free Private Image Tools Online">
-  <meta name="twitter:description" content="Compress, resize, convert, and crop images for free. 100% private — your images never leave your device. No uploads, no ads, no signup.">
+  <meta name="twitter:title" content="PicBrew — Free AI Image Tools Online">
+  <meta name="twitter:description" content="Free AI image tools — background removal, OCR, upscaling, alt text, and more. 100% private — your images never leave your device. No uploads, no servers, no signup.">
   <meta name="twitter:image" content="https://picbrew.org/og-image.png">
   <meta name="theme-color" content="#0B0B0F">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -50,6 +50,10 @@
       <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">&#9776;</button>
       <ul class="nav-links" role="menubar">
         <li><a href="index.html" class="active" role="menuitem">Home</a></li>
+        <li><a href="background-removal.html" role="menuitem">AI Erase BG</a></li>
+        <li><a href="ai-ocr.html" role="menuitem">AI OCR</a></li>
+        <li><a href="ai-upscaler.html" role="menuitem">AI Upscaler</a></li>
+        <li><a href="ai-alt-text.html" role="menuitem">AI Alt Text</a></li>
         <li><a href="compress.html" role="menuitem">Compress</a></li>
         <li><a href="resize.html" role="menuitem">Resize</a></li>
         <li><a href="convert.html" role="menuitem">Convert</a></li>
@@ -68,10 +72,6 @@
         <li><a href="qrcode.html" role="menuitem">QR Code</a></li>
         <li><a href="overlay.html" role="menuitem">Overlay</a></li>
         <li><a href="text.html" role="menuitem">Text</a></li>
-        <li><a href="background-removal.html" role="menuitem">AI Erase BG</a></li>
-        <li><a href="ai-ocr.html" role="menuitem">AI OCR</a></li>
-        <li><a href="ai-upscaler.html" role="menuitem">AI Upscaler</a></li>
-        <li><a href="ai-alt-text.html" role="menuitem">AI Alt Text</a></li>
         <li><a href="https://buymeacoffee.com/dairylea" class="nav-coffee" target="_blank" rel="noopener">&#9749; Buy Me a Coffee</a></li>
       </ul>
     </div>
@@ -100,10 +100,10 @@
         </svg>
       </div>
       <h1 class="hero-title">
-        <span class="hero-title-line1">Free, Private</span>
-        <span class="hero-title-line2">Image Tools</span>
+        <span class="hero-title-line1">Free AI Image Tools</span>
+        <span class="hero-title-line2">100% Private</span>
       </h1>
-      <p class="hero-subtitle">Compress, resize, convert, crop, and more — instantly in your browser.<br>No uploads. No servers. No signup.</p>
+      <p class="hero-subtitle">AI-powered image editing that runs entirely in your browser.<br>Background removal, OCR, upscaling, and more — no uploads, no servers, no signup.</p>
       <div class="privacy-badge">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         Your images never leave your device
@@ -117,6 +117,37 @@
     </div>
     <script>try{if(sessionStorage.getItem('bmc_dismissed')==='1')document.getElementById('bmcBanner').style.display='none'}catch(e){}</script>
 
+    <div class="tool-section-header ai-section-header">
+      <span class="tool-section-icon">🤖</span>
+      <span>AI Tools</span>
+      <span class="tool-section-badge">Powered by AI · Runs in Your Browser</span>
+    </div>
+    <div class="tool-grid">
+      <a href="background-removal.html" class="tool-card tool-card-ai">
+        <div class="tool-card-icon" aria-hidden="true">&#129668;</div>
+        <h2>AI Background Removal</h2>
+        <p>Remove backgrounds automatically with AI — handles hair, fur, and complex edges. Download transparent PNG.</p>
+      </a>
+      <a href="ai-ocr.html" class="tool-card tool-card-ai">
+        <div class="tool-card-icon" aria-hidden="true">&#128269;</div>
+        <h2>AI OCR — Extract Text</h2>
+        <p>Extract text from photos, screenshots, and scanned documents. 14+ languages. Runs privately in your browser.</p>
+      </a>
+      <a href="ai-upscaler.html" class="tool-card tool-card-ai">
+        <div class="tool-card-icon" aria-hidden="true">&#128301;</div>
+        <h2>AI Image Upscaler</h2>
+        <p>Enlarge images 2x with AI super-resolution powered by TensorFlow.js. Sharper than standard upscaling. 100% private.</p>
+      </a>
+      <a href="ai-alt-text.html" class="tool-card tool-card-ai">
+        <div class="tool-card-icon" aria-hidden="true">🏷️</div>
+        <h2>AI Alt Text Generator</h2>
+        <p>Auto-generate descriptive alt text for any image using AI captioning. Perfect for accessibility &amp; SEO. Runs privately in your browser.</p>
+      </a>
+    </div>
+    <div class="tool-section-header">
+      <span class="tool-section-icon">🛠️</span>
+      <span>All Image Tools</span>
+    </div>
     <div class="tool-grid">
       <a href="compress.html" class="tool-card">
         <div class="tool-card-icon" aria-hidden="true">&#128230;</div>
@@ -207,26 +238,6 @@
         <div class="tool-card-icon" aria-hidden="true">&#128396;</div>
         <h2>Add Text to Image</h2>
         <p>Add custom text with your choice of font, size, and color. Drag, resize, and rotate text freely.</p>
-      </a>
-      <a href="background-removal.html" class="tool-card">
-        <div class="tool-card-icon" aria-hidden="true">&#129668;</div>
-        <h2>AI Background Removal</h2>
-        <p>Remove backgrounds automatically with AI — handles hair, fur, and complex edges. Download transparent PNG.</p>
-      </a>
-      <a href="ai-ocr.html" class="tool-card">
-        <div class="tool-card-icon" aria-hidden="true">&#128269;</div>
-        <h2>AI OCR — Extract Text</h2>
-        <p>Extract text from photos, screenshots, and scanned documents. 14+ languages. Runs privately in your browser.</p>
-      </a>
-      <a href="ai-upscaler.html" class="tool-card">
-        <div class="tool-card-icon" aria-hidden="true">&#128301;</div>
-        <h2>AI Image Upscaler</h2>
-        <p>Enlarge images 2x with AI super-resolution powered by TensorFlow.js. Sharper than standard upscaling. 100% private.</p>
-      </a>
-      <a href="ai-alt-text.html" class="tool-card">
-        <div class="tool-card-icon" aria-hidden="true">🏷️</div>
-        <h2>AI Alt Text Generator</h2>
-        <p>Auto-generate descriptive alt text for any image using AI captioning. Perfect for accessibility &amp; SEO. Runs privately in your browser.</p>
       </a>
     </div>
 

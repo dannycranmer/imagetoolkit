@@ -309,6 +309,46 @@ body::before {
   font-weight: 400;
 }
 
+/* Tool section headers */
+.tool-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 2rem 0 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--border);
+}
+.tool-section-header .tool-section-icon {
+  font-size: 1.2rem;
+}
+.tool-section-header .tool-section-badge {
+  margin-left: auto;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #3B82F6, #7C3AED);
+  color: #fff;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  letter-spacing: 0.01em;
+}
+.ai-section-header {
+  color: #3B82F6;
+  border-bottom-color: rgba(59,130,246,0.25);
+  margin-top: 0;
+}
+.tool-card-ai {
+  border: 1.5px solid rgba(59,130,246,0.2);
+  background: linear-gradient(135deg, rgba(59,130,246,0.04), rgba(124,58,237,0.04));
+}
+.tool-card-ai:hover {
+  border-color: rgba(59,130,246,0.45);
+  box-shadow: 0 8px 32px rgba(59,130,246,0.12);
+}
+
 /* Sections */
 .section-title {
   text-align: center;
