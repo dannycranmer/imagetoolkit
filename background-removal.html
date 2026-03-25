@@ -238,7 +238,7 @@
         <div class="processing-card">
           <div class="spinner"></div>
           <div class="processing-label" id="processingLabel">Loading AI model…</div>
-          <div class="processing-sub" id="processingSub">First run downloads ~5 MB model. Subsequent runs are near-instant.</div>
+          <div class="processing-sub" id="processingSub">First run downloads ~44 MB AI model. Cached after first use — subsequent runs are faster.</div>
           <div class="processing-bar-wrap">
             <div class="processing-bar-fill" id="progressBar"></div>
           </div>
@@ -296,7 +296,7 @@
         <div class="trust-item">
           <div class="icon">&#9889;</div>
           <h3>Fast After First Run</h3>
-          <p>The AI model downloads once (~5 MB) and is cached in your browser. Subsequent removals are near-instant.</p>
+          <p>The AI model downloads once (~44 MB) and is cached in your browser. Subsequent removals are much faster.</p>
         </div>
         <div class="trust-item">
           <div class="icon">&#127808;</div>
@@ -433,7 +433,7 @@
       originalView.style.display = '';
       progressBar.style.width = '5%';
       processingLabel.textContent = 'Loading AI library…';
-      processingSub.textContent = 'First run downloads ~5 MB model and caches it. Subsequent runs are near-instant.';
+      processingSub.textContent = 'First run downloads ~44 MB AI model and caches it in your browser. Subsequent runs are faster.';
 
       try {
         // Lazy-load the library on first click so event listeners are never blocked
@@ -446,7 +446,7 @@
         progressBar.style.width = '10%';
 
         const bgConfig = {
-          publicPath: 'https://unpkg.com/@imgly/background-removal@1.4.5/dist/',
+          publicPath: 'https://staticimgly.com/@imgly/background-removal-data/1.4.5/dist/',
           model: 'small',
           output: { format: 'image/png', quality: 1 },
           progress: handleProgress,
