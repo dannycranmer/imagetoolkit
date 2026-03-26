@@ -318,7 +318,6 @@
   <div class="copy-toast" id="copyToast">✓ Colorized!</div>
 
   <script src="js/common.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
   <script>
   (function() {
     // ── DOM refs ──
@@ -363,42 +362,50 @@
     var loadedImg       = null;
 
     // ── Color presets ──
+    // Absolute target RGB colors for 3-stop gradient: shadow / midtone / highlight
+    // Algorithm maps grayscale luminance → these colors (not offsets from original)
     var presets = {
       natural: {
         name: 'Natural', icon: '🌿',
-        shadowA: -0.08, shadowB: -0.15,
-        midA: 0.05, midB: 0.08,
-        highA: 0.03, highB: 0.05
+        // Natural outdoor daylight: cool blue shadows, greenish midtones, warm sunlit highlights
+        sR: 55,  sG: 72,  sB: 105,
+        mR: 120, mG: 140, mB: 100,
+        hR: 235, hG: 225, hB: 195
       },
       warm: {
         name: 'Warm Afternoon', icon: '☀️',
-        shadowA: 0.05, shadowB: -0.05,
-        midA: 0.18, midB: 0.12,
-        highA: 0.12, highB: 0.08
+        // Golden hour: deep amber shadows, rich golden midtones, bright warm highlights
+        sR: 80,  sG: 52,  sB: 28,
+        mR: 200, mG: 148, mB: 72,
+        hR: 255, hG: 242, hB: 198
       },
       cool: {
         name: 'Cool Steel', icon: '❄️',
-        shadowA: -0.15, shadowB: -0.25,
-        midA: -0.08, midB: -0.12,
-        highA: -0.03, highB: -0.08
+        // Industrial cold: deep navy shadows, steel-blue midtones, icy highlights
+        sR: 28,  sG: 40,  sB: 88,
+        mR: 80,  mG: 102, mB: 158,
+        hR: 200, hG: 220, hB: 242
       },
       sepia: {
         name: 'Sepia Plus', icon: '📜',
-        shadowA: 0.08, shadowB: 0.05,
-        midA: 0.22, midB: 0.15,
-        highA: 0.18, highB: 0.12
+        // Classic sepia: dark brown shadows, rich sepia midtones, parchment highlights
+        sR: 48,  sG: 30,  sB: 15,
+        mR: 168, mG: 115, mB: 58,
+        hR: 242, hG: 222, hB: 168
       },
       moody: {
         name: 'Moody Cinema', icon: '🎬',
-        shadowA: -0.12, shadowB: -0.20,
-        midA: 0.02, midB: -0.02,
-        highA: 0.18, highB: 0.10
+        // Teal-and-orange: deep teal shadows, muted neutral midtones, warm orange highlights
+        sR: 22,  sG: 58,  sB: 82,
+        mR: 105, mG: 118, mB: 108,
+        hR: 255, hG: 178, hB: 112
       },
       vintage: {
         name: 'Vintage Film', icon: '📷',
-        shadowA: 0.05, shadowB: 0.08,
-        midA: 0.12, midB: 0.18,
-        highA: 0.08, highB: 0.15
+        // Faded: lifted dark tones (raised blacks), warm yellowy midtones, creamy highlights
+        sR: 68,  sG: 55,  sB: 42,
+        mR: 180, mG: 162, mB: 112,
+        hR: 245, hG: 238, hB: 210
       }
     };
 
@@ -511,6 +518,9 @@
     }
 
     // ── Core colorization algorithm ──
+    // Maps grayscale luminance to a 3-stop color gradient (shadow→midtone→highlight),
+    // then blends from grayscale toward that color based on intensity.
+    // This guarantees the output is visibly different from any input image.
     function colorizeCanvas(srcCanvas, dstCv, preset, shadowAdj, midAdj, highAdj, intensity) {
       var W = srcCanvas.width, H = srcCanvas.height;
       dstCv.width = W; dstCv.height = H;
@@ -521,97 +531,46 @@
       var dstImgData = dstCtx.createImageData(W, H);
       var d = dstImgData.data;
       var p = presets[preset];
-      var intensityMult = intensity / 100;
 
-      // Merge slider adjustments (±100 maps to ±0.15 additional shift)
-      var shadowAmod = p.shadowA + (shadowAdj / 100) * 0.15;
-      var midAmod    = p.midA    + (midAdj    / 100) * 0.15;
-      var highAmod   = p.highA   + (highAdj   / 100) * 0.15;
+      // intensity 0→grayscale, 100→full colorization, 200→over-saturated
+      var intFrac = Math.min(2, intensity / 100);
+
+      // Fine-tune sliders: ±100 maps to ±20px warm/cool shift per zone
+      var sWarm = (shadowAdj / 100) * 20;
+      var mWarm = (midAdj    / 100) * 20;
+      var hWarm = (highAdj   / 100) * 20;
 
       for (var i = 0; i < src.length; i += 4) {
-        var lum = (src[i] * 0.299 + src[i+1] * 0.587 + src[i+2] * 0.114) / 255;
+        // Compute luminance — strip all color, treat as grayscale (works on B&W and color photos)
+        var lum = src[i] * 0.299 + src[i+1] * 0.587 + src[i+2] * 0.114;
+        var t = lum / 255;  // 0.0 (black) to 1.0 (white)
 
-        // Shadow weight peaks at lum=0, fades to 0 at lum=0.33
-        var sw = Math.max(0, 1 - lum * 3);
-        // Midtone weight peaks at lum=0.5, fades to 0 at 0.25 and 0.75
-        var mw = Math.max(0, 1 - Math.abs(lum - 0.5) * 4);
-        // Highlight weight: 0 at lum=0.66, 1 at lum=1
-        var hw = Math.max(0, (lum - 0.66) * 3);
+        // 3-stop linear gradient: shadow (t=0) → midtone (t=0.5) → highlight (t=1)
+        var r, g, b, w;
+        if (t <= 0.5) {
+          var f = t * 2;  // 0→1 as lum: 0→128
+          r = p.sR + (p.mR - p.sR) * f;
+          g = p.sG + (p.mG - p.sG) * f;
+          b = p.sB + (p.mB - p.sB) * f;
+          w = sWarm * (1 - f) + mWarm * f;
+        } else {
+          var f = (t - 0.5) * 2;  // 0→1 as lum: 128→255
+          r = p.mR + (p.hR - p.mR) * f;
+          g = p.mG + (p.hG - p.mG) * f;
+          b = p.mB + (p.hB - p.mB) * f;
+          w = mWarm * (1 - f) + hWarm * f;
+        }
+        // Apply warmth: slider shifts R up/B down (warm) or R down/B up (cool)
+        r += w; b -= w;
 
-        // Color channel offsets
-        var dr = (sw * shadowAmod + mw * midAmod    + hw * highAmod)   * 80 * intensityMult;
-        var dg = (sw * p.shadowB  + mw * p.midB     + hw * p.highB)    * 40 * intensityMult * 0.5;
-        var db = -(sw * shadowAmod + mw * midAmod   + hw * highAmod)   * 60 * intensityMult * 0.3;
-
-        d[i]   = Math.max(0, Math.min(255, src[i]   + dr));
-        d[i+1] = Math.max(0, Math.min(255, src[i+1] + dg));
-        d[i+2] = Math.max(0, Math.min(255, src[i+2] + db));
+        // Blend: grayscale (lum,lum,lum) → colorized (r,g,b) based on intensity
+        // At intFrac=0: pure gray. At intFrac=1: full preset color. intFrac>1: extra saturation.
+        d[i]   = Math.max(0, Math.min(255, Math.round(lum + (r - lum) * intFrac)));
+        d[i+1] = Math.max(0, Math.min(255, Math.round(lum + (g - lum) * intFrac)));
+        d[i+2] = Math.max(0, Math.min(255, Math.round(lum + (b - lum) * intFrac)));
         d[i+3] = 255;
       }
       dstCtx.putImageData(dstImgData, 0, 0);
-    }
-
-    // ── TF.js-accelerated colorization (uses tensor for luminance analysis, canvas for pixel writes) ──
-    function colorizeWithTF(srcCanvas, dstCv, preset, shadowAdj, midAdj, highAdj, intensity) {
-      // Try to use tf if loaded (provides faster typed array operations on large images)
-      if (typeof tf !== 'undefined') {
-        try {
-          var W = srcCanvas.width, H = srcCanvas.height;
-          dstCv.width = W; dstCv.height = H;
-          var srcCtx = srcCanvas.getContext('2d');
-          var srcData = srcCtx.getImageData(0, 0, W, H);
-          var src = srcData.data;
-          var dstCtx = dstCv.getContext('2d');
-          var dstImgData = dstCtx.createImageData(W, H);
-          var d = dstImgData.data;
-          var p = presets[preset];
-          var intensityMult = intensity / 100;
-          var shadowAmod = p.shadowA + (shadowAdj / 100) * 0.15;
-          var midAmod    = p.midA    + (midAdj    / 100) * 0.15;
-          var highAmod   = p.highA   + (highAdj   / 100) * 0.15;
-
-          // Use tf.tidy for memory management
-          tf.tidy(function() {
-            var n = W * H;
-            // Extract per-pixel luminance using tf
-            var rArr = new Float32Array(n);
-            var gArr = new Float32Array(n);
-            var bArr = new Float32Array(n);
-            for (var i = 0; i < n; i++) {
-              rArr[i] = src[i*4]   / 255;
-              gArr[i] = src[i*4+1] / 255;
-              bArr[i] = src[i*4+2] / 255;
-            }
-            var rT = tf.tensor1d(rArr);
-            var gT = tf.tensor1d(gArr);
-            var bT = tf.tensor1d(bArr);
-            var lumT = rT.mul(0.299).add(gT.mul(0.587)).add(bT.mul(0.114));
-            var lumData = lumT.dataSync();
-
-            // Apply colorization
-            for (var j = 0; j < n; j++) {
-              var lum = lumData[j];
-              var sw = Math.max(0, 1 - lum * 3);
-              var mw = Math.max(0, 1 - Math.abs(lum - 0.5) * 4);
-              var hw = Math.max(0, (lum - 0.66) * 3);
-              var dr = (sw * shadowAmod + mw * midAmod + hw * highAmod) * 80 * intensityMult;
-              var dg2 = (sw * p.shadowB  + mw * p.midB  + hw * p.highB)  * 40 * intensityMult * 0.5;
-              var db2 = -(sw * shadowAmod + mw * midAmod + hw * highAmod) * 60 * intensityMult * 0.3;
-              d[j*4]   = Math.max(0, Math.min(255, src[j*4]   + dr));
-              d[j*4+1] = Math.max(0, Math.min(255, src[j*4+1] + dg2));
-              d[j*4+2] = Math.max(0, Math.min(255, src[j*4+2] + db2));
-              d[j*4+3] = 255;
-            }
-          });
-
-          dstCtx.putImageData(dstImgData, 0, 0);
-          return true;
-        } catch (e) {
-          console.warn('[PicBrew Colorize] TF.js path failed, falling back to canvas:', e);
-          return false;
-        }
-      }
-      return false;
     }
 
     // ── Main colorize action ──
@@ -645,11 +604,7 @@
 
           setTimeout(function() {
             try {
-              // Try TF.js path first, fall back to canvas
-              var tfDone = colorizeWithTF(srcCanvas, dstCanvas, selectedPreset, shadowAdj, midAdj, highAdj, intensity);
-              if (!tfDone) {
-                colorizeCanvas(srcCanvas, dstCanvas, selectedPreset, shadowAdj, midAdj, highAdj, intensity);
-              }
+              colorizeCanvas(srcCanvas, dstCanvas, selectedPreset, shadowAdj, midAdj, highAdj, intensity);
 
               // Update origCanvas to match scale
               origCanvas.width = W; origCanvas.height = H;
