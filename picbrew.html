@@ -3,56 +3,55 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Remove Image Noise Online Free — PicBrew</title>
-  <meta name="description" content="Reduce noise and grain from photos for free. Adjustable denoise strength with live preview. 100% private — your images never leave your device.">
-  <link rel="canonical" href="https://picbrew.org/denoise.html">
-  <meta property="og:title" content="Remove Image Noise Online Free — PicBrew">
-  <meta property="og:description" content="Reduce noise and grain from photos for free. Adjustable denoise strength with live preview. 100% private — your images never leave your device.">
+  <title>Black &amp; White Photo Converter — Free Online B&amp;W Filter — PicBrew</title>
+  <meta name="description" content="Convert photos to black and white online for free. Adjust contrast, brightness, and apply B&W presets like Film Noir and Vintage. 100% private — your images never leave your device.">
+  <link rel="canonical" href="https://picbrew.org/picbrew.html">
+  <meta property="og:title" content="Black &amp; White Photo Converter — PicBrew">
+  <meta property="og:description" content="Convert photos to black and white online for free. Adjust contrast, brightness, and apply B&W presets like Film Noir and Vintage. 100% private — your images never leave your device.">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://picbrew.org/denoise.html">
+  <meta property="og:url" content="https://picbrew.org/picbrew.html">
   <meta property="og:image" content="https://picbrew.org/og-image.png">
   <meta property="og:site_name" content="PicBrew">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Remove Image Noise Online Free — PicBrew">
-  <meta name="twitter:description" content="Reduce noise and grain from photos for free. Adjustable denoise strength with live preview. 100% private — your images never leave your device.">
+  <meta name="twitter:title" content="Black &amp; White Photo Converter — PicBrew">
+  <meta name="twitter:description" content="Convert photos to black and white online for free. Adjust contrast, brightness, and apply B&W presets like Film Noir and Vintage. 100% private — your images never leave your device.">
   <meta name="twitter:image" content="https://picbrew.org/og-image.png">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="css/style.css">
   <style>
-    .denoise-controls {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1.5rem;
-      align-items: center;
+    .filter-controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
     }
-    .denoise-slider {
+    .filter-slider {
       display: flex;
       align-items: center;
       gap: 0.75rem;
-      flex: 1;
-      min-width: 200px;
     }
-    .denoise-slider label {
+    .filter-slider label {
       font-weight: 600;
       font-size: 0.85rem;
-      min-width: 70px;
+      min-width: 80px;
     }
-    .denoise-slider input[type="range"] {
+    .filter-slider input[type="range"] {
       flex: 1;
-      min-width: 120px;
+      min-width: 100px;
     }
-    .denoise-slider .denoise-val {
+    .filter-slider .filter-val {
       font-weight: 700;
       font-size: 0.85rem;
       min-width: 44px;
       text-align: center;
       color: var(--accent);
     }
-    .mode-toggle {
+    .preset-grid {
       display: flex;
+      flex-wrap: wrap;
       gap: 0.5rem;
+      margin-top: 0.5rem;
     }
-    .mode-btn {
+    .preset-btn {
       padding: 0.45rem 0.9rem;
       border: 1px solid var(--border);
       border-radius: 6px;
@@ -62,14 +61,39 @@
       font-weight: 600;
       transition: all 0.15s;
     }
-    .mode-btn:hover {
+    .preset-btn:hover {
       border-color: var(--accent);
       color: var(--accent);
     }
-    .mode-btn.active {
+    .preset-btn.active {
       background: var(--accent);
       color: #fff;
       border-color: var(--accent);
+    }
+    .toggle-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .toggle-filter-btn {
+      padding: 0.45rem 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg-card);
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      transition: all 0.15s;
+    }
+    .toggle-filter-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .toggle-filter-btn.active {
+      background: #1E293B;
+      color: #fff;
+      border-color: #1E293B;
     }
     .preview-split {
       display: grid;
@@ -90,23 +114,25 @@
       margin-bottom: 0.75rem;
       color: var(--text-muted);
     }
-    .preview-panel canvas {
+    .preview-panel canvas, .preview-panel img {
       max-width: 100%;
       max-height: 400px;
       border-radius: 6px;
     }
-    .preview-info {
+    .filter-info {
       font-size: 0.8rem;
       color: var(--text-muted);
       margin-top: 0.5rem;
     }
     @media (max-width: 768px) {
-      .denoise-controls {
-        flex-direction: column;
-        align-items: stretch;
+      .filter-controls {
+        grid-template-columns: 1fr;
       }
       .preview-split {
         grid-template-columns: 1fr;
+      }
+      .filter-slider label {
+        min-width: 70px;
       }
     }
   </style>
@@ -114,9 +140,9 @@
   {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    "name": "Image Noise Remover — PicBrew",
-    "description": "Reduce noise and grain from photos for free. Adjustable denoise strength with live preview. 100% private — your images never leave your device.",
-    "url": "https://picbrew.org/denoise.html",
+    "name": "Black & White Photo Converter — PicBrew",
+    "description": "Convert photos to black and white online for free. Adjust contrast, brightness, and apply B&W presets like Film Noir and Vintage. 100% private — your images never leave your device.",
+    "url": "https://picbrew.org/picbrew.html",
     "applicationCategory": "MultimediaApplication",
     "operatingSystem": "Any",
     "browserRequirements": "Requires JavaScript",
@@ -149,17 +175,17 @@
         <li><a href="flip-rotate.html" role="menuitem">Flip &amp; Rotate</a></li>
         <li><a href="background-remover.html" role="menuitem">BG Remover</a></li>
         <li><a href="filters.html" role="menuitem">Filters</a></li>
-        <li><a href="picbrew.html" role="menuitem">B&amp;W</a></li>
         <li><a href="palette.html" role="menuitem">Palette</a></li>
         <li><a href="meme.html" role="menuitem">Meme</a></li>
         <li><a href="base64.html" role="menuitem">Base64</a></li>
         <li><a href="collage.html" role="menuitem">Collage</a></li>
-        <li><a href="denoise.html" class="active" role="menuitem">Denoise</a></li>
+        <li><a href="denoise.html" role="menuitem">Denoise</a></li>
         <li><a href="mockup.html" role="menuitem">Mockup</a></li>
         <li><a href="image-to-pdf.html" role="menuitem">To PDF</a></li>
         <li><a href="qrcode.html" role="menuitem">QR Code</a></li>
         <li><a href="overlay.html" role="menuitem">Overlay</a></li>
         <li><a href="text.html" role="menuitem">Text</a></li>
+        <li><a href="picbrew.html" class="active" role="menuitem">B&amp;W Photo</a></li>
         <li><a href="background-removal.html" role="menuitem">AI Erase BG</a></li>
         <li><a href="ai-ocr.html" role="menuitem">AI OCR</a></li>
         <li><a href="ai-upscaler.html" role="menuitem">AI Upscaler</a></li>
@@ -175,41 +201,54 @@
 
   <main class="main">
     <div class="tool-header">
-      <h1>Image Noise Remover</h1>
-      <p>Reduce noise and grain from photos. Adjust strength for the perfect balance between smoothing and detail. Your images never leave your device.</p>
+      <h1>Black &amp; White Photo Converter</h1>
+      <p>Convert any photo to stunning black &amp; white instantly. Fine-tune contrast, brightness, and choose from classic B&amp;W presets. Your images never leave your device.</p>
     </div>
 
     <div class="drop-zone" id="dropZone">
-      <div class="drop-zone-icon">&#128247;</div>
+      <div class="drop-zone-icon">⚫</div>
       <div class="drop-zone-text"><strong>Drop an image here</strong> or click to browse<br>JPEG, PNG, WebP supported</div>
       <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp">
     </div>
 
     <div class="controls" id="controls" style="display:none">
-      <div class="denoise-controls">
-        <div class="denoise-slider">
-          <label for="strength">Strength</label>
-          <input type="range" id="strength" min="1" max="10" value="3" step="1">
-          <span class="denoise-val" id="strengthVal">3</span>
+
+      <div style="margin-bottom:1rem">
+        <label style="font-weight:600;font-size:0.85rem;display:block;margin-bottom:0.5rem">B&amp;W Presets</label>
+        <div class="preset-grid">
+          <button class="preset-btn active" data-preset="normal">Normal</button>
+          <button class="preset-btn" data-preset="highcontrast">High Contrast</button>
+          <button class="preset-btn" data-preset="soft">Soft</button>
+          <button class="preset-btn" data-preset="filmnoir">Film Noir</button>
+          <button class="preset-btn" data-preset="vintage">Vintage</button>
+          <button class="preset-btn" data-preset="bright">Bright &amp; Airy</button>
         </div>
-        <div class="denoise-slider">
-          <label for="passes">Passes</label>
-          <input type="range" id="passes" min="1" max="5" value="1" step="1">
-          <span class="denoise-val" id="passesVal">1</span>
+      </div>
+
+      <div class="filter-controls">
+        <div class="filter-slider">
+          <label for="brightness">Brightness</label>
+          <input type="range" id="brightness" min="0" max="200" value="100">
+          <span class="filter-val" id="brightnessVal">100%</span>
+        </div>
+        <div class="filter-slider">
+          <label for="contrast">Contrast</label>
+          <input type="range" id="contrast" min="0" max="200" value="100">
+          <span class="filter-val" id="contrastVal">100%</span>
         </div>
       </div>
 
       <div style="margin-top:1rem">
-        <label style="font-weight:600;font-size:0.85rem">Mode</label>
-        <div class="mode-toggle" style="margin-top:0.4rem">
-          <button class="mode-btn active" id="modeGaussian" data-mode="gaussian">Gaussian Blur</button>
-          <button class="mode-btn" id="modeMedian" data-mode="median">Median Filter</button>
-          <button class="mode-btn" id="modeBilateral" data-mode="bilateral">Bilateral</button>
+        <label style="font-weight:600;font-size:0.85rem">Effects</label>
+        <div class="toggle-filters">
+          <button class="toggle-filter-btn" id="grainBtn">Film Grain</button>
+          <button class="toggle-filter-btn" id="vignetteBtn">Vignette</button>
+          <button class="toggle-filter-btn" id="invertBtn">Invert (Negative)</button>
         </div>
       </div>
 
-      <div class="btn-row" style="margin-top:1rem">
-        <button class="btn btn-primary" id="applyBtn">Apply Denoise</button>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="resetBtn">Reset</button>
         <button class="btn btn-green" id="downloadBtn">Download</button>
         <button class="btn btn-outline" id="clearBtn">Clear</button>
       </div>
@@ -232,14 +271,14 @@
 
     <div class="preview-split" id="previewArea" style="display:none">
       <div class="preview-panel">
-        <h3>Original</h3>
+        <h3>Original (Color)</h3>
         <canvas id="originalCanvas"></canvas>
-        <div class="preview-info" id="originalInfo"></div>
+        <div class="filter-info" id="originalInfo"></div>
       </div>
       <div class="preview-panel">
-        <h3>Denoised</h3>
-        <canvas id="denoisedCanvas"></canvas>
-        <div class="preview-info" id="denoisedInfo"></div>
+        <h3>Black &amp; White</h3>
+        <canvas id="filteredCanvas"></canvas>
+        <div class="filter-info" id="filteredInfo"></div>
       </div>
     </div>
   </main>
@@ -266,43 +305,92 @@
     const errorMsg = document.getElementById('errorMsg');
     const previewArea = document.getElementById('previewArea');
     const originalCanvas = document.getElementById('originalCanvas');
-    const denoisedCanvas = document.getElementById('denoisedCanvas');
+    const filteredCanvas = document.getElementById('filteredCanvas');
     const originalInfo = document.getElementById('originalInfo');
-    const denoisedInfo = document.getElementById('denoisedInfo');
+    const filteredInfo = document.getElementById('filteredInfo');
 
-    const strengthSlider = document.getElementById('strength');
-    const passesSlider = document.getElementById('passes');
+    const brightnessSlider = document.getElementById('brightness');
+    const contrastSlider = document.getElementById('contrast');
     const outputFormat = document.getElementById('outputFormat');
     const outputQuality = document.getElementById('outputQuality');
     const qualityVal = document.getElementById('qualityVal');
 
-    const applyBtn = document.getElementById('applyBtn');
+    const grainBtn = document.getElementById('grainBtn');
+    const vignetteBtn = document.getElementById('vignetteBtn');
+    const invertBtn = document.getElementById('invertBtn');
+    const resetBtn = document.getElementById('resetBtn');
     const downloadBtn = document.getElementById('downloadBtn');
     const clearBtn = document.getElementById('clearBtn');
 
     let currentFile = null;
     let currentImg = null;
-    let currentMode = 'gaussian';
+    let grainOn = false;
+    let vignetteOn = false;
+    let invertOn = false;
+    let activePreset = 'normal';
 
-    // Slider displays
-    strengthSlider.addEventListener('input', () => {
-      document.getElementById('strengthVal').textContent = strengthSlider.value;
+    // B&W preset definitions: [brightness, contrast]
+    const presets = {
+      normal:       { brightness: 100, contrast: 100, label: 'Normal' },
+      highcontrast: { brightness: 95,  contrast: 160, label: 'High Contrast' },
+      soft:         { brightness: 110, contrast: 70,  label: 'Soft' },
+      filmnoir:     { brightness: 85,  contrast: 170, label: 'Film Noir' },
+      vintage:      { brightness: 105, contrast: 90,  label: 'Vintage' },
+      bright:       { brightness: 130, contrast: 80,  label: 'Bright & Airy' },
+    };
+
+    // Preset buttons
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const preset = presets[btn.dataset.preset];
+        if (!preset) return;
+        activePreset = btn.dataset.preset;
+        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        brightnessSlider.value = preset.brightness;
+        contrastSlider.value = preset.contrast;
+        document.getElementById('brightnessVal').textContent = preset.brightness + '%';
+        document.getElementById('contrastVal').textContent = preset.contrast + '%';
+        applyFilters();
+      });
     });
-    passesSlider.addEventListener('input', () => {
-      document.getElementById('passesVal').textContent = passesSlider.value;
+
+    // Slider listeners
+    brightnessSlider.addEventListener('input', () => {
+      document.getElementById('brightnessVal').textContent = brightnessSlider.value + '%';
+      clearPresetActive();
+      applyFilters();
+    });
+    contrastSlider.addEventListener('input', () => {
+      document.getElementById('contrastVal').textContent = contrastSlider.value + '%';
+      clearPresetActive();
+      applyFilters();
     });
     outputQuality.addEventListener('input', () => {
       qualityVal.textContent = outputQuality.value + '%';
     });
 
-    // Mode toggle
-    document.querySelectorAll('.mode-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentMode = btn.dataset.mode;
-      });
+    // Toggle effects
+    grainBtn.addEventListener('click', () => {
+      grainOn = !grainOn;
+      grainBtn.classList.toggle('active', grainOn);
+      applyFilters();
     });
+    vignetteBtn.addEventListener('click', () => {
+      vignetteOn = !vignetteOn;
+      vignetteBtn.classList.toggle('active', vignetteOn);
+      applyFilters();
+    });
+    invertBtn.addEventListener('click', () => {
+      invertOn = !invertOn;
+      invertBtn.classList.toggle('active', invertOn);
+      applyFilters();
+    });
+
+    function clearPresetActive() {
+      activePreset = null;
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    }
 
     setupDropZone(dropZone, fileInput, files => {
       currentFile = files[0];
@@ -312,7 +400,7 @@
         controls.style.display = 'block';
         previewArea.style.display = 'grid';
         drawOriginal();
-        applyDenoise();
+        applyFilters();
         dropZone.querySelector('.drop-zone-text').innerHTML =
           '<strong>' + escHTML(currentFile.name) + '</strong><br>Drop another to replace';
       }).catch(e => {
@@ -320,37 +408,27 @@
       });
     });
 
-    applyBtn.addEventListener('click', () => {
-      if (currentImg) applyDenoise();
-    });
-
     clearBtn.addEventListener('click', () => {
       currentFile = null;
       currentImg = null;
       controls.style.display = 'none';
       previewArea.style.display = 'none';
+      resetAllFilters();
       dropZone.querySelector('.drop-zone-text').innerHTML =
         '<strong>Drop an image here</strong> or click to browse<br>JPEG, PNG, WebP supported';
     });
 
+    resetBtn.addEventListener('click', () => {
+      resetAllFilters();
+      applyFilters();
+    });
+
     downloadBtn.addEventListener('click', () => {
       if (!currentImg) return;
-
-      // Render at full resolution
       const fullCanvas = document.createElement('canvas');
       fullCanvas.width = currentImg.naturalWidth;
       fullCanvas.height = currentImg.naturalHeight;
-      const ctx = fullCanvas.getContext('2d');
-      ctx.drawImage(currentImg, 0, 0);
-
-      const strength = parseInt(strengthSlider.value);
-      const passes = parseInt(passesSlider.value);
-      let imageData = ctx.getImageData(0, 0, fullCanvas.width, fullCanvas.height);
-
-      for (let p = 0; p < passes; p++) {
-        imageData = applyFilter(imageData, strength, currentMode);
-      }
-      ctx.putImageData(imageData, 0, 0);
+      renderBW(fullCanvas, currentImg);
 
       const fmt = outputFormat.value === 'same' ? getOriginalFormat() : outputFormat.value;
       const mime = getMimeType(fmt);
@@ -358,9 +436,26 @@
       const ext = fmt === 'jpeg' ? 'jpg' : fmt;
 
       fullCanvas.toBlob(blob => {
-        if (blob) downloadBlob(blob, baseName(currentFile.name) + '-denoised.' + ext);
+        if (blob) downloadBlob(blob, baseName(currentFile.name) + '-bw.' + ext);
       }, mime, quality);
     });
+
+    function resetAllFilters() {
+      brightnessSlider.value = 100;
+      contrastSlider.value = 100;
+      document.getElementById('brightnessVal').textContent = '100%';
+      document.getElementById('contrastVal').textContent = '100%';
+      grainOn = false;
+      vignetteOn = false;
+      invertOn = false;
+      grainBtn.classList.remove('active');
+      vignetteBtn.classList.remove('active');
+      invertBtn.classList.remove('active');
+      activePreset = 'normal';
+      document.querySelectorAll('.preset-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.preset === 'normal');
+      });
+    }
 
     function drawOriginal() {
       if (!currentImg) return;
@@ -368,159 +463,80 @@
       const scale = Math.min(1, maxW / currentImg.naturalWidth, maxH / currentImg.naturalHeight);
       const w = Math.round(currentImg.naturalWidth * scale);
       const h = Math.round(currentImg.naturalHeight * scale);
-
       originalCanvas.width = w;
       originalCanvas.height = h;
       const ctx = originalCanvas.getContext('2d');
       ctx.drawImage(currentImg, 0, 0, w, h);
-
-      originalInfo.textContent = currentImg.naturalWidth + ' x ' + currentImg.naturalHeight + ' — ' + formatBytes(currentFile.size);
+      originalInfo.textContent = currentImg.naturalWidth + ' × ' + currentImg.naturalHeight + ' — ' + formatBytes(currentFile.size);
     }
 
-    function applyDenoise() {
+    function applyFilters() {
       if (!currentImg) return;
-
       const maxW = 500, maxH = 400;
       const scale = Math.min(1, maxW / currentImg.naturalWidth, maxH / currentImg.naturalHeight);
       const w = Math.round(currentImg.naturalWidth * scale);
       const h = Math.round(currentImg.naturalHeight * scale);
+      filteredCanvas.width = w;
+      filteredCanvas.height = h;
+      renderBW(filteredCanvas, currentImg, w, h);
 
-      denoisedCanvas.width = w;
-      denoisedCanvas.height = h;
-      const ctx = denoisedCanvas.getContext('2d');
-      ctx.drawImage(currentImg, 0, 0, w, h);
+      const parts = ['B&W'];
+      if (brightnessSlider.value !== '100') parts.push('Brightness ' + brightnessSlider.value + '%');
+      if (contrastSlider.value !== '100') parts.push('Contrast ' + contrastSlider.value + '%');
+      if (grainOn) parts.push('Grain');
+      if (vignetteOn) parts.push('Vignette');
+      if (invertOn) parts.push('Inverted');
+      filteredInfo.textContent = parts.join(' · ');
+    }
 
-      const strength = parseInt(strengthSlider.value);
-      const passes = parseInt(passesSlider.value);
-      let imageData = ctx.getImageData(0, 0, w, h);
+    function renderBW(canvas, img, w, h) {
+      w = w || canvas.width;
+      h = h || canvas.height;
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
 
-      for (let p = 0; p < passes; p++) {
-        imageData = applyFilter(imageData, strength, currentMode);
+      // Apply brightness/contrast via CSS filter, then read pixels for grayscale
+      ctx.filter = 'brightness(' + (brightnessSlider.value / 100) + ') contrast(' + (contrastSlider.value / 100) + ')';
+      ctx.drawImage(img, 0, 0, w, h);
+      ctx.filter = 'none';
+
+      // Convert to grayscale via pixel manipulation (cross-browser reliable)
+      const imageData = ctx.getImageData(0, 0, w, h);
+      const d = imageData.data;
+      for (let i = 0; i < d.length; i += 4) {
+        // Luminance-weighted grayscale (perceived brightness)
+        const gray = Math.round(0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]);
+        const v = invertOn ? 255 - gray : gray;
+        d[i] = v;
+        d[i + 1] = v;
+        d[i + 2] = v;
+        // alpha unchanged
       }
       ctx.putImageData(imageData, 0, 0);
 
-      const modeNames = { gaussian: 'Gaussian Blur', median: 'Median Filter', bilateral: 'Bilateral' };
-      denoisedInfo.textContent = modeNames[currentMode] + ' — Strength ' + strength + ' — ' + passes + ' pass' + (passes > 1 ? 'es' : '');
-    }
-
-    function applyFilter(imageData, strength, mode) {
-      const { width, height, data } = imageData;
-      const out = new Uint8ClampedArray(data);
-      const radius = strength;
-
-      if (mode === 'gaussian') {
-        // Gaussian blur via box blur approximation (separable, fast)
-        boxBlur(data, out, width, height, radius);
-      } else if (mode === 'median') {
-        medianFilter(data, out, width, height, Math.min(radius, 5));
-      } else if (mode === 'bilateral') {
-        bilateralFilter(data, out, width, height, radius);
+      // Film grain
+      if (grainOn) {
+        const grainData = ctx.getImageData(0, 0, w, h);
+        const gd = grainData.data;
+        for (let i = 0; i < gd.length; i += 4) {
+          const noise = (Math.random() - 0.5) * 40;
+          gd[i]     = Math.max(0, Math.min(255, gd[i]     + noise));
+          gd[i + 1] = Math.max(0, Math.min(255, gd[i + 1] + noise));
+          gd[i + 2] = Math.max(0, Math.min(255, gd[i + 2] + noise));
+        }
+        ctx.putImageData(grainData, 0, 0);
       }
 
-      return new ImageData(out, width, height);
-    }
-
-    // Fast box blur (approximation of gaussian)
-    function boxBlur(src, dst, w, h, r) {
-      // Two-pass separable box blur
-      const temp = new Uint8ClampedArray(src);
-      // Horizontal pass
-      for (let y = 0; y < h; y++) {
-        for (let x = 0; x < w; x++) {
-          let rr = 0, gg = 0, bb = 0, count = 0;
-          for (let dx = -r; dx <= r; dx++) {
-            const nx = Math.min(w - 1, Math.max(0, x + dx));
-            const i = (y * w + nx) * 4;
-            rr += src[i]; gg += src[i + 1]; bb += src[i + 2];
-            count++;
-          }
-          const i = (y * w + x) * 4;
-          temp[i] = rr / count;
-          temp[i + 1] = gg / count;
-          temp[i + 2] = bb / count;
-          temp[i + 3] = src[i + 3];
-        }
-      }
-      // Vertical pass
-      for (let y = 0; y < h; y++) {
-        for (let x = 0; x < w; x++) {
-          let rr = 0, gg = 0, bb = 0, count = 0;
-          for (let dy = -r; dy <= r; dy++) {
-            const ny = Math.min(h - 1, Math.max(0, y + dy));
-            const i = (ny * w + x) * 4;
-            rr += temp[i]; gg += temp[i + 1]; bb += temp[i + 2];
-            count++;
-          }
-          const i = (y * w + x) * 4;
-          dst[i] = rr / count;
-          dst[i + 1] = gg / count;
-          dst[i + 2] = bb / count;
-          dst[i + 3] = temp[i + 3];
-        }
-      }
-    }
-
-    // Median filter
-    function medianFilter(src, dst, w, h, r) {
-      for (let y = 0; y < h; y++) {
-        for (let x = 0; x < w; x++) {
-          const rs = [], gs = [], bs = [];
-          for (let dy = -r; dy <= r; dy++) {
-            for (let dx = -r; dx <= r; dx++) {
-              const nx = Math.min(w - 1, Math.max(0, x + dx));
-              const ny = Math.min(h - 1, Math.max(0, y + dy));
-              const i = (ny * w + nx) * 4;
-              rs.push(src[i]); gs.push(src[i + 1]); bs.push(src[i + 2]);
-            }
-          }
-          rs.sort((a, b) => a - b);
-          gs.sort((a, b) => a - b);
-          bs.sort((a, b) => a - b);
-          const mid = rs.length >> 1;
-          const i = (y * w + x) * 4;
-          dst[i] = rs[mid];
-          dst[i + 1] = gs[mid];
-          dst[i + 2] = bs[mid];
-          dst[i + 3] = src[i + 3];
-        }
-      }
-    }
-
-    // Bilateral filter (edge-preserving denoise)
-    function bilateralFilter(src, dst, w, h, r) {
-      const sigmaSpace = r;
-      const sigmaColor = 30 + r * 8; // Adaptive color sigma
-      const spaceCoeff = -0.5 / (sigmaSpace * sigmaSpace);
-      const colorCoeff = -0.5 / (sigmaColor * sigmaColor);
-
-      for (let y = 0; y < h; y++) {
-        for (let x = 0; x < w; x++) {
-          const ci = (y * w + x) * 4;
-          const cr = src[ci], cg = src[ci + 1], cb = src[ci + 2];
-          let sumR = 0, sumG = 0, sumB = 0, sumW = 0;
-
-          for (let dy = -r; dy <= r; dy++) {
-            for (let dx = -r; dx <= r; dx++) {
-              const nx = Math.min(w - 1, Math.max(0, x + dx));
-              const ny = Math.min(h - 1, Math.max(0, y + dy));
-              const ni = (ny * w + nx) * 4;
-
-              const spatialDist = dx * dx + dy * dy;
-              const colorDist = (src[ni] - cr) ** 2 + (src[ni + 1] - cg) ** 2 + (src[ni + 2] - cb) ** 2;
-              const weight = Math.exp(spatialDist * spaceCoeff + colorDist * colorCoeff);
-
-              sumR += src[ni] * weight;
-              sumG += src[ni + 1] * weight;
-              sumB += src[ni + 2] * weight;
-              sumW += weight;
-            }
-          }
-
-          dst[ci] = sumR / sumW;
-          dst[ci + 1] = sumG / sumW;
-          dst[ci + 2] = sumB / sumW;
-          dst[ci + 3] = src[ci + 3];
-        }
+      // Vignette
+      if (vignetteOn) {
+        const cx = w / 2, cy = h / 2;
+        const radius = Math.sqrt(cx * cx + cy * cy);
+        const gradient = ctx.createRadialGradient(cx, cy, radius * 0.4, cx, cy, radius);
+        gradient.addColorStop(0, 'rgba(0,0,0,0)');
+        gradient.addColorStop(1, 'rgba(0,0,0,0.65)');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, w, h);
       }
     }
 
@@ -529,6 +545,12 @@
       if (type === 'image/jpeg') return 'jpeg';
       if (type === 'image/webp') return 'webp';
       return 'png';
+    }
+
+    function getMimeType(fmt) {
+      if (fmt === 'jpeg') return 'image/jpeg';
+      if (fmt === 'webp') return 'image/webp';
+      return 'image/png';
     }
 
     function escHTML(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
