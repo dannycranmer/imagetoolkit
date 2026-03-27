@@ -247,6 +247,21 @@
         </div>
       </div>
 
+      <div style="margin-top:1rem">
+        <label style="font-weight:600;font-size:0.85rem;display:block;margin-bottom:0.5rem">Threshold &amp; Dithering</label>
+        <div class="filter-slider">
+          <label for="threshold">Threshold</label>
+          <input type="range" id="threshold" min="0" max="255" value="128">
+          <span class="filter-val" id="thresholdVal">128</span>
+        </div>
+        <div style="margin-top:0.5rem;font-size:0.78rem;color:var(--text-muted)">Pixels below threshold → black, above → white. Dithering adds texture for smoother gradients.</div>
+        <div class="toggle-filters" style="margin-top:0.5rem">
+          <button class="toggle-filter-btn active" id="ditherNoneBtn">No Dither</button>
+          <button class="toggle-filter-btn" id="ditherFloydBtn">Floyd-Steinberg</button>
+          <button class="toggle-filter-btn" id="ditherBayerBtn">Ordered (Bayer)</button>
+        </div>
+      </div>
+
       <div class="btn-row">
         <button class="btn btn-primary" id="resetBtn">Reset</button>
         <button class="btn btn-green" id="downloadBtn">Download</button>
@@ -328,6 +343,12 @@
     let vignetteOn = false;
     let invertOn = false;
     let activePreset = 'normal';
+    let ditherMode = 'none'; // 'none' | 'floyd' | 'bayer'
+
+    const thresholdSlider = document.getElementById('threshold');
+    const ditherNoneBtn = document.getElementById('ditherNoneBtn');
+    const ditherFloydBtn = document.getElementById('ditherFloydBtn');
+    const ditherBayerBtn = document.getElementById('ditherBayerBtn');
 
     // B&W preset definitions: [brightness, contrast]
     const presets = {
@@ -386,6 +407,22 @@
       invertBtn.classList.toggle('active', invertOn);
       applyFilters();
     });
+
+    thresholdSlider.addEventListener('input', () => {
+      document.getElementById('thresholdVal').textContent = thresholdSlider.value;
+      applyFilters();
+    });
+
+    function setDitherMode(mode) {
+      ditherMode = mode;
+      ditherNoneBtn.classList.toggle('active', mode === 'none');
+      ditherFloydBtn.classList.toggle('active', mode === 'floyd');
+      ditherBayerBtn.classList.toggle('active', mode === 'bayer');
+      applyFilters();
+    }
+    ditherNoneBtn.addEventListener('click', () => setDitherMode('none'));
+    ditherFloydBtn.addEventListener('click', () => setDitherMode('floyd'));
+    ditherBayerBtn.addEventListener('click', () => setDitherMode('bayer'));
 
     function clearPresetActive() {
       activePreset = null;
@@ -455,6 +492,12 @@
       document.querySelectorAll('.preset-btn').forEach(b => {
         b.classList.toggle('active', b.dataset.preset === 'normal');
       });
+      thresholdSlider.value = 128;
+      document.getElementById('thresholdVal').textContent = '128';
+      ditherMode = 'none';
+      ditherNoneBtn.classList.add('active');
+      ditherFloydBtn.classList.remove('active');
+      ditherBayerBtn.classList.remove('active');
     }
 
     function drawOriginal() {
@@ -480,7 +523,9 @@
       filteredCanvas.height = h;
       renderBW(filteredCanvas, currentImg, w, h);
 
-      const parts = ['B&W'];
+      const parts = ['True B&W · Threshold ' + thresholdSlider.value];
+      if (ditherMode === 'floyd') parts.push('Floyd-Steinberg dither');
+      else if (ditherMode === 'bayer') parts.push('Bayer ordered dither');
       if (brightnessSlider.value !== '100') parts.push('Brightness ' + brightnessSlider.value + '%');
       if (contrastSlider.value !== '100') parts.push('Contrast ' + contrastSlider.value + '%');
       if (grainOn) parts.push('Grain');
@@ -489,6 +534,9 @@
       filteredInfo.textContent = parts.join(' · ');
     }
 
+    // Precomputed 4×4 Bayer matrix scaled to [0, 255]
+    const BAYER4 = [0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5].map(v => Math.round(v * 255 / 15));
+
     function renderBW(canvas, img, w, h) {
       w = w || canvas.width;
       h = h || canvas.height;
@@ -496,26 +544,12 @@
       canvas.height = h;
       const ctx = canvas.getContext('2d');
 
-      // Apply brightness/contrast via CSS filter, then read pixels for grayscale
+      // Apply brightness/contrast via CSS filter
       ctx.filter = 'brightness(' + (brightnessSlider.value / 100) + ') contrast(' + (contrastSlider.value / 100) + ')';
       ctx.drawImage(img, 0, 0, w, h);
       ctx.filter = 'none';
 
-      // Convert to grayscale via pixel manipulation (cross-browser reliable)
-      const imageData = ctx.getImageData(0, 0, w, h);
-      const d = imageData.data;
-      for (let i = 0; i < d.length; i += 4) {
-        // Luminance-weighted grayscale (perceived brightness)
-        const gray = Math.round(0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]);
-        const v = invertOn ? 255 - gray : gray;
-        d[i] = v;
-        d[i + 1] = v;
-        d[i + 2] = v;
-        // alpha unchanged
-      }
-      ctx.putImageData(imageData, 0, 0);
-
-      // Film grain
+      // Apply film grain to the image BEFORE threshold (grain influences the B&W distribution)
       if (grainOn) {
         const grainData = ctx.getImageData(0, 0, w, h);
         const gd = grainData.data;
@@ -528,7 +562,63 @@
         ctx.putImageData(grainData, 0, 0);
       }
 
-      // Vignette
+      // Extract pixels and build luminance-weighted grayscale float array
+      const imageData = ctx.getImageData(0, 0, w, h);
+      const d = imageData.data;
+      const gray = new Float32Array(w * h);
+      for (let i = 0; i < w * h; i++) {
+        gray[i] = 0.2126 * d[i * 4] + 0.7152 * d[i * 4 + 1] + 0.0722 * d[i * 4 + 2];
+      }
+
+      const thr = parseInt(thresholdSlider.value);
+
+      if (ditherMode === 'floyd') {
+        // Floyd-Steinberg error-diffusion dithering
+        for (let y = 0; y < h; y++) {
+          for (let x = 0; x < w; x++) {
+            const idx = y * w + x;
+            const oldVal = Math.max(0, Math.min(255, gray[idx]));
+            const newVal = oldVal >= thr ? 255 : 0;
+            gray[idx] = newVal;
+            const err = oldVal - newVal;
+            if (x + 1 < w)               gray[idx + 1]     += err * 7 / 16;
+            if (y + 1 < h) {
+              if (x > 0)                  gray[idx + w - 1] += err * 3 / 16;
+                                          gray[idx + w]     += err * 5 / 16;
+              if (x + 1 < w)             gray[idx + w + 1] += err * 1 / 16;
+            }
+          }
+        }
+        // Values are already 0 or 255 after diffusion — snap with >=128 guard
+        for (let i = 0; i < w * h; i++) {
+          const bwVal = invertOn ? (gray[i] >= 128 ? 0 : 255) : (gray[i] >= 128 ? 255 : 0);
+          d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = bwVal;
+        }
+
+      } else if (ditherMode === 'bayer') {
+        // Ordered (Bayer 4×4) dithering
+        for (let y = 0; y < h; y++) {
+          for (let x = 0; x < w; x++) {
+            const idx = y * w + x;
+            // Offset gray by ±127 based on Bayer position, then threshold
+            const bayerOffset = BAYER4[(y % 4) * 4 + (x % 4)] - 128;
+            const adjusted = Math.max(0, Math.min(255, gray[idx] + bayerOffset));
+            const bwVal = invertOn ? (adjusted >= thr ? 0 : 255) : (adjusted >= thr ? 255 : 0);
+            d[idx * 4] = d[idx * 4 + 1] = d[idx * 4 + 2] = bwVal;
+          }
+        }
+
+      } else {
+        // Simple threshold — strictly 2 colours, no dithering
+        for (let i = 0; i < w * h; i++) {
+          const bwVal = invertOn ? (gray[i] >= thr ? 0 : 255) : (gray[i] >= thr ? 255 : 0);
+          d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = bwVal;
+        }
+      }
+
+      ctx.putImageData(imageData, 0, 0);
+
+      // Vignette overlay (drawn on top, adds dark gradient)
       if (vignetteOn) {
         const cx = w / 2, cy = h / 2;
         const radius = Math.sqrt(cx * cx + cy * cy);
