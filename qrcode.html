@@ -162,6 +162,31 @@
       margin-bottom: 0.75rem;
       opacity: 0.5;
     }
+    .select-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .select-row label {
+      font-weight: 600;
+      font-size: 0.85rem;
+      min-width: 80px;
+    }
+    .select-row select {
+      flex: 1;
+      padding: 0.4rem 0.6rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.85rem;
+      background: var(--bg-card);
+      color: var(--text);
+      cursor: pointer;
+    }
+    .select-row select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+    }
     @media (max-width: 768px) {
       .qr-controls {
         grid-template-columns: 1fr;
@@ -250,6 +275,60 @@
           <input type="range" id="qrSize" min="200" max="1000" value="400" step="50">
           <span class="slider-val" id="qrSizeVal">400px</span>
         </div>
+        <div class="select-row">
+          <label for="qrVersion">Complexity</label>
+          <select id="qrVersion" title="QR Version — higher versions hold more data but create denser codes">
+            <option value="0" selected>Auto (recommended)</option>
+            <optgroup label="Low — simple, fewer squares">
+              <option value="1">V1 — 21×21 modules (shortest URLs)</option>
+              <option value="2">V2 — 25×25 modules</option>
+              <option value="3">V3 — 29×29 modules</option>
+              <option value="4">V4 — 33×33 modules</option>
+              <option value="5">V5 — 37×37 modules</option>
+            </optgroup>
+            <optgroup label="Medium — balanced">
+              <option value="6">V6 — 41×41 modules</option>
+              <option value="7">V7 — 45×45 modules</option>
+              <option value="8">V8 — 49×49 modules</option>
+              <option value="9">V9 — 53×53 modules</option>
+              <option value="10">V10 — 57×57 modules</option>
+              <option value="11">V11 — 61×61 modules</option>
+              <option value="12">V12 — 65×65 modules</option>
+              <option value="13">V13 — 69×69 modules</option>
+              <option value="14">V14 — 73×73 modules</option>
+              <option value="15">V15 — 77×77 modules</option>
+            </optgroup>
+            <optgroup label="High — longer text">
+              <option value="16">V16 — 81×81 modules</option>
+              <option value="17">V17 — 85×85 modules</option>
+              <option value="18">V18 — 89×89 modules</option>
+              <option value="19">V19 — 93×93 modules</option>
+              <option value="20">V20 — 97×97 modules</option>
+              <option value="21">V21 — 101×101 modules</option>
+              <option value="22">V22 — 105×105 modules</option>
+              <option value="23">V23 — 109×109 modules</option>
+              <option value="24">V24 — 113×113 modules</option>
+              <option value="25">V25 — 117×117 modules</option>
+              <option value="26">V26 — 121×121 modules</option>
+              <option value="27">V27 — 125×125 modules</option>
+              <option value="28">V28 — 129×129 modules</option>
+              <option value="29">V29 — 133×133 modules</option>
+              <option value="30">V30 — 137×137 modules</option>
+            </optgroup>
+            <optgroup label="Maximum — dense, holds most data">
+              <option value="31">V31 — 141×141 modules</option>
+              <option value="32">V32 — 145×145 modules</option>
+              <option value="33">V33 — 149×149 modules</option>
+              <option value="34">V34 — 153×153 modules</option>
+              <option value="35">V35 — 157×157 modules</option>
+              <option value="36">V36 — 161×161 modules</option>
+              <option value="37">V37 — 165×165 modules</option>
+              <option value="38">V38 — 169×169 modules</option>
+              <option value="39">V39 — 173×173 modules</option>
+              <option value="40">V40 — 177×177 modules (maximum data)</option>
+            </optgroup>
+          </select>
+        </div>
       </div>
 
       <div style="margin-top:1rem; display:flex; flex-wrap:wrap; gap:1.5rem;">
@@ -322,6 +401,7 @@
     const qrText = document.getElementById('qrText');
     const qrSize = document.getElementById('qrSize');
     const qrSizeVal = document.getElementById('qrSizeVal');
+    const qrVersion = document.getElementById('qrVersion');
     const qrFgColor = document.getElementById('qrFgColor');
     const qrBgColor = document.getElementById('qrBgColor');
     const logoInput = document.getElementById('logoInput');
@@ -378,7 +458,8 @@
       hideError(errorMsg);
       try {
         // typeNumber 0 = auto-detect version, 'H' = highest error correction
-        const qr = qrcode(0, 'H');
+        const typeNum = parseInt(qrVersion.value);
+        const qr = qrcode(typeNum, 'H');
         qr.addData(text);
         qr.make();
         lastQR = qr;
@@ -388,9 +469,14 @@
         qrInfo.style.display = 'block';
         downloadBtn.style.display = 'inline-flex';
         const modules = qr.getModuleCount();
-        qrInfo.textContent = modules + '×' + modules + ' modules — EC Level H (30% recovery)';
+        const versionNum = (modules - 17) / 4;
+        qrInfo.textContent = 'V' + versionNum + ' — ' + modules + '×' + modules + ' modules — EC Level H (30% recovery)';
       } catch (e) {
-        showError(errorMsg, e.message || 'Failed to generate QR code. Text may be too long.');
+        const typeNum = parseInt(qrVersion.value);
+        const msg = typeNum > 0
+          ? 'Data too long for V' + typeNum + '. Try Auto or a higher version.'
+          : (e.message || 'Failed to generate QR code. Text may be too long.');
+        showError(errorMsg, msg);
       }
     });
 
